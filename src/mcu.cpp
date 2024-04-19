@@ -1404,7 +1404,7 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
     printf("Event count = %lld\n", track.events.size());
 
     for (size_t i = 0; i < track.events.size(); ++i) {
-        uint64_t this_event_time_us = SMF_TicksToUS(track.events[i].timestamp, us_per_qn, division);
+        uint64_t this_event_time_us = us_simulated + SMF_TicksToUS(track.events[i].delta_time, us_per_qn, division);
 
         if (track.events[i].is_tempo())
         {

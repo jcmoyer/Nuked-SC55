@@ -77,6 +77,11 @@ SMF_Track SMF_MergeTracks(const SMF_Data& data)
         }
         return left.timestamp < right.timestamp;
     });
+    for (size_t i = 1; i < merged_track.events.size(); ++i)
+    {
+        merged_track.events[i].delta_time =
+            merged_track.events[i].timestamp - merged_track.events[i - 1].timestamp;
+    }
     return merged_track;
 }
 
