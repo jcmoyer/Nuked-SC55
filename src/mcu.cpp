@@ -1398,7 +1398,7 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
     SMF_Track track = SMF_MergeTracks(data);
 
     uint64_t division = data.header.division;
-    uint64_t us_per_qn = 400000;
+    uint64_t us_per_qn = 500000;
     uint64_t us_simulated = 0;
 
     printf("Event count = %lld\n", track.events.size());
