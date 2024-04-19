@@ -45,6 +45,8 @@
 #include "midi.h"
 #include "utf8main.h"
 #include "utils/files.h"
+#include "wav.h"
+#include "smf.h"
 
 #if __linux__
 #include <unistd.h>
@@ -177,6 +179,8 @@ static uint8_t sw_pos = 3;
 static uint8_t io_sd = 0x00;
 
 SDL_atomic_t mcu_button_pressed = { 0 };
+
+WAV_Handle render_output;
 
 uint8_t RCU_Read(void)
 {
@@ -1013,6 +1017,67 @@ void MCU_WorkThread_Unlock(void)
     SDL_UnlockMutex(work_thread_lock);
 }
 
+static void MCU_Step()
+{
+    if (pcm.config_reg_3c & 0x40)
+        sample_write_ptr &= ~3;
+    else
+        sample_write_ptr &= ~1;
+
+    // We don't need to wait for an audio callback when rendering.
+#if 0
+    if (sample_read_ptr == sample_write_ptr)
+    {
+        MCU_WorkThread_Unlock();
+        while (sample_read_ptr == sample_write_ptr)
+        {
+            SDL_Delay(1);
+        }
+        MCU_WorkThread_Lock();
+    }
+#endif
+
+    if (!mcu.ex_ignore)
+        MCU_Interrupt_Handle();
+    else
+        mcu.ex_ignore = 0;
+
+    if (!mcu.sleep)
+        MCU_ReadInstruction();
+
+    mcu.cycles += 12; // FIXME: assume 12 cycles per instruction
+
+    // if (mcu.cycles % 24000000 == 0)
+    //     printf("seconds: %i\n", (int)(mcu.cycles / 24000000));
+
+    PCM_Update(mcu.cycles);
+
+    TIMER_Clock(mcu.cycles);
+
+    if (!mcu_mk1 && !mcu_jv880 && !mcu_scb55)
+        SM_Update(mcu.cycles);
+    else
+    {
+        MCU_UpdateUART_RX();
+        MCU_UpdateUART_TX();
+    }
+
+    MCU_UpdateAnalog(mcu.cycles);
+
+    if (mcu_mk1)
+    {
+        if (ga_lcd_counter)
+        {
+            ga_lcd_counter--;
+            if (ga_lcd_counter == 0)
+            {
+                MCU_GA_SetGAInt(1, 0);
+                MCU_GA_SetGAInt(1, 1);
+            }
+        }
+    }
+}
+
 int SDLCALL work_thread(void* data)
 {
     work_thread_lock = SDL_CreateMutex();
@@ -1020,59 +1085,7 @@ int SDLCALL work_thread(void* data)
     MCU_WorkThread_Lock();
     while (work_thread_run)
     {
-        if (pcm.config_reg_3c & 0x40)
-            sample_write_ptr &= ~3;
-        else
-            sample_write_ptr &= ~1;
-        if (sample_read_ptr == sample_write_ptr)
-        {
-            MCU_WorkThread_Unlock();
-            while (sample_read_ptr == sample_write_ptr)
-            {
-                SDL_Delay(1);
-            }
-            MCU_WorkThread_Lock();
-        }
-
-        if (!mcu.ex_ignore)
-            MCU_Interrupt_Handle();
-        else
-            mcu.ex_ignore = 0;
-
-        if (!mcu.sleep)
-            MCU_ReadInstruction();
-
-        mcu.cycles += 12; // FIXME: assume 12 cycles per instruction
-
-        // if (mcu.cycles % 24000000 == 0)
-        //     printf("seconds: %i\n", (int)(mcu.cycles / 24000000));
-
-        PCM_Update(mcu.cycles);
-
-        TIMER_Clock(mcu.cycles);
-
-        if (!mcu_mk1 && !mcu_jv880 && !mcu_scb55)
-            SM_Update(mcu.cycles);
-        else
-        {
-            MCU_UpdateUART_RX();
-            MCU_UpdateUART_TX();
-        }
-
-        MCU_UpdateAnalog(mcu.cycles);
-
-        if (mcu_mk1)
-        {
-            if (ga_lcd_counter)
-            {
-                ga_lcd_counter--;
-                if (ga_lcd_counter == 0)
-                {
-                    MCU_GA_SetGAInt(1, 0);
-                    MCU_GA_SetGAInt(1, 1);
-                }
-            }
-        }
+        MCU_Step();
     }
     MCU_WorkThread_Unlock();
 
@@ -1209,6 +1222,18 @@ static const char* audio_format_to_str(int format)
     return "UNK";
 }
 
+int MCU_OutputFrequency()
+{
+    if (mcu_mk1 || mcu_jv880)
+    {
+        return 64000;
+    }
+    else
+    {
+        return 66207;
+    }
+}
+
 int MCU_OpenAudio(int deviceIndex, int pageSize, int pageNum)
 {
     SDL_AudioSpec spec = {};
@@ -1218,7 +1243,7 @@ int MCU_OpenAudio(int deviceIndex, int pageSize, int pageNum)
     audio_buffer_size = audio_page_size*pageNum;
     
     spec.format = AUDIO_S16SYS;
-    spec.freq = (mcu_mk1 || mcu_jv880) ? 64000 : 66207;
+    spec.freq = MCU_OutputFrequency();
     spec.channels = 2;
     spec.callback = audio_callback;
     spec.samples = audio_page_size / 4;
@@ -1291,9 +1316,12 @@ void MCU_PostSample(int *sample)
         sample[1] = INT16_MAX;
     else if (sample[1] < INT16_MIN)
         sample[1] = INT16_MIN;
+#if 0
     sample_buffer[sample_write_ptr + 0] = sample[0];
     sample_buffer[sample_write_ptr + 1] = sample[1];
     sample_write_ptr = (sample_write_ptr + 2) % audio_buffer_size;
+#endif
+    render_output.WriteSample(sample[0], sample[1]);
 }
 
 void MCU_GA_SetGAInt(int line, int value)
@@ -1361,7 +1389,55 @@ void MIDI_Reset(ResetType resetType)
             MCU_PostUART(gmReset[i]);
         }
     }
+}
 
+static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
+{
+    render_output.Open(output_filename);
+
+    SMF_Track track = SMF_MergeTracks(data);
+
+    uint64_t division = data.header.division;
+    uint64_t us_per_qn = 400000;
+    uint64_t us_simulated = 0;
+
+    printf("Event count = %lld\n", track.events.size());
+
+    for (size_t i = 0; i < track.events.size(); ++i) {
+        uint64_t this_event_time_us = SMF_TicksToUS(track.events[i].timestamp, us_per_qn, division);
+
+        if (track.events[i].is_tempo())
+        {
+            us_per_qn = track.events[i].get_tempo_us();
+        }
+
+        printf("[%lld/%lld] Event (%02x) at %lldus\n", i + 1, track.events.size(), track.events[i].payload[0], this_event_time_us);
+
+        // Simulate until this event fires. We step twice because the emulator
+        // currently assumes that instructions take 12 cycles, and that there
+        // are 24_000_000 cycles in a second. 24_000_000/1_000_000 = 24 cycles
+        // per microsecond. Each MCU_Step takes 12 cycles.
+        while (us_simulated < this_event_time_us)
+        {
+            MCU_Step();
+            MCU_Step();
+            ++us_simulated;
+        }
+
+        // Fire the event. TODO: Metaevents cause strange output so we filter
+        // them out. Needs investigation.
+        if (!track.events[i].is_metaevent())
+        {
+            for (uint8_t byte : track.events[i].payload)
+            {
+                MCU_PostUART(byte);
+            }
+        }
+    }
+
+    render_output.Finish(MCU_OutputFrequency());
+
+    printf("Simulated %lldus\n", us_simulated);
 }
 
 int main(int argc, char *argv[])
@@ -1375,6 +1451,8 @@ int main(int argc, char *argv[])
     int pageNum = 32;
     bool autodetect = true;
     ResetType resetType = ResetType::NONE;
+    std::string inputFilename;
+    std::string outputFilename;
 
     romset = ROM_SET_MK2;
 
@@ -1485,6 +1563,23 @@ int main(int argc, char *argv[])
             {
                 romset = ROM_SET_SC155MK2;
                 autodetect = false;
+            }
+            else if (!strcmp(argv[i], "-o"))
+            {
+                if (i + 1 < argc)
+                {
+                    outputFilename = argv[i + 1];
+                    ++i;
+                }
+                else
+                {
+                    printf("Expected output filename\n");
+                    return 1;
+                }
+            }
+            else
+            {
+                inputFilename = argv[i];
             }
         }
     }
@@ -1735,27 +1830,53 @@ int main(int argc, char *argv[])
     // Close all files as they no longer needed being open
     closeAllR();
 
+    // We don't use any SDL features
+#if 0
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
         fprintf(stderr, "FATAL ERROR: Failed to initialize the SDL2: %s.\n", SDL_GetError());
         fflush(stderr);
         return 2;
     }
+#endif
 
+    // We don't output to an audio device.
+#if 0
     if (!MCU_OpenAudio(audioDeviceIndex, pageSize, pageNum))
     {
         fprintf(stderr, "FATAL ERROR: Failed to open the audio stream.\n");
         fflush(stderr);
         return 2;
     }
+#endif
 
+    // We'll source MIDI events from disk instead of opening a device. Should
+    // abstract over this if this code is ever upstreamed.
+#if 0
     if(!MIDI_Init(port))
     {
         fprintf(stderr, "ERROR: Failed to initialize the MIDI Input.\nWARNING: Continuing without MIDI Input...\n");
         fflush(stderr);
     }
+#endif
 
+    if (!inputFilename.size())
+    {
+        printf("Expected input filename\n");
+        return 1;
+    }
+
+    if (!outputFilename.size())
+    {
+        printf("Expected output filename\n");
+        return 1;
+    }
+
+    SMF_Data data = SMF_LoadEvents(inputFilename.c_str());
+
+#if 0
     LCD_Init();
+#endif
     MCU_Init();
     MCU_PatchROM();
     MCU_Reset();
@@ -1763,13 +1884,19 @@ int main(int argc, char *argv[])
     PCM_Reset();
 
     if (resetType != ResetType::NONE) MIDI_Reset(resetType);
-    
-    MCU_Run();
 
+#if 0
+    MCU_Run();
+#endif
+
+    MCU_RenderTrack(data, outputFilename.c_str());
+
+#if 0
     MCU_CloseAudio();
     MIDI_Quit();
     LCD_UnInit();
     SDL_Quit();
+#endif
 
     return 0;
 }

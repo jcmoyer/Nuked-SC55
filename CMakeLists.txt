@@ -196,6 +196,8 @@ set(SC55_SRC
     src/midi.h
     src/pcm.cpp src/pcm.h
     src/submcu.cpp src/submcu.h
+    src/wav.cpp src/wav.h
+    src/smf.cpp src/smf.h
 
     src/utils/files.cpp src/utils/files.h
 )
