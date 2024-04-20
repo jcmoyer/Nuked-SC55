@@ -1401,8 +1401,6 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
     uint64_t us_per_qn = 500000;
     uint64_t us_simulated = 0;
 
-    printf("Event count = %lld\n", track.events.size());
-
     for (size_t i = 0; i < track.events.size(); ++i) {
         uint64_t this_event_time_us = us_simulated + SMF_TicksToUS(track.events[i].delta_time, us_per_qn, division);
 
@@ -1411,7 +1409,7 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
             us_per_qn = track.events[i].get_tempo_us();
         }
 
-        printf("[%lld/%lld] Event (%02x) at %lldus\n", i + 1, track.events.size(), track.events[i].payload[0], this_event_time_us);
+        printf("[%lld/%lld] Event (%02x) at %lldus\r", i + 1, track.events.size(), track.events[i].payload[0], this_event_time_us);
 
         // Simulate until this event fires. We step twice because the emulator
         // currently assumes that instructions take 12 cycles, and that there
@@ -1435,9 +1433,9 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
         }
     }
 
-    render_output.Finish(MCU_OutputFrequency());
+    printf("\n");
 
-    printf("Simulated %lldus\n", us_simulated);
+    render_output.Finish(MCU_OutputFrequency());
 }
 
 int main(int argc, char *argv[])
@@ -1873,6 +1871,7 @@ int main(int argc, char *argv[])
     }
 
     SMF_Data data = SMF_LoadEvents(inputFilename.c_str());
+    SMF_PrintStats(data);
 
 #if 0
     LCD_Init();

@@ -54,6 +54,7 @@ struct SMF_Data
 };
 
 SMF_Track SMF_MergeTracks(const SMF_Data& data);
+void SMF_PrintStats(const SMF_Data& data);
 SMF_Data SMF_LoadEvents(const char* filename);
 
 inline uint64_t SMF_TicksToUS(uint64_t ticks, uint64_t us_per_qn, uint64_t division)

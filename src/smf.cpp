@@ -70,7 +70,7 @@ SMF_Track SMF_MergeTracks(const SMF_Data& data)
             track.events.begin(),
             track.events.end());
     }
-    std::sort(merged_track.events.begin(), merged_track.events.end(), [](SMF_Event& left, SMF_Event& right) {
+    std::sort(merged_track.events.begin(), merged_track.events.end(), [](const SMF_Event& left, const SMF_Event& right) {
         if (left.timestamp == right.timestamp)
         {
             return left.seq_id < right.seq_id;
@@ -187,8 +187,14 @@ void SMF_LoadTrack(std::ifstream& input, SMF_Data& result, uint32_t expected_end
                 break;
         }
     }
+}
 
-    printf("Read %lld events\n", new_track.events.size());
+void SMF_PrintStats(const SMF_Data& data)
+{
+    for (size_t i = 0; i < data.tracks.size(); ++i)
+    {
+        fprintf(stderr, "Track %02lld: %lld events\n", i, data.tracks[i].events.size());
+    }
 }
 
 SMF_Data SMF_LoadEvents(const char* filename)
@@ -202,8 +208,6 @@ SMF_Data SMF_LoadEvents(const char* filename)
     }
 
     SMF_Data data;
-
-    int track_num = 0;
 
     for (;;)
     {
@@ -225,17 +229,12 @@ SMF_Data SMF_LoadEvents(const char* filename)
 
         if (chunk_type == "MThd")
         {
-            printf("Midi header with size = %d expected end = %d\n", chunk_size, expected_end);
-
             SMF_ReadHeader(input, data.header);
-
             input.seekg(expected_end, std::ios::beg);
         }
         else if (chunk_type == "MTrk")
         {
-            printf("Midi track %d at %d \n", track_num, (int)input.tellg());
             SMF_LoadTrack(input, data, expected_end);
-            ++track_num;
         }
         else
         {
