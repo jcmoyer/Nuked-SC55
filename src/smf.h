@@ -5,6 +5,28 @@
 #include <cstdint>
 #include <vector>
 
+// Should use C++17 span but the project only targets C++11 for now.
+struct SMF_ByteSpan
+{
+    const uint8_t* first = nullptr;
+    const uint8_t* last = nullptr;
+
+    SMF_ByteSpan(const std::vector<uint8_t>& source)
+        : first(&source.front()), last(&source.back())
+    {
+    }
+
+    const uint8_t& operator[](size_t offset) const
+    {
+        return first[offset];
+    }
+
+    size_t Size() const
+    {
+        return last - first + 1;
+    }
+};
+
 struct SMF_Header
 {
     uint16_t format;
@@ -21,24 +43,26 @@ struct SMF_Event
     uint64_t timestamp;
     // Time since track start (only for first event in a track) or the prior event.
     uint32_t delta_time;
-    // Raw data bytes representing this message.
-    std::vector<uint8_t> payload;
+    // MIDI message type.
+    uint8_t status;
+    // Offset to raw data bytes for this message within an SMF_ByteSpan.
+    uint32_t data_first, data_last;
 
-    bool is_metaevent() const
+    bool IsMetaEvent() const
     {
-        return payload.size() > 0 && payload[0] == 0xff;
+        return status == 0xff;
     }
 
-    bool is_tempo() const
+    bool IsTempo(SMF_ByteSpan bytes) const
     {
-        return payload.size() == 6 && payload[0] == 0xff && payload[1] == 0x51;
+        return IsMetaEvent() && bytes[data_first] == 0x51;
     }
 
-    uint32_t get_tempo_us() const
+    uint32_t GetTempoUS(SMF_ByteSpan bytes) const
     {
-        return ((uint32_t)payload[3]) << 16 |
-               ((uint32_t)payload[4]) << 8  |
-               ((uint32_t)payload[5]);
+        return ((uint32_t)bytes[data_first + 2]) << 16 |
+               ((uint32_t)bytes[data_first + 3]) << 8  |
+               ((uint32_t)bytes[data_first + 4]);
     }
 };
 
@@ -50,6 +74,7 @@ struct SMF_Track
 struct SMF_Data
 {
     SMF_Header header;
+    std::vector<uint8_t> bytes;
     std::vector<SMF_Track> tracks;
 };
 

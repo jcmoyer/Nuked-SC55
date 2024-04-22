@@ -5,59 +5,154 @@
 #include <string>
 #include <fstream>
 
-static void SMF_ReadU16BE(std::ifstream& input, uint16_t& value)
+// security: do not call without verifying [ptr,ptr+1] is a readable range
+// performance: 16 bit load + rol in clang and gcc, worse in MSVC
+static uint16_t UncheckedLoadU16BE(const uint8_t* ptr)
 {
-    input.read((char*)&value, sizeof(uint16_t));
-
-    // TODO: don't assume LE host
-    value =
-        ((value & 0x00FF) << 8) |
-        ((value & 0xFF00) >> 8);
+    return ((uint16_t)(*ptr) << 8) | ((uint16_t)(*(ptr + 1)));
 }
 
-static void SMF_ReadU32BE(std::ifstream& input, uint32_t& value)
+// security: do not call without verifying [ptr,ptr+3] is a readable range
+// performance: 32 bit load + bswap in clang and gcc, worse in MSVC
+static uint32_t UncheckedLoadU32BE(const uint8_t* ptr)
 {
-    input.read((char*)&value, sizeof(uint32_t));
-
-    // TODO: don't assume LE host
-    value =
-        ((value & 0x000000FF) << 24) |
-        ((value & 0x0000FF00) << 8)  |
-        ((value & 0x00FF0000) >> 8)  |
-        ((value & 0xFF000000) >> 24);
+    return ((uint32_t)(*(ptr + 0)) << 24) |
+           ((uint32_t)(*(ptr + 1)) << 16) |
+           ((uint32_t)(*(ptr + 2)) << 8)  |
+           ((uint32_t)(*(ptr + 3)) << 0);
 }
 
-static void SMF_ReadHeader(std::ifstream& input, SMF_Header& header)
+struct SMF_Reader
 {
-    SMF_ReadU16BE(input, header.format);
-    SMF_ReadU16BE(input, header.ntrks);
-    SMF_ReadU16BE(input, header.division);
+    SMF_ByteSpan bytes;
+    size_t       offset = 0;
+
+    SMF_Reader(SMF_ByteSpan bytes)
+        : bytes(bytes)
+    {
+    }
+
+    [[nodiscard]]
+    bool AtEnd() const
+    {
+        return offset == bytes.Size();
+    }
+
+    [[nodiscard]]
+    bool PutBack()
+    {
+        if (offset == 0)
+        {
+            return false;
+        }
+        --offset;
+        return true;
+    }
+
+    [[nodiscard]]
+    bool Skip(size_t count)
+    {
+        if (count > RemainingBytes())
+        {
+            return false;
+        }
+        offset += count;
+        return true;
+    }
+
+    [[nodiscard]]
+    size_t RemainingBytes() const
+    {
+        return bytes.Size() - offset;
+    }
+
+    [[nodiscard]]
+    bool ReadU8(uint8_t& value)
+    {
+        if (RemainingBytes() < sizeof(uint8_t))
+        {
+            return false;
+        }
+        value = bytes[offset];
+        ++offset;
+        return true;
+    }
+
+    [[nodiscard]]
+    bool ReadU16BE(uint16_t& value)
+    {
+        if (RemainingBytes() < sizeof(uint16_t))
+        {
+            return false;
+        }
+        value = UncheckedLoadU16BE(&bytes[offset]);
+        offset += sizeof(uint16_t);
+        return true;
+    }
+
+    [[nodiscard]]
+    bool ReadU32BE(uint32_t& value)
+    {
+        if (RemainingBytes() < sizeof(uint32_t))
+        {
+            return false;
+        }
+        value = UncheckedLoadU32BE(&bytes[offset]);
+        offset += sizeof(uint32_t);
+        return true;
+    }
+
+    [[nodiscard]]
+    bool ReadBytes(uint8_t* destination, size_t count)
+    {
+        if (RemainingBytes() < count)
+        {
+            return false;
+        }
+        memcpy(destination, &bytes[offset], count);
+        offset += count;
+        return true;
+    }
+};
+
+inline void Check(bool stat, const char* msg)
+{
+    if (!stat)
+    {
+        fprintf(stderr, "Panic: %s\n", msg);
+        exit(1);
+    }
 }
 
-static void SMF_ReadByte(std::ifstream& input, uint8_t& value)
+#define STR1(x) #x
+#define STR2(x) STR1(x)
+#define CHECK(expr) Check((expr), __FILE__ ":" STR2(__LINE__) ": " #expr)
+
+static void SMF_ReadHeader(SMF_Reader& reader, SMF_Header& header)
 {
-    input.read((char*)&value, 1);
+    CHECK(reader.ReadU16BE(header.format));
+    CHECK(reader.ReadU16BE(header.ntrks));
+    CHECK(reader.ReadU16BE(header.division));
 }
 
-static void SMF_ReadVarint(std::ifstream& input, uint32_t& value)
+[[nodiscard]]
+static bool SMF_ReadVarint(SMF_Reader& reader, uint32_t& value)
 {
     value = 0;
     for (int i = 0; i < 4; ++i)
     {
-        uint8_t byte;
-        input.read((char*)&byte, 1);
+        uint8_t byte = 0;
+        if (!reader.ReadU8(byte))
+        {
+            return false;
+        }
         value = (value << 7) | (uint32_t)(byte & 0x7F);
         if ((byte & 0x80) == 0)
         {
             break;
         }
     }
-}
-
-static void SMF_ReadBytes(std::ifstream& input, std::vector<uint8_t>& value, size_t count)
-{
-    value.resize(count);
-    input.read((char*)value.data(), count);
+    return true;
 }
 
 SMF_Track SMF_MergeTracks(const SMF_Data& data)
@@ -85,7 +180,7 @@ SMF_Track SMF_MergeTracks(const SMF_Data& data)
     return merged_track;
 }
 
-void SMF_LoadTrack(std::ifstream& input, SMF_Data& result, uint32_t expected_end)
+void SMF_LoadTrack(SMF_Reader& reader, SMF_Data& result, uint32_t expected_end)
 {
     uint8_t last_status = 0;
     uint64_t total_time = 0;
@@ -95,22 +190,21 @@ void SMF_LoadTrack(std::ifstream& input, SMF_Data& result, uint32_t expected_end
 
     for (;;)
     {
-        uint64_t offset = input.tellg();
-        if (offset == expected_end)
+        if (reader.offset == expected_end)
         {
             break;
         }
-        else if (offset > expected_end)
+        else if (reader.offset > expected_end)
         {
             printf("Read past expected track end; midi file may be malformed\n");
             exit(1);
         }
 
         uint32_t delta_time;
-        SMF_ReadVarint(input, delta_time);
+        CHECK(SMF_ReadVarint(reader, delta_time));
 
         uint8_t event_type;
-        SMF_ReadByte(input, event_type);
+        CHECK(reader.ReadU8(event_type));
 
         bool is_status = (event_type & 0x80) != 0;
         if (is_status)
@@ -119,8 +213,10 @@ void SMF_LoadTrack(std::ifstream& input, SMF_Data& result, uint32_t expected_end
         }
         else
         {
-            // put back, this is actually a data byte
-            input.seekg(-1, std::ios::cur);
+            // Put back, this is actually a data byte. No need to check if this
+            // op is valid because we only got here if we already read a status
+            // byte.
+            (void)reader.PutBack();
         }
 
         total_time += delta_time;
@@ -130,7 +226,7 @@ void SMF_LoadTrack(std::ifstream& input, SMF_Data& result, uint32_t expected_end
         new_event.seq_id = new_track.events.size();
         new_event.delta_time = delta_time;
         new_event.timestamp = total_time;
-        uint8_t a, b;
+        new_event.status = last_status;
 
         switch (last_status & 0xF0)
         {
@@ -140,47 +236,39 @@ void SMF_LoadTrack(std::ifstream& input, SMF_Data& result, uint32_t expected_end
             case 0xA0:
             case 0xB0:
             case 0xE0:
-                SMF_ReadByte(input, a);
-                SMF_ReadByte(input, b);
-                new_event.payload.push_back(last_status);
-                new_event.payload.push_back(a);
-                new_event.payload.push_back(b);
+                new_event.data_first = reader.offset;
+                CHECK(reader.Skip(2));
+                new_event.data_last = reader.offset;
                 break;
             // 1 param
             case 0xC0:
             case 0xD0:
-                SMF_ReadByte(input, a);
-                new_event.payload.push_back(last_status);
-                new_event.payload.push_back(a);
+                new_event.data_first = reader.offset;
+                CHECK(reader.Skip(1));
+                new_event.data_last = reader.offset;
                 break;
             // variable length
             case 0xF0:
                 {
-                    uint8_t mode = event_type & 0x0F;
-
-                    uint8_t meta_type;
-                    uint32_t meta_len;
-                    std::vector<uint8_t> meta_payload;
-
+                    const uint8_t mode = event_type & 0x0F;
                     switch (mode)
                     {
                         case 0xF:
-                            SMF_ReadByte(input, meta_type);
-                            SMF_ReadVarint(input, meta_len);
-                            SMF_ReadBytes(input, meta_payload, meta_len);
-
-                            new_event.payload.push_back(event_type);
-                            new_event.payload.push_back(meta_type);
-                            // TODO: not correct, need to turn varint back into bytes
-                            // probably should just load the whole file into memory so we can look backwards for free
-                            new_event.payload.push_back(meta_len);
-                            new_event.payload.insert(new_event.payload.end(), meta_payload.begin(), meta_payload.end());
-
-                            printf("read but unhandled FF mode %d size %d at %d\n", mode, meta_len, (int)input.tellg());
-                            break;
+                            {
+                                uint32_t meta_len;
+                                // meta event type
+                                new_event.data_first = reader.offset;
+                                CHECK(reader.Skip(1));
+                                // meta event len
+                                CHECK(SMF_ReadVarint(reader, meta_len));
+                                // meta event data
+                                CHECK(reader.Skip(meta_len));
+                                new_event.data_last = reader.offset;
+                                break;
+                            }
 
                         default:
-                            printf("unhandled Fx message: %x\n", event_type);
+                            printf("unhandled Fx message: %x\n", last_status);
                             break;
                     }
                 }
@@ -207,38 +295,43 @@ SMF_Data SMF_LoadEvents(const char* filename)
         exit(1);
     }
 
-    SMF_Data data;
+    input.seekg(0, std::ios::end);
+    size_t midi_size_bytes = input.tellg();
+    input.seekg(0, std::ios::beg);
 
-    for (;;)
+    SMF_Data data;
+    data.bytes.resize(midi_size_bytes);
+    input.read((char*)data.bytes.data(), midi_size_bytes);
+
+    SMF_ByteSpan bytes(data.bytes);
+    SMF_Reader reader(bytes);
+
+    while (!reader.AtEnd())
     {
+        size_t chunk_start = reader.offset;
+
         std::string chunk_type;
         chunk_type.resize(4);
-        input.read((char*)chunk_type.data(), 4);
-
-        if (input.eof())
-        {
-            break;
-        }
+        CHECK(reader.ReadBytes((uint8_t*)chunk_type.data(), 4));
 
         uint32_t chunk_size = 0;
-        SMF_ReadU32BE(input, chunk_size);
+        CHECK(reader.ReadU32BE(chunk_size));
 
-        uint64_t chunk_data_offset = input.tellg();
+        uint64_t chunk_data_offset = reader.offset;
 
         uint64_t expected_end = chunk_data_offset + chunk_size;
 
         if (chunk_type == "MThd")
         {
-            SMF_ReadHeader(input, data.header);
-            input.seekg(expected_end, std::ios::beg);
+            SMF_ReadHeader(reader, data.header);
         }
         else if (chunk_type == "MTrk")
         {
-            SMF_LoadTrack(input, data, expected_end);
+            SMF_LoadTrack(reader, data, expected_end);
         }
         else
         {
-            printf("Unexpected chunk type '%s' at %d \n", chunk_type.c_str(), (int) input.tellg());
+            printf("Unexpected chunk type '%s' at %lld\n", chunk_type.c_str(), chunk_start);
             exit(1);
         }
     }

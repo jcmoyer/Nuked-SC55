@@ -1404,12 +1404,12 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
     for (size_t i = 0; i < track.events.size(); ++i) {
         uint64_t this_event_time_us = us_simulated + SMF_TicksToUS(track.events[i].delta_time, us_per_qn, division);
 
-        if (track.events[i].is_tempo())
+        if (track.events[i].IsTempo(data.bytes))
         {
-            us_per_qn = track.events[i].get_tempo_us();
+            us_per_qn = track.events[i].GetTempoUS(data.bytes);
         }
 
-        printf("[%lld/%lld] Event (%02x) at %lldus\r", i + 1, track.events.size(), track.events[i].payload[0], this_event_time_us);
+        printf("[%lld/%lld] Event (%02x) at %lldus\r", i + 1, track.events.size(), track.events[i].status, this_event_time_us);
 
         // Simulate until this event fires. We step twice because the emulator
         // currently assumes that instructions take 12 cycles, and that there
@@ -1422,14 +1422,11 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
             ++us_simulated;
         }
 
-        // Fire the event. TODO: Metaevents cause strange output so we filter
-        // them out. Needs investigation.
-        if (!track.events[i].is_metaevent())
+        // Fire the event.
+        MCU_PostUART(track.events[i].status);
+        for (uint32_t data_offset = track.events[i].data_first; data_offset != track.events[i].data_last; ++data_offset)
         {
-            for (uint8_t byte : track.events[i].payload)
-            {
-                MCU_PostUART(byte);
-            }
+            MCU_PostUART(data.bytes[data_offset]);
         }
     }
 
