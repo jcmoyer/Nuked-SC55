@@ -1423,10 +1423,13 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
         }
 
         // Fire the event.
-        MCU_PostUART(track.events[i].status);
-        for (uint32_t data_offset = track.events[i].data_first; data_offset != track.events[i].data_last; ++data_offset)
+        if (!track.events[i].IsMetaEvent())
         {
-            MCU_PostUART(data.bytes[data_offset]);
+            MCU_PostUART(track.events[i].status);
+            for (uint32_t data_offset = track.events[i].data_first; data_offset != track.events[i].data_last; ++data_offset)
+            {
+                MCU_PostUART(data.bytes[data_offset]);
+            }
         }
     }
 
