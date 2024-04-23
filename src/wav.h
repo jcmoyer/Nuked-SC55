@@ -20,7 +20,7 @@ public:
 
     void Open(const char* filename);
     void Close();
-    void WriteSample(short left, short right);
+    void WriteSample(int16_t left, int16_t right);
     void Finish(uint32_t sample_rate);
 
 private:

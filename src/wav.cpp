@@ -38,7 +38,7 @@ void WAV_Handle::Close()
     output.close();
 }
 
-void WAV_Handle::WriteSample(short left, short right)
+void WAV_Handle::WriteSample(int16_t left, int16_t right)
 {
     output.write((const char*)&left, sizeof(short));
     output.write((const char*)&right, sizeof(short));
