@@ -4,17 +4,20 @@
 #include <cstdio>
 #include <string>
 #include <fstream>
+#include <cstring>
 
 // security: do not call without verifying [ptr,ptr+1] is a readable range
 // performance: 16 bit load + rol in clang and gcc, worse in MSVC
-static uint16_t UncheckedLoadU16BE(const uint8_t* ptr)
+[[nodiscard]]
+inline uint16_t UncheckedLoadU16BE(const uint8_t* ptr)
 {
     return ((uint16_t)(*ptr) << 8) | ((uint16_t)(*(ptr + 1)));
 }
 
 // security: do not call without verifying [ptr,ptr+3] is a readable range
 // performance: 32 bit load + bswap in clang and gcc, worse in MSVC
-static uint32_t UncheckedLoadU32BE(const uint8_t* ptr)
+[[nodiscard]]
+inline uint32_t UncheckedLoadU32BE(const uint8_t* ptr)
 {
     return ((uint32_t)(*(ptr + 0)) << 24) |
            ((uint32_t)(*(ptr + 1)) << 16) |
@@ -180,36 +183,30 @@ SMF_Track SMF_MergeTracks(const SMF_Data& data)
     return merged_track;
 }
 
-void SMF_LoadTrack(SMF_Reader& reader, SMF_Data& result, uint32_t expected_end)
+inline bool SMF_IsStatusByte(uint8_t byte)
 {
-    uint8_t last_status = 0;
+    return (byte & 0x80) != 0;
+}
+
+bool SMF_ReadTrack(SMF_Reader& reader, SMF_Data& result, uint64_t expected_end)
+{
+    uint8_t running_status = 0;
     uint64_t total_time = 0;
 
     result.tracks.emplace_back();
     SMF_Track& new_track = result.tracks.back();
 
-    for (;;)
+    while (reader.offset < expected_end)
     {
-        if (reader.offset == expected_end)
-        {
-            break;
-        }
-        else if (reader.offset > expected_end)
-        {
-            printf("Read past expected track end; midi file may be malformed\n");
-            exit(1);
-        }
-
         uint32_t delta_time;
         CHECK(SMF_ReadVarint(reader, delta_time));
 
-        uint8_t event_type;
-        CHECK(reader.ReadU8(event_type));
+        uint8_t event_head;
+        CHECK(reader.ReadU8(event_head));
 
-        bool is_status = (event_type & 0x80) != 0;
-        if (is_status)
+        if (SMF_IsStatusByte(event_head))
         {
-            last_status = event_type;
+            running_status = event_head;
         }
         else
         {
@@ -226,9 +223,9 @@ void SMF_LoadTrack(SMF_Reader& reader, SMF_Data& result, uint32_t expected_end)
         new_event.seq_id = new_track.events.size();
         new_event.delta_time = delta_time;
         new_event.timestamp = total_time;
-        new_event.status = last_status;
+        new_event.status = running_status;
 
-        switch (last_status & 0xF0)
+        switch (running_status & 0xF0)
         {
             // 2 param
             case 0x80:
@@ -250,7 +247,7 @@ void SMF_LoadTrack(SMF_Reader& reader, SMF_Data& result, uint32_t expected_end)
             // variable length
             case 0xF0:
                 {
-                    const uint8_t mode = event_type & 0x0F;
+                    const uint8_t mode = running_status & 0x0F;
                     switch (mode)
                     {
                         case 0xF:
@@ -268,13 +265,21 @@ void SMF_LoadTrack(SMF_Reader& reader, SMF_Data& result, uint32_t expected_end)
                             }
 
                         default:
-                            printf("unhandled Fx message: %x\n", last_status);
+                            printf("unhandled Fx message: %x\n", running_status);
                             break;
                     }
                 }
                 break;
         }
     }
+
+    if (reader.offset > expected_end)
+    {
+        fprintf(stderr, "Read past expected track end\n");
+        return false;
+    }
+
+    return true;
 }
 
 void SMF_PrintStats(const SMF_Data& data)
@@ -285,55 +290,66 @@ void SMF_PrintStats(const SMF_Data& data)
     }
 }
 
-SMF_Data SMF_LoadEvents(const char* filename)
+bool SMF_ReadAllBytes(const char* filename, std::vector<uint8_t>& buffer)
 {
     std::ifstream input(filename, std::ios::binary);
 
     if (!input)
     {
-        printf("Failed to open input\n");
-        exit(1);
+        return false;
     }
 
     input.seekg(0, std::ios::end);
-    size_t midi_size_bytes = input.tellg();
+    size_t byte_count = input.tellg();
     input.seekg(0, std::ios::beg);
 
-    SMF_Data data;
-    data.bytes.resize(midi_size_bytes);
-    input.read((char*)data.bytes.data(), midi_size_bytes);
+    buffer.resize(byte_count);
 
-    SMF_ByteSpan bytes(data.bytes);
-    SMF_Reader reader(bytes);
+    input.read((char*)buffer.data(), byte_count);
+
+    return input.good();
+}
+
+bool SMF_ReadChunk(SMF_Reader& reader, SMF_Data& data)
+{
+    uint64_t chunk_start = reader.offset;
+
+    uint8_t chunk_type[4];
+    CHECK(reader.ReadBytes(chunk_type, 4));
+
+    uint32_t chunk_size = 0;
+    CHECK(reader.ReadU32BE(chunk_size));
+
+    uint64_t chunk_end = reader.offset + chunk_size;
+
+    if (memcmp(chunk_type, "MThd", 4) == 0)
+    {
+        SMF_ReadHeader(reader, data.header);
+    }
+    else if (memcmp(chunk_type, "MTrk", 4) == 0)
+    {
+        SMF_ReadTrack(reader, data, chunk_end);
+    }
+    else
+    {
+        fprintf(stderr, "Unexpected chunk type at %lld\n", chunk_start);
+        return false;
+    }
+
+    return true;
+}
+
+SMF_Data SMF_LoadEvents(const char* filename)
+{
+    SMF_Data data;
+
+    CHECK(SMF_ReadAllBytes(filename, data.bytes));
+
+    SMF_Reader reader(data.bytes);
 
     while (!reader.AtEnd())
     {
-        size_t chunk_start = reader.offset;
-
-        std::string chunk_type;
-        chunk_type.resize(4);
-        CHECK(reader.ReadBytes((uint8_t*)chunk_type.data(), 4));
-
-        uint32_t chunk_size = 0;
-        CHECK(reader.ReadU32BE(chunk_size));
-
-        uint64_t chunk_data_offset = reader.offset;
-
-        uint64_t expected_end = chunk_data_offset + chunk_size;
-
-        if (chunk_type == "MThd")
-        {
-            SMF_ReadHeader(reader, data.header);
-        }
-        else if (chunk_type == "MTrk")
-        {
-            SMF_LoadTrack(reader, data, expected_end);
-        }
-        else
-        {
-            printf("Unexpected chunk type '%s' at %lld\n", chunk_type.c_str(), chunk_start);
-            exit(1);
-        }
+        CHECK(SMF_ReadChunk(reader, data));
     }
 
     return data;
