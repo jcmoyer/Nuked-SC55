@@ -6,25 +6,37 @@
 #include <vector>
 
 // Should use C++17 span but the project only targets C++11 for now.
-struct SMF_ByteSpan
+class SMF_ByteSpan
 {
-    const uint8_t* first = nullptr;
-    const uint8_t* last = nullptr;
+public:
+    SMF_ByteSpan() = default;
 
     SMF_ByteSpan(const std::vector<uint8_t>& source)
-        : first(&source.front()), last(&source.back())
+        : ptr(source.data()), len(source.size())
     {
     }
 
+    ~SMF_ByteSpan() = default;
+    // copyable
+    SMF_ByteSpan(const SMF_ByteSpan&) = default;
+    SMF_ByteSpan& operator=(const SMF_ByteSpan&) = default;
+    // moveable
+    SMF_ByteSpan(SMF_ByteSpan&&) = default;
+    SMF_ByteSpan& operator=(SMF_ByteSpan&&) = default;
+
     const uint8_t& operator[](size_t offset) const
     {
-        return first[offset];
+        return ptr[offset];
     }
 
     size_t Size() const
     {
-        return last - first + 1;
+        return len;
     }
+
+private:
+    const uint8_t* ptr = nullptr;
+    size_t         len = 0;
 };
 
 struct SMF_Header
