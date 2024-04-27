@@ -1532,13 +1532,16 @@ int main(int argc, char *argv[])
             else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help") || !strcmp(argv[i], "--help"))
             {
                 // TODO: Might want to try to find a way to print out the executable's actual name (without any full paths).
-                printf("Usage: nuked-sc55 [options]\n");
+                printf("Usage: nuked-sc55 [options] <filename>\n");
                 printf("Options:\n");
                 printf("  -h, -help, --help              Display this information.\n");
+                // Not used by renderer.
+#if 0
                 printf("\n");
                 printf("  -p:<port_number>               Set MIDI port.\n");
                 printf("  -a:<device_number>             Set Audio Device index.\n");
                 printf("  -ab:<page_size>:[page_count]   Set Audio Buffer size.\n");
+#endif
                 printf("\n");
                 printf("  -mk2                           Use SC-55mk2 ROM set.\n");
                 printf("  -st                            Use SC-55st ROM set.\n");
@@ -1550,6 +1553,8 @@ int main(int argc, char *argv[])
                 printf("\n");
                 printf("  -gs                            Reset system in GS mode.\n");
                 printf("  -gm                            Reset system in GM mode.\n");
+                printf("\n");
+                printf("  -o <filename>                  Render output to filename.\n");
                 return 0;
             }
             else if (!strcmp(argv[i], "-sc155"))
