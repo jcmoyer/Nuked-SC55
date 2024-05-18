@@ -168,7 +168,7 @@ SMF_Track SMF_MergeTracks(const SMF_Data& data)
             track.events.begin(),
             track.events.end());
     }
-    std::sort(merged_track.events.begin(), merged_track.events.end(), [](const SMF_Event& left, const SMF_Event& right) {
+    std::stable_sort(merged_track.events.begin(), merged_track.events.end(), [](const SMF_Event& left, const SMF_Event& right) {
         if (left.timestamp == right.timestamp)
         {
             return left.seq_id < right.seq_id;
