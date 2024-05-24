@@ -265,7 +265,7 @@ bool SMF_ReadTrack(SMF_Reader& reader, SMF_Data& result, uint64_t expected_end)
                             }
 
                         default:
-                            printf("unhandled Fx message: %x\n", running_status);
+                            fprintf(stderr, "unhandled Fx message: %x\n", running_status);
                             break;
                     }
                 }

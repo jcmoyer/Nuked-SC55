@@ -25,7 +25,7 @@ int MIDI_Init(int port)
 {
     if (s_midi_in)
     {
-        printf("MIDI already running\n");
+        fprintf(stderr, "MIDI already running\n");
         return 0; // Already running
     }
 
@@ -38,7 +38,7 @@ int MIDI_Init(int port)
 
     if (count == 0)
     {
-        printf("No midi input\n");
+        fprintf(stderr, "No midi input\n");
         delete s_midi_in;
         s_midi_in = nullptr;
         return 0;
@@ -46,7 +46,7 @@ int MIDI_Init(int port)
 
     if (port < 0 || port >= count)
     {
-        printf("Out of range midi port is requested. Defaulting to port 0\n");
+        fprintf(stderr, "Out of range midi port is requested. Defaulting to port 0\n");
         port = 0;
     }
 
