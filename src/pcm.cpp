@@ -198,7 +198,7 @@ void PCM_Write(uint32_t address, uint8_t data)
 uint8_t PCM_Read(uint32_t address)
 {
     address &= 0x3f;
-    //printf("PCM Read: %.2x\n", address);
+    //fprintf(stderr, "PCM Read: %.2x\n", address);
 
     if (address < 0x4)
     {
@@ -1431,7 +1431,7 @@ void PCM_Update(uint64_t cycles)
 
             if (active && (ram2[6] & 1) != 0 && (ram2[8] & 0x4000) == 0 && !pcm.irq_assert && irq_flag)
             {
-                //printf("irq voice %i\n", slot);
+                //fprintf(stderr, "irq voice %i\n", slot);
                 if (pcm.nfs)
                     ram2[8] |= 0x4000;
                 pcm.irq_assert = 1;

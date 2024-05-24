@@ -96,7 +96,7 @@ void CALLBACK MIDI_Callback(
             break;
         }
         default:
-            printf("hmm");
+            fprintf(stderr, "hmm");
             break;
     }
 }
@@ -107,13 +107,13 @@ int MIDI_Init(int port)
 
     if (num == 0)
     {
-        printf("No midi input\n");
+        fprintf(stderr, "No midi input\n");
         return 0;
     }
 
     if (port < 0 || port >= num)
     {
-        printf("Out of range midi port is requested. Defaulting to port 0\n");
+        fprintf(stderr, "Out of range midi port is requested. Defaulting to port 0\n");
         port = 0;
     }
 
@@ -125,11 +125,11 @@ int MIDI_Init(int port)
 
     if (res != MMSYSERR_NOERROR)
     {
-        printf("Can't open midi input\n");
+        fprintf(stderr, "Can't open midi input\n");
         return 0;
     }
 
-    printf("Opened midi port: %s\n", caps.szPname);
+    fprintf(stderr, "Opened midi port: %s\n", caps.szPname);
 
     midi_buffer.lpData = midi_in_buffer;
     midi_buffer.dwBufferLength = sizeof(midi_in_buffer);

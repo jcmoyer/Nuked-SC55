@@ -155,7 +155,7 @@ static SDL_AudioDeviceID sdl_audio;
 
 void MCU_ErrorTrap(void)
 {
-    printf("%.2x %.4x\n", mcu.cp, mcu.pc);
+    fprintf(stderr, "%.2x %.4x\n", mcu.cp, mcu.pc);
 }
 
 int mcu_mk1 = 0; // 0 - SC-55mkII, SC-55ST. 1 - SC-55, CM-300/SCC-1
@@ -608,7 +608,7 @@ uint8_t MCU_Read(uint32_t address)
                 }
                 else
                 {
-                    printf("Unknown read %x\n", address);
+                    fprintf(stderr, "Unknown read %x\n", address);
                     ret = 0xff;
                 }
                 //
@@ -664,7 +664,7 @@ uint8_t MCU_Read(uint32_t address)
                 }
                 else
                 {
-                    printf("Unknown read %x\n", address);
+                    fprintf(stderr, "Unknown read %x\n", address);
                     ret = 0xff;
                 }
                 //
@@ -788,7 +788,7 @@ void MCU_Write(uint32_t address, uint8_t value)
                     else if (address == (base | 0x402))
                         ga_int_enable = (value << 1);
                     else
-                        printf("Unknown write %x %x\n", address, value);
+                        fprintf(stderr, "Unknown write %x %x\n", address, value);
                     //
                     // e400: always 4?
                     // e401: SC0-6?
@@ -823,7 +823,7 @@ void MCU_Write(uint32_t address, uint8_t value)
                 }
                 else
                 {
-                    printf("Unknown write %x %x\n", address, value);
+                    fprintf(stderr, "Unknown write %x %x\n", address, value);
                 }
             }
             else
@@ -866,7 +866,7 @@ void MCU_Write(uint32_t address, uint8_t value)
                 }
                 else
                 {
-                    printf("Unknown write %x %x\n", address, value);
+                    fprintf(stderr, "Unknown write %x %x\n", address, value);
                 }
             }
         }
@@ -876,7 +876,7 @@ void MCU_Write(uint32_t address, uint8_t value)
         }
         else
         {
-            printf("Unknown write %x %x\n", address, value);
+            fprintf(stderr, "Unknown write %x %x\n", address, value);
         }
     }
     else if (page == 5 && mcu_mk1)
@@ -897,7 +897,7 @@ void MCU_Write(uint32_t address, uint8_t value)
     }
     else
     {
-        printf("Unknown write %x %x\n", (page << 16) | address, value);
+        fprintf(stderr, "Unknown write %x %x\n", (page << 16) | address, value);
     }
 }
 
@@ -1000,7 +1000,7 @@ void MCU_UpdateUART_TX(void)
     dev_register[DEV_SSR] |= 0x80;
     MCU_Interrupt_SetRequest(INTERRUPT_SOURCE_UART_TX, (dev_register[DEV_SCR] & 0x80) != 0);
 
-    // printf("tx:%x\n", dev_register[DEV_TDR]);
+    // fprintf(stderr, "tx:%x\n", dev_register[DEV_TDR]);
 }
 
 static bool work_thread_run = false;
@@ -1048,7 +1048,7 @@ static void MCU_Step()
     mcu.cycles += 12; // FIXME: assume 12 cycles per instruction
 
     // if (mcu.cycles % 24000000 == 0)
-    //     printf("seconds: %i\n", (int)(mcu.cycles / 24000000));
+    //     fprintf(stderr, "seconds: %i\n", (int)(mcu.cycles / 24000000));
 
     PCM_Update(mcu.cycles);
 
@@ -1251,7 +1251,7 @@ int MCU_OpenAudio(int deviceIndex, int pageSize, int pageNum)
     sample_buffer = (short*)calloc(audio_buffer_size, sizeof(short));
     if (!sample_buffer)
     {
-        printf("Cannot allocate audio buffer.\n");
+        fprintf(stderr, "Cannot allocate audio buffer.\n");
         return 0;
     }
     sample_read_ptr = 0;
@@ -1260,13 +1260,13 @@ int MCU_OpenAudio(int deviceIndex, int pageSize, int pageNum)
     int num = SDL_GetNumAudioDevices(0);
     if (num == 0)
     {
-        printf("No audio output device found.\n");
+        fprintf(stderr, "No audio output device found.\n");
         return 0;
     }
     
     if (deviceIndex < -1 || deviceIndex >= num)
     {
-        printf("Out of range audio device index is requested. Default audio output device is selected.\n");
+        fprintf(stderr, "Out of range audio device index is requested. Default audio output device is selected.\n");
         deviceIndex = -1;
     }
     
@@ -1278,15 +1278,15 @@ int MCU_OpenAudio(int deviceIndex, int pageSize, int pageNum)
         return 0;
     }
 
-    printf("Audio device: %s\n", audioDevicename);
+    fprintf(stderr, "Audio device: %s\n", audioDevicename);
 
-    printf("Audio Requested: F=%s, C=%d, R=%d, B=%d\n",
+    fprintf(stderr, "Audio Requested: F=%s, C=%d, R=%d, B=%d\n",
            audio_format_to_str(spec.format),
            spec.channels,
            spec.freq,
            spec.samples);
 
-    printf("Audio Actual: F=%s, C=%d, R=%d, B=%d\n",
+    fprintf(stderr, "Audio Actual: F=%s, C=%d, R=%d, B=%d\n",
            audio_format_to_str(spec_actual.format),
            spec_actual.channels,
            spec_actual.freq,
@@ -1409,7 +1409,7 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
             us_per_qn = track.events[i].GetTempoUS(data.bytes);
         }
 
-        printf("[%lld/%lld] Event (%02x) at %lldus\r", i + 1, track.events.size(), track.events[i].status, this_event_time_us);
+        fprintf(stderr, "[%lld/%lld] Event (%02x) at %lldus\r", i + 1, track.events.size(), track.events[i].status, this_event_time_us);
 
         // Simulate until this event fires. We step twice because the emulator
         // currently assumes that instructions take 12 cycles, and that there
@@ -1433,7 +1433,7 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
         }
     }
 
-    printf("\n");
+    fprintf(stderr, "\n");
 
     render_output.Finish(MCU_OutputFrequency());
 }
@@ -1532,29 +1532,29 @@ int main(int argc, char *argv[])
             else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "-help") || !strcmp(argv[i], "--help"))
             {
                 // TODO: Might want to try to find a way to print out the executable's actual name (without any full paths).
-                printf("Usage: nuked-sc55 [options] <filename>\n");
-                printf("Options:\n");
-                printf("  -h, -help, --help              Display this information.\n");
+                fprintf(stderr, "Usage: nuked-sc55 [options] <filename>\n");
+                fprintf(stderr, "Options:\n");
+                fprintf(stderr, "  -h, -help, --help              Display this information.\n");
                 // Not used by renderer.
 #if 0
-                printf("\n");
-                printf("  -p:<port_number>               Set MIDI port.\n");
-                printf("  -a:<device_number>             Set Audio Device index.\n");
-                printf("  -ab:<page_size>:[page_count]   Set Audio Buffer size.\n");
+                fprintf(stderr, "\n");
+                fprintf(stderr, "  -p:<port_number>               Set MIDI port.\n");
+                fprintf(stderr, "  -a:<device_number>             Set Audio Device index.\n");
+                fprintf(stderr, "  -ab:<page_size>:[page_count]   Set Audio Buffer size.\n");
 #endif
-                printf("\n");
-                printf("  -mk2                           Use SC-55mk2 ROM set.\n");
-                printf("  -st                            Use SC-55st ROM set.\n");
-                printf("  -mk1                           Use SC-55mk1 ROM set.\n");
-                printf("  -cm300                         Use CM-300/SCC-1 ROM set.\n");
-                printf("  -jv880                         Use JV-880 ROM set.\n");
-                printf("  -scb55                         Use SCB-55 ROM set.\n");
-                printf("  -rlp3237                       Use RLP-3237 ROM set.\n");
-                printf("\n");
-                printf("  -gs                            Reset system in GS mode.\n");
-                printf("  -gm                            Reset system in GM mode.\n");
-                printf("\n");
-                printf("  -o <filename>                  Render output to filename.\n");
+                fprintf(stderr, "\n");
+                fprintf(stderr, "  -mk2                           Use SC-55mk2 ROM set.\n");
+                fprintf(stderr, "  -st                            Use SC-55st ROM set.\n");
+                fprintf(stderr, "  -mk1                           Use SC-55mk1 ROM set.\n");
+                fprintf(stderr, "  -cm300                         Use CM-300/SCC-1 ROM set.\n");
+                fprintf(stderr, "  -jv880                         Use JV-880 ROM set.\n");
+                fprintf(stderr, "  -scb55                         Use SCB-55 ROM set.\n");
+                fprintf(stderr, "  -rlp3237                       Use RLP-3237 ROM set.\n");
+                fprintf(stderr, "\n");
+                fprintf(stderr, "  -gs                            Reset system in GS mode.\n");
+                fprintf(stderr, "  -gm                            Reset system in GM mode.\n");
+                fprintf(stderr, "\n");
+                fprintf(stderr, "  -o <filename>                  Render output to filename.\n");
                 return 0;
             }
             else if (!strcmp(argv[i], "-sc155"))
@@ -1576,7 +1576,7 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    printf("Expected output filename\n");
+                    fprintf(stderr, "Expected output filename\n");
                     return 1;
                 }
             }
@@ -1599,7 +1599,7 @@ int main(int argc, char *argv[])
     basePath = Files::real_dirname(argv[0]);
 #endif
 
-    printf("Base path is: %s\n", argv[0]);
+    fprintf(stderr, "Base path is: %s\n", argv[0]);
 
     if(Files::dirExists(basePath + "/../share/nuked-sc55"))
         basePath += "/../share/nuked-sc55";
@@ -1628,7 +1628,7 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-        printf("ROM set autodetect: %s\n", rs_name[romset]);
+        fprintf(stderr, "ROM set autodetect: %s\n", rs_name[romset]);
     }
 
     mcu_mk1 = false;
@@ -1789,12 +1789,12 @@ int main(int argc, char *argv[])
         if (s_rf[4] && fread(tempbuf, 1, 0x800000, s_rf[4]))
             unscramble(tempbuf, waverom_exp, 0x800000);
         else
-            printf("WaveRom EXP not found, skipping it.\n");
+            fprintf(stderr, "WaveRom EXP not found, skipping it.\n");
         
         if (s_rf[5] && fread(tempbuf, 1, 0x200000, s_rf[5]))
             unscramble(tempbuf, waverom_card, 0x200000);
         else
-            printf("WaveRom PCM not found, skipping it.\n");
+            fprintf(stderr, "WaveRom PCM not found, skipping it.\n");
     }
     else
     {
@@ -1865,13 +1865,13 @@ int main(int argc, char *argv[])
 
     if (!inputFilename.size())
     {
-        printf("Expected input filename\n");
+        fprintf(stderr, "Expected input filename\n");
         return 1;
     }
 
     if (!outputFilename.size())
     {
-        printf("Expected output filename\n");
+        fprintf(stderr, "Expected output filename\n");
         return 1;
     }
 
@@ -1893,7 +1893,7 @@ int main(int argc, char *argv[])
         // TODO: HACK: The reset causes program changes at T=0 to not occur, so
         // run the emulator for a bit to let it complete the reset before we
         // start rendering.
-        printf("Running reset, this might take a couple seconds...\n");
+        fprintf(stderr, "Running reset, this might take a couple seconds...\n");
         for (int i = 0; i < 24000000; ++i)
         {
             MCU_Step();
