@@ -48,6 +48,11 @@
 #include "wav.h"
 #include "smf.h"
 
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 #if __linux__
 #include <unistd.h>
 #include <limits.h>
@@ -1393,7 +1398,18 @@ void MIDI_Reset(ResetType resetType)
 
 static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
 {
-    render_output.Open(output_filename);
+    if (strcmp(output_filename, "stdout") == 0)
+    {
+#ifdef _WIN32
+        // On Windows, stdout is opened in text mode, which causes newline translation to occur.
+        _setmode(_fileno(stdout), O_BINARY);
+#endif
+        render_output.OpenStdout();
+    }
+    else
+    {
+        render_output.Open(output_filename);
+    }
 
     SMF_Track track = SMF_MergeTracks(data);
 
@@ -1435,7 +1451,8 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
 
     fprintf(stderr, "\n");
 
-    render_output.Finish(MCU_OutputFrequency());
+    render_output.SetSampleRate(MCU_OutputFrequency());
+    render_output.Finish();
 }
 
 int main(int argc, char *argv[])
