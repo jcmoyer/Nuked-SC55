@@ -33,6 +33,8 @@
  */
 #include <stdint.h>
 #include <string.h>
+#include <xmmintrin.h>
+#include <smmintrin.h>
 #include "mcu.h"
 #include "mcu_timer.h"
 
@@ -60,31 +62,30 @@ void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
     if (t > 2)
         return;
     address &= 0x0f;
-    frt_t *ftimer = &timer.frt[t];
     switch (address)
     {
     case REG_TCR:
-        ftimer->tcr = data;
+        timer.frt.tcr[t] = data;
         break;
     case REG_TCSR:
-        ftimer->tcsr &= ~0xf;
-        ftimer->tcsr |= data & 0xf;
-        if ((data & 0x10) == 0 && (ftimer->status_rd & 0x10) != 0)
+        timer.frt.tcsr[t] &= ~0xf;
+        timer.frt.tcsr[t] |= data & 0xf;
+        if ((data & 0x10) == 0 && (timer.frt.status_rd[t] & 0x10) != 0)
         {
-            ftimer->tcsr &= ~0x10;
-            ftimer->status_rd &= ~0x10;
+            timer.frt.tcsr[t] &= ~0x10;
+            timer.frt.status_rd[t] &= ~0x10;
             MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + t * 4, 0);
         }
-        if ((data & 0x20) == 0 && (ftimer->status_rd & 0x20) != 0)
+        if ((data & 0x20) == 0 && (timer.frt.status_rd[t] & 0x20) != 0)
         {
-            ftimer->tcsr &= ~0x20;
-            ftimer->status_rd &= ~0x20;
+            timer.frt.tcsr[t] &= ~0x20;
+            timer.frt.status_rd[t] &= ~0x20;
             MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + t * 4, 0);
         }
-        if ((data & 0x40) == 0 && (ftimer->status_rd & 0x40) != 0)
+        if ((data & 0x40) == 0 && (timer.frt.status_rd[t] & 0x40) != 0)
         {
-            ftimer->tcsr &= ~0x40;
-            ftimer->status_rd &= ~0x40;
+            timer.frt.tcsr[t] &= ~0x40;
+            timer.frt.status_rd[t] &= ~0x40;
             MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + t * 4, 0);
         }
         break;
@@ -95,16 +96,16 @@ void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
         timer.timer_tempreg = data;
         break;
     case REG_FRCL:
-        ftimer->frc = (timer.timer_tempreg << 8) | data;
+        timer.frt.frc[t] = (timer.timer_tempreg << 8) | data;
         break;
     case REG_OCRAL:
-        ftimer->ocra = (timer.timer_tempreg << 8) | data;
+        timer.frt.ocra[t] = (timer.timer_tempreg << 8) | data;
         break;
     case REG_OCRBL:
-        ftimer->ocrb = (timer.timer_tempreg << 8) | data;
+        timer.frt.ocrb[t] = (timer.timer_tempreg << 8) | data;
         break;
     case REG_ICRL:
-        ftimer->icr = (timer.timer_tempreg << 8) | data;
+        timer.frt.icr[t] = (timer.timer_tempreg << 8) | data;
         break;
     }
 }
@@ -115,30 +116,29 @@ uint8_t TIMER_Read(mcu_timer_t& timer, uint32_t address)
     if (t > 2)
         return 0xff;
     address &= 0x0f;
-    frt_t *ftimer = &timer.frt[t];
     switch (address)
     {
     case REG_TCR:
-        return ftimer->tcr;
+        return timer.frt.tcr[t];
     case REG_TCSR:
     {
-        uint8_t ret = ftimer->tcsr;
-        ftimer->status_rd |= ftimer->tcsr & 0xf0;
-        //ftimer->status_rd |= 0xf0;
+        uint8_t ret = timer.frt.tcsr[t];
+        timer.frt.status_rd[t] |= timer.frt.tcsr[t] & 0xf0;
+        //timer.frt.status_rd |= 0xf0;
         return ret;
     }
     case REG_FRCH:
-        timer.timer_tempreg = ftimer->frc & 0xff;
-        return ftimer->frc >> 8;
+        timer.timer_tempreg = timer.frt.frc[t] & 0xff;
+        return timer.frt.frc [t]>> 8;
     case REG_OCRAH:
-        timer.timer_tempreg = ftimer->ocra & 0xff;
-        return ftimer->ocra >> 8;
+        timer.timer_tempreg = timer.frt.ocra[t] & 0xff;
+        return timer.frt.ocra [t]>> 8;
     case REG_OCRBH:
-        timer.timer_tempreg = ftimer->ocrb & 0xff;
-        return ftimer->ocrb >> 8;
+        timer.timer_tempreg = timer.frt.ocrb[t] & 0xff;
+        return timer.frt.ocrb[t] >> 8;
     case REG_ICRH:
-        timer.timer_tempreg = ftimer->icr & 0xff;
-        return ftimer->icr >> 8;
+        timer.timer_tempreg = timer.frt.icr[t] & 0xff;
+        return timer.frt.icr [t]>> 8;
     case REG_FRCL:
     case REG_OCRAL:
     case REG_OCRBL:
@@ -210,12 +210,40 @@ uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address)
     return 0xff;
 }
 
-constexpr uint64_t FRT_STEP_TABLE_GENERIC[4] = {
-    3, 7, 31, 1
+alignas(16) constexpr uint8_t FRT_STEP_TABLE_GENERIC[16] = {
+    3, 7, 31, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-constexpr uint64_t FRT_STEP_TABLE_MK1[4] = {
-    3, 7, 31, 3
+alignas(16) constexpr uint8_t SSE_ONES[16] = {
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+};
+
+alignas(16) constexpr uint16_t SSE_LOW_1_16[8] = {
+    1, 1, 1, 1, 1, 1, 1, 1,
+};
+
+alignas(16) constexpr uint8_t SHUFFLE_16_TO_8[16] = {
+    0, 2, 4, 6, 8, 10, 12, 14, 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+alignas(16) constexpr uint8_t SSE_LOW_3[16] = {
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+};
+
+alignas(16) constexpr uint16_t OVERFLOW_TCSR_BITS[8] = {
+    0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10,
+};
+
+alignas(16) constexpr uint16_t MATCHA_TCSR_BITS[8] = {
+    0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+};
+
+alignas(16) constexpr uint16_t MATCHB_TCSR_BITS[8] = {
+    0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40,
+};
+
+alignas(16) constexpr uint8_t FRT_STEP_TABLE_MK1[16] = {
+    3, 7, 31, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 constexpr uint64_t TIMER_STEP_TABLE_GENERIC[8] = {
@@ -226,48 +254,148 @@ constexpr uint64_t TIMER_STEP_TABLE_MK1[8] = {
     0, 7, 63, 1023, 0, 3, 3, 3
 };
 
+static void TIMER_FRT_Reference(mcu_timer_t& timer, bool mk1)
+{
+    const auto& FRT_STEP_TABLE = mk1 ? FRT_STEP_TABLE_MK1 : FRT_STEP_TABLE_GENERIC;
+
+    bool frt_step[3];
+    uint32_t value[3];
+    bool matcha[3];
+    bool matchb[3];
+    bool of[3];
+    for (int i = 0; i < 3; i++)
+    {
+        frt_step[i] = !(timer.timer_cycles & FRT_STEP_TABLE[timer.frt.tcr[i] & 3]);
+        value[i] = timer.frt.frc[i];
+        matcha[i] = value[i] == timer.frt.ocra[i];
+        matchb[i] = value[i] == timer.frt.ocrb[i];
+        if (timer.frt.tcsr[i] & 1 && matcha[i])
+            value[i] = 0;
+        else
+            ++value[i];
+        of[i] = (value[i] >> 16) & 1;
+
+        if (frt_step[i])
+        {
+            timer.frt.frc[i] = value[i];
+            // flags
+            if (of[i])
+                timer.frt.tcsr[i] |= 0x10;
+            if (matcha[i])
+                timer.frt.tcsr[i] |= 0x20;
+            if (matchb[i])
+                timer.frt.tcsr[i] |= 0x40;
+            if ((timer.frt.tcr[i] & 0x10) != 0 && (timer.frt.tcsr[i] & 0x10) != 0)
+                MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + i * 4, 1);
+            if ((timer.frt.tcr[i] & 0x20) != 0 && (timer.frt.tcsr[i] & 0x20) != 0)
+                MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + i * 4, 1);
+            if ((timer.frt.tcr[i] & 0x40) != 0 && (timer.frt.tcsr[i] & 0x40) != 0)
+                MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + i * 4, 1);
+        }
+    }
+}
+
+template <size_t I>
+void TIMER_FRT_SSE_Dispatch(const mcu_timer_t& timer, uint64_t word)
+{
+    if (word & (0x10ull << (I * 16))) {
+        MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + I * 4, 1);
+    }
+    if (word & (0x20ull << (I * 16))) {
+        MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + I * 4, 1);
+    }
+    if (word & (0x40ull << (I * 16))) {
+        MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + I * 4, 1);
+    }
+}
+
+static void TIMER_FRT_SSE(mcu_timer_t& timer, bool mk1)
+{
+    const auto& FRT_STEP_TABLE = mk1 ? FRT_STEP_TABLE_MK1 : FRT_STEP_TABLE_GENERIC;
+
+    const __m128i step_table = _mm_load_si128((const __m128i*)FRT_STEP_TABLE);
+    const __m128i lo3        = _mm_load_si128((const __m128i*)SSE_LOW_3);
+    const __m128i shuf_16_8  = _mm_load_si128((const __m128i*)SHUFFLE_16_TO_8);
+    const __m128i lo1_16     = _mm_load_si128((const __m128i*)SSE_LOW_1_16);
+    const __m128i all_one    = _mm_load_si128((const __m128i*)SSE_ONES);
+    const __m128i all_zero   = _mm_setzero_si128();
+
+    __m128i v_cycles = _mm_set1_epi16(timer.timer_cycles);
+
+    __m128i v_table = _mm_load_si128((const __m128i*)timer.frt.tcr);
+    const __m128i tcr_wide = _mm_cvtepu8_epi16(v_table);
+
+    // compute indices for LUT
+    v_table = _mm_and_si128(v_table, lo3);
+    // select from LUT and convert to u16 for the rest of the algo
+    v_table = _mm_shuffle_epi8(step_table, v_table);
+    v_table = _mm_cvtepu8_epi16(v_table);
+
+    v_cycles = _mm_and_si128(v_table, v_cycles);
+
+    // construct mask for timers that will be stepped (ffff = step, 0000 = no step)
+    const __m128i step_mask = _mm_cmpeq_epi16(v_cycles, all_zero);
+
+    const __m128i value = _mm_load_si128((const __m128i*)timer.frt.frc);
+    // note tcsr is stored as packed u8, we need packed u16
+    const __m128i tcsr  = _mm_cvtepu8_epi16(_mm_load_si128((const __m128i*)timer.frt.tcsr));
+    const __m128i ocra  = _mm_load_si128((const __m128i*)timer.frt.ocra);
+    const __m128i ocrb  = _mm_load_si128((const __m128i*)timer.frt.ocrb);
+
+    __m128i matcha = _mm_cmpeq_epi16(value, ocra);
+    __m128i matchb = _mm_cmpeq_epi16(value, ocrb);
+
+    __m128i tcsr_cond = _mm_cmpeq_epi16(_mm_and_si128(tcsr, lo1_16), lo1_16);
+    tcsr_cond = _mm_and_si128(tcsr_cond, matcha);
+
+    // incremented form of frc will only be applied if step_mask is set
+    __m128i new_frc = _mm_add_epi16(value, lo1_16);
+    // select zero or +1 based on result of cond
+    new_frc = _mm_blendv_epi8(new_frc, all_zero, tcsr_cond);
+    // however we only take the new value if we step
+    new_frc = _mm_blendv_epi8(value, new_frc, step_mask);
+
+    _mm_store_si128((__m128i*)timer.frt.frc, new_frc);
+
+    // check if any adds overflowed
+    const __m128i old_is_max16 = _mm_cmpeq_epi16(value, all_one);
+    const __m128i new_is_min16 = _mm_cmpeq_epi16(new_frc, all_zero);
+    const __m128i overflow     = _mm_and_si128(old_is_max16, new_is_min16);
+
+    __m128i new_tcsr;
+    // first we accumulate the new bits
+    new_tcsr = _mm_and_si128(overflow, _mm_load_si128((const __m128i*)OVERFLOW_TCSR_BITS));
+    new_tcsr = _mm_or_si128(new_tcsr, _mm_and_si128(matcha, _mm_load_si128((const __m128i*)MATCHA_TCSR_BITS)));
+    new_tcsr = _mm_or_si128(new_tcsr, _mm_and_si128(matchb, _mm_load_si128((const __m128i*)MATCHB_TCSR_BITS)));
+    // mask out the ones we don't step
+    new_tcsr = _mm_and_si128(new_tcsr, step_mask);
+    // and combine with the original
+    new_tcsr = _mm_or_si128(tcsr, new_tcsr);
+    // remember to shuffle down to convert from 16 to 8 bit
+    _mm_store_si128((__m128i*)timer.frt.tcsr, _mm_shuffle_epi8(new_tcsr, shuf_16_8));
+
+    // we can compute all 9 interrupt conditions at once but we do still need
+    // to extract the bits and branch on them individually to make calls :(
+    const __m128i interrupt_mask = _mm_and_si128(new_tcsr, tcr_wide);
+
+    // the interrupt info is in the bottom 64-bit word
+    const uint64_t word = _mm_extract_epi64(_mm_and_si128(interrupt_mask, step_mask), 0);
+
+    // Dispatch interrupts for all timers
+    TIMER_FRT_SSE_Dispatch<0>(timer, word);
+    TIMER_FRT_SSE_Dispatch<1>(timer, word);
+    TIMER_FRT_SSE_Dispatch<2>(timer, word);
+}
+
 void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
 {
     const bool mk1 = timer.mcu->mcu_mk1;
-    const auto& FRT_STEP_TABLE = mk1 ? FRT_STEP_TABLE_MK1 : FRT_STEP_TABLE_GENERIC;
     const auto& TIMER_STEP_TABLE = mk1 ? TIMER_STEP_TABLE_MK1 : TIMER_STEP_TABLE_GENERIC;
 
     while (timer.timer_cycles*2 < cycles) // FIXME
     {
-        for (int i = 0; i < 3; i++)
-        {
-            frt_t *ftimer = &timer.frt[i];
-
-            const bool frt_step = !(timer.timer_cycles & FRT_STEP_TABLE[ftimer->tcr & 3]);
-
-            if (frt_step)
-            {
-                uint32_t value = ftimer->frc;
-                uint32_t matcha = value == ftimer->ocra;
-                uint32_t matchb = value == ftimer->ocrb;
-                if ((ftimer->tcsr & 1) != 0 && matcha) // CCLRA
-                    value = 0;
-                else
-                    value++;
-                uint32_t of = (value >> 16) & 1;
-                value &= 0xffff;
-                ftimer->frc = value;
-
-                // flags
-                if (of)
-                    ftimer->tcsr |= 0x10;
-                if (matcha)
-                    ftimer->tcsr |= 0x20;
-                if (matchb)
-                    ftimer->tcsr |= 0x40;
-                if ((ftimer->tcr & 0x10) != 0 && (ftimer->tcsr & 0x10) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + i * 4, 1);
-                if ((ftimer->tcr & 0x20) != 0 && (ftimer->tcsr & 0x20) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + i * 4, 1);
-                if ((ftimer->tcr & 0x40) != 0 && (ftimer->tcsr & 0x40) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + i * 4, 1);
-            }
-        }
+        //TIMER_FRT_Reference(timer, mk1);
+        TIMER_FRT_SSE(timer, mk1);
 
         const bool timer_step = !(timer.timer_cycles & TIMER_STEP_TABLE[timer.tcr & 7]);
 
