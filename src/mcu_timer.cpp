@@ -260,11 +260,12 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
                     ftimer->tcsr |= 0x20;
                 if (matchb)
                     ftimer->tcsr |= 0x40;
-                if ((ftimer->tcr & 0x10) != 0 && (ftimer->tcsr & 0x10) != 0)
+
+                if (ftimer->tcr & ftimer->tcsr & 0x10)
                     MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + i * 4, 1);
-                if ((ftimer->tcr & 0x20) != 0 && (ftimer->tcsr & 0x20) != 0)
+                if (ftimer->tcr & ftimer->tcsr & 0x20)
                     MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + i * 4, 1);
-                if ((ftimer->tcr & 0x40) != 0 && (ftimer->tcsr & 0x40) != 0)
+                if (ftimer->tcr & ftimer->tcsr & 0x40)
                     MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + i * 4, 1);
             }
         }
@@ -293,11 +294,11 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
                 timer.tcsr |= 0x40;
             if (matchb)
                 timer.tcsr |= 0x80;
-            if ((timer.tcr & 0x20) != 0 && (timer.tcsr & 0x20) != 0)
+            if (timer.tcr & timer.tcsr & 0x20)
                 MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_OVI, 1);
-            if ((timer.tcr & 0x40) != 0 && (timer.tcsr & 0x40) != 0)
+            if (timer.tcr & timer.tcsr & 0x40)
                 MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIA, 1);
-            if ((timer.tcr & 0x80) != 0 && (timer.tcsr & 0x80) != 0)
+            if (timer.tcr & timer.tcsr & 0x80)
                 MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIB, 1);
         }
 
