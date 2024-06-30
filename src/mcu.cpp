@@ -1396,6 +1396,19 @@ void MIDI_Reset(ResetType resetType)
     }
 }
 
+uint64_t R_NSPerStep()
+{
+    // These are best guesses.
+    if (mcu_mk1)
+    {
+        return 600;
+    }
+    else
+    {
+        return 500;
+    }
+}
+
 static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
 {
     if (strcmp(output_filename, "stdout") == 0)
@@ -1413,29 +1426,30 @@ static void MCU_RenderTrack(const SMF_Data& data, const char* output_filename)
 
     SMF_Track track = SMF_MergeTracks(data);
 
+    const uint64_t ns_per_step = R_NSPerStep();
+
     uint64_t division = data.header.division;
     uint64_t us_per_qn = 500000;
-    uint64_t us_simulated = 0;
+    uint64_t ns_simulated = 0;
 
     for (size_t i = 0; i < track.events.size(); ++i) {
-        uint64_t this_event_time_us = us_simulated + SMF_TicksToUS(track.events[i].delta_time, us_per_qn, division);
+        uint64_t this_event_time_ns = ns_simulated + 1000 * SMF_TicksToUS(track.events[i].delta_time, us_per_qn, division);
 
         if (track.events[i].IsTempo(data.bytes))
         {
             us_per_qn = track.events[i].GetTempoUS(data.bytes);
         }
 
-        fprintf(stderr, "[%lld/%lld] Event (%02x) at %lldus\r", i + 1, track.events.size(), track.events[i].status, this_event_time_us);
+        fprintf(stderr, "[%lld/%lld] Event (%02x) at %lldns\r", i + 1, track.events.size(), track.events[i].status, this_event_time_ns);
 
         // Simulate until this event fires. We step twice because the emulator
         // currently assumes that instructions take 12 cycles, and that there
         // are 24_000_000 cycles in a second. 24_000_000/1_000_000 = 24 cycles
         // per microsecond. Each MCU_Step takes 12 cycles.
-        while (us_simulated < this_event_time_us)
+        while (ns_simulated < this_event_time_ns)
         {
             MCU_Step();
-            MCU_Step();
-            ++us_simulated;
+            ns_simulated += ns_per_step;
         }
 
         // Fire the event.
