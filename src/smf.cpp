@@ -247,26 +247,30 @@ bool SMF_ReadTrack(SMF_Reader& reader, SMF_Data& result, uint64_t expected_end)
             // variable length
             case 0xF0:
                 {
-                    const uint8_t mode = running_status & 0x0F;
-                    switch (mode)
+                    if (new_event.status == 0xF0 || new_event.status == 0xF7)
                     {
-                        case 0xF:
-                            {
-                                uint32_t meta_len;
-                                // meta event type
-                                new_event.data_first = reader.offset;
-                                CHECK(reader.Skip(1));
-                                // meta event len
-                                CHECK(SMF_ReadVarint(reader, meta_len));
-                                // meta event data
-                                CHECK(reader.Skip(meta_len));
-                                new_event.data_last = reader.offset;
-                                break;
-                            }
-
-                        default:
-                            fprintf(stderr, "unhandled Fx message: %x\n", running_status);
-                            break;
+                        // Sysex events
+                        uint32_t sysex_len;
+                        CHECK(SMF_ReadVarint(reader, sysex_len));
+                        new_event.data_first = reader.offset;
+                        CHECK(reader.Skip(sysex_len));
+                        new_event.data_last = reader.offset;
+                    }
+                    else if (new_event.status == 0xFF)
+                    {
+                        // Meta events
+                        uint32_t meta_len;
+                        new_event.data_first = reader.offset;
+                        // Skip type byte
+                        CHECK(reader.Skip(1));
+                        CHECK(SMF_ReadVarint(reader, meta_len));
+                        CHECK(reader.Skip(meta_len));
+                        new_event.data_last = reader.offset;
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Panic: unhandled Fx message: %x\n", new_event.status);
+                        exit(1);
                     }
                 }
                 break;
