@@ -56,11 +56,20 @@ bool LCD_QuitRequested(lcd_t& lcd)
 
 void LCD_SetContrast(lcd_t& ldc, uint8_t contrast)
 {
-    if (contrast > 16)
-        contrast = 16;
-    if (contrast < 1)
-        contrast = 1;
-    lcd.contrast = contrast;
+    if (lcd.mcu->is_jv880)
+    {
+        if (contrast > 10)
+            contrast = 10;
+        lcd.contrast = contrast;
+    }
+    else
+    {
+        if (contrast > 16)
+            contrast = 16;
+        if (contrast < 1)
+            contrast = 1;
+        lcd.contrast = contrast;
+    }
 }
 
 
