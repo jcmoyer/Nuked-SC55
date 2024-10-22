@@ -305,7 +305,10 @@ void LCD_FontRenderStandard(lcd_t& lcd, int32_t x, int32_t y, uint8_t ch, bool o
                 for (int jj = 0; jj < 5; jj++)
                 {
                     if (overlay)
-                        lcd.buffer[xx+ii][yy+jj] &= col;
+                    {
+                         if (lcd.buffer[xx+ii][yy+jj] != col && col == lcd.color1)
+                            lcd.buffer[xx+ii][yy+jj] = col;
+                    }
                     else
                         lcd.buffer[xx+ii][yy+jj] = col;
                 }
