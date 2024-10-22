@@ -54,6 +54,16 @@ bool LCD_QuitRequested(lcd_t& lcd)
     return lcd.quit_requested;
 }
 
+void LCD_SetContrast(lcd_t& ldc, uint8_t contrast)
+{
+    if (contrast > 16)
+        contrast = 16;
+    if (contrast < 1)
+        contrast = 1;
+    lcd.contrast = contrast;
+}
+
+
 void LCD_Write(lcd_t& lcd, uint32_t address, uint8_t data)
 {
     if (address == 0)
@@ -404,6 +414,18 @@ void LCD_FontRenderLR(lcd_t& lcd, uint8_t ch)
     }
 }
 
+static uint32_t inline LCD_MixColor(uint32_t color, uint8_t contrast) {
+    uint8_t b = (color >> 16) & 0xFF;
+    uint8_t g = (color >> 8) & 0xFF;
+    uint8_t r = color & 0xFF;
+
+    b = (b * contrast) >> 8;
+    g = (g * contrast) >> 8;
+    r = (r * contrast) >> 8;
+
+    return (color & 0xFF000000) | ((b & 0xFF) << 16) | ((g & 0xFF) << 8) | (r & 0xFF);
+} 
+
 void LCD_Update(lcd_t& lcd)
 {
     if (!lcd.mcu->is_cm300 && !lcd.mcu->is_st && !lcd.mcu->is_scb55)
@@ -432,6 +454,10 @@ void LCD_Update(lcd_t& lcd)
                     }
                 }
             }
+            uint32_t con = 0x11 * (lcd.contrast - 1);
+            con = (con * con) >> 8;
+            lcd.color2 = LCD_MixColor(lcd.buffer[0][0], 0xFF - (con / 4 + 4));
+            lcd.color1 = LCD_MixColor(lcd.color2, 0x11 * (16 - (((lcd.buffer + 1) >> 1) + 4)));
 
             if (lcd.mcu->is_jv880)
             {
