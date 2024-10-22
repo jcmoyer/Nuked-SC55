@@ -306,7 +306,7 @@ void LCD_FontRenderStandard(lcd_t& lcd, int32_t x, int32_t y, uint8_t ch, bool o
                 {
                     if (overlay)
                     {
-                         if (lcd.buffer[xx+ii][yy+jj] != col && col == lcd.color1)
+                        if (lcd.buffer[xx+ii][yy+jj] != col && col == lcd.color1)
                             lcd.buffer[xx+ii][yy+jj] = col;
                     }
                     else
@@ -469,6 +469,7 @@ void LCD_Update(lcd_t& lcd)
                     for (int j = 0; j < 24; j++)
                     {
                         uint8_t ch = lcd.LCD_Data[i * 40 + j];
+                        LCD_FontRenderStandard(lcd, 10 + i * 50, 4 + j * 34, ch);
                         LCD_FontRenderStandard(lcd, 4 + i * 50, 4 + j * 34, ch);
                     }
                 }
@@ -477,7 +478,7 @@ void LCD_Update(lcd_t& lcd)
                 int j = lcd.LCD_DD_RAM % 0x40;
                 int i = lcd.LCD_DD_RAM / 0x40;
                 if (i < 2 && j < 24 && lcd.LCD_C)
-                    LCD_FontRenderStandard(lcd, 4 + i * 50, 4 + j * 34, '_', true);
+                    LCD_FontRenderStandard(lcd, 10 + i * 50, 4 + j * 34, '_', true);
             }
             else
             {
