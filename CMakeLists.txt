@@ -28,6 +28,13 @@ if(USE_RTMIDI)
     find_package(rtmidi MODULE REQUIRED)
 endif()
 
+# ASIO
+if(WIN32)
+    option(NUKED_ENABLE_ASIO "Enable ASIO" OFF)
+    set(NUKED_ASIO_SDK_DIR "" CACHE PATH
+        "Directory containing the ASIO SDK")
+endif()
+
 #==============================================================================
 # Support functions
 #==============================================================================
@@ -115,6 +122,25 @@ endif()
 if(APPLE)
     find_library(LIBCoreAudio CoreAudio)
     target_link_libraries(nuked-sc55 PRIVATE ${LIBCoreAudio})
+endif()
+
+if(NUKED_ENABLE_ASIO)
+    target_include_directories(nuked-sc55 PRIVATE "${NUKED_ASIO_SDK_DIR}/common")
+    target_include_directories(nuked-sc55 PRIVATE "${NUKED_ASIO_SDK_DIR}/host")
+    target_include_directories(nuked-sc55 PRIVATE "${NUKED_ASIO_SDK_DIR}/host/pc")
+
+    configure_file(src/asio_config.h.in asio_config.h @ONLY)
+    target_include_directories(nuked-sc55 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+
+    target_sources(nuked-sc55
+        PRIVATE
+        "${NUKED_ASIO_SDK_DIR}/common/asio.cpp"
+        "${NUKED_ASIO_SDK_DIR}/common/combase.cpp"
+        "${NUKED_ASIO_SDK_DIR}/common/debugmessage.cpp"
+        "${NUKED_ASIO_SDK_DIR}/common/register.cpp"
+        "${NUKED_ASIO_SDK_DIR}/host/asiodrivers.cpp"
+        "${NUKED_ASIO_SDK_DIR}/host/pc/asiolist.cpp"
+    )
 endif()
 
 #==============================================================================

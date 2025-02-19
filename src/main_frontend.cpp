@@ -42,10 +42,39 @@
 #include <SDL.h>
 #include <cinttypes>
 #include <optional>
+#include <vector>
 
 #ifdef _WIN32
 #include <Windows.h>
+#include "asio_config.h"
 #endif
+
+#ifdef NUKED_ENABLE_ASIO
+#include "asiosys.h"
+#include "asio.h"
+#include "asiodrivers.h"
+
+// TODO: move the asio stuff into another file and abstract over it and SDL
+void FE_ASIO_Start();
+void FE_ASIO_Stop();
+void FE_ASIO_Reset();
+
+AsioDrivers drivers;
+ASIODriverInfo driverInfo;
+ASIOCallbacks callbacks;
+
+const long N_BUFFERS = 2;
+ASIOBufferInfo buffer_info[N_BUFFERS]{};
+ASIOChannelInfo channel_info[N_BUFFERS]{};
+
+long minSize;
+long maxSize;
+long preferredSize;
+long granularity;
+
+std::atomic<bool> defer_reset = false;
+#endif
+
 
 // Workaround until all compilers implement CWG 2518 (at time of writing, MSVC
 // doesn't accept a static_assert(false) in a constexpr conditional branch)
@@ -65,6 +94,9 @@ struct FE_Instance
     std::thread thread;
     bool        running;
     AudioFormat format;
+
+    SDL_AudioStream *stream;
+    std::vector<AudioFrame<int32_t>> frames;
 
     // Statically selects the correct ringbuffer field into based on SampleT.
     template <typename SampleT>
@@ -184,10 +216,13 @@ void FE_ReceiveSample(void* userdata, const AudioFrame<int32_t>& in)
 {
     FE_Instance& fe = *(FE_Instance*)userdata;
 
-    AudioFrame<SampleT> out;
-    Normalize(in, out);
+    //AudioFrame<SampleT> out;
+    //Normalize(in, out);
 
-    fe.StaticSelectBuffer<SampleT>().UncheckedWriteOne(out);
+    //fe.StaticSelectBuffer<SampleT>().UncheckedWriteOne(out);
+
+    // TODO: asio hacked up to support S32 only
+    fe.frames.push_back(in);
 }
 
 template <typename SampleT>
@@ -316,6 +351,11 @@ void FE_PrintAudioDevices()
 
 bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 {
+    // TODO: quick hack to disable SDL audio
+    fe.audio_page_size = (params.page_size / 2) * 2; // must be even
+    fe.audio_buffer_size = fe.audio_page_size * params.page_num;
+    return true;
+
     SDL_AudioSpec spec = {};
     SDL_AudioSpec spec_actual = {};
 
@@ -410,7 +450,14 @@ void FE_RunInstance(FE_Instance& instance)
 {
     while (instance.running)
     {
-        while (FE_IsBufferFull<SampleT>(instance))
+        // TODO: how to pick flush size? make configurable?
+        if (instance.frames.size() >= preferredSize*2)
+        {
+            SDL_AudioStreamPut(instance.stream, instance.frames.data(), instance.frames.size() * sizeof(AudioFrame<int32_t>));
+            instance.frames.clear();
+        }
+
+        while (SDL_AudioStreamAvailable(instance.stream) >= preferredSize*8*2)
         {
             SDL_Delay(1);
         }
@@ -435,6 +482,13 @@ void FE_EventLoop(FE_Application& fe)
 {
     while (fe.running)
     {
+        if (defer_reset)
+        {
+            // TODO: segfault on exit, check asio shutdown
+            FE_ASIO_Reset();
+            defer_reset = false;
+        }
+
         for (size_t i = 0; i < fe.instances_in_use; ++i)
         {
             if (fe.instances[i].emu.IsLCDEnabled())
@@ -515,9 +569,242 @@ BOOL WINAPI FE_CtrlCHandler(DWORD dwCtrlType)
 }
 #endif
 
+#include <cstdlib>
+
+FE_Application* g_frontend;
+// TODO: cleanup
+int32_t huge[0x200000];
+
+ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool directProcess)
+{
+    FE_Application& frontend = *g_frontend;
+
+    size_t renderable_count = preferredSize;
+    for (size_t i = 0; i < frontend.instances_in_use; ++i)
+    {
+        renderable_count = Min(
+            renderable_count,
+            (size_t)SDL_AudioStreamAvailable(frontend.instances[i].stream) / 8
+        );
+    }
+
+    memset(buffer_info[0].buffers[index], 0, preferredSize * 4);
+    memset(buffer_info[1].buffers[index], 0, preferredSize * 4);
+
+    if (renderable_count >= preferredSize)
+    {
+        for (size_t i = 0; i < frontend.instances_in_use; ++i)
+        {
+            SDL_AudioStreamGet(frontend.instances[i].stream, huge, preferredSize * 2 * 4);
+
+            for (int j = 0; j < preferredSize; ++j) {
+                ((int32_t*)(buffer_info[0].buffers[index]))[j] = huge[2 * j + 0];
+                ((int32_t*)(buffer_info[1].buffers[index]))[j] = huge[2 * j + 1];
+            }
+        }
+    }
+
+    ASIOOutputReady();
+
+    return 0;
+}
+
+void bufferSwitch(long index, ASIOBool processNow)
+{
+	ASIOTime  timeInfo;
+	memset (&timeInfo, 0, sizeof (timeInfo));
+
+	// get the time stamp of the buffer, not necessary if no
+	// synchronization to other media is required
+	if(ASIOGetSamplePosition(&timeInfo.timeInfo.samplePosition, &timeInfo.timeInfo.systemTime) == ASE_OK)
+		timeInfo.timeInfo.flags = kSystemTimeValid | kSamplePositionValid;
+
+	bufferSwitchTimeInfo (&timeInfo, index, processNow);
+}
+
+void sampleRateDidChange(ASIOSampleRate sRate)
+{
+    fprintf(stderr, "ASIO: sample rate changed to %d\n", sRate);
+}
+
+long asioMessage(long selector, long value, void* message, double* opt)
+{
+    switch (selector)
+    {
+        case kAsioEngineVersion: return 2;
+        case kAsioSupportsTimeCode: return 0;
+		case kAsioResetRequest:
+            defer_reset = true;
+            return 1;
+        default: return 1;
+    }
+}
+
+void FE_ASIO_Start()
+{
+    buffer_info[0].isInput = ASIOFalse;
+    buffer_info[0].channelNum = 0;
+    buffer_info[0].buffers[0] = buffer_info[0].buffers[1] = 0;
+
+    buffer_info[1].isInput = ASIOFalse;
+    buffer_info[1].channelNum = 1;
+    buffer_info[1].buffers[0] = buffer_info[0].buffers[1] = 0;
+
+    callbacks.bufferSwitch = bufferSwitch;
+    callbacks.bufferSwitchTimeInfo = bufferSwitchTimeInfo;
+    callbacks.sampleRateDidChange = sampleRateDidChange;
+    callbacks.asioMessage = asioMessage;
+
+    // TODO: wat. do we seriously need to allocate all this?
+    char* names[32];
+    for (int i = 0; i < 32; ++i)
+    {
+        names[i] = (char*)malloc(32);
+    }
+
+    long names_count = drivers.getDriverNames(names, 32);
+    for (long i = 0; i < names_count; ++i)
+    {
+        fprintf(stderr, "%d: %s\n", i, names[i]);
+    }
+
+    // TODO: make user selectable, but need to combine with SDL devices
+    bool loaded = drivers.loadDriver("ASIO4ALL v2");
+    if (!loaded)
+    {
+        fprintf(stderr, "loaded ASIO\n");
+    }
+
+    if (ASIOInit(&driverInfo) != ASE_OK)
+    {
+        fprintf(stderr, "ASIOInit failed\n");
+        return;
+    }
+
+    fprintf(stderr,
+            "asioVersion:   %d\n"
+            "driverVersion: %d\n"
+            "Name:          %s\n"
+            "ErrorMessage:  %s\n",
+            driverInfo.asioVersion,
+            driverInfo.driverVersion,
+            driverInfo.name,
+            driverInfo.errorMessage);
+
+    if (ASIOGetBufferSize(&minSize, &maxSize, &preferredSize, &granularity) == ASE_OK)
+    {
+        fprintf (stderr, "ASIOGetBufferSize (min: %d, max: %d, preferred: %d, granularity: %d);\n",
+                minSize, maxSize,
+                preferredSize, granularity);
+    }
+
+    if (ASIOSetSampleRate(44100) != ASE_OK)
+    {
+        fprintf (stderr, "ASIOSetSampleRate failed\n");
+    }
+
+    //ASIOControlPanel();
+
+    long input_channels, output_channels;
+	if(ASIOGetChannels(&input_channels, &output_channels) != ASE_OK)
+    {
+        fprintf(stderr,"ASIOGetChannels failed\n");
+        return;
+    }
+
+    fprintf(stderr,"%d in, %d out\n",input_channels,output_channels);
+
+    ASIOCreateBuffers(buffer_info, N_BUFFERS, preferredSize, &callbacks);
+
+    for (int i = 0; i < N_BUFFERS; ++i)
+    {
+        channel_info[i].channel = buffer_info[i].channelNum;
+        ASIOGetChannelInfo(&channel_info[i]);
+
+        fprintf(stderr, "%s\n", channel_info[i].name);
+
+        switch (channel_info[i].type)
+        {
+        case ASIOSTInt16LSB:
+            fprintf(stderr, "I16LSB\n");
+            break;
+        case ASIOSTInt24LSB: // used for 20 bits as well
+            fprintf(stderr, "I24LSB\n");
+            break;
+        case ASIOSTInt32LSB:
+            fprintf(stderr, "I32LSB\n");
+            break;
+        case ASIOSTFloat32LSB: // IEEE 754 32 bit float, as found on Intel x86 architecture
+            fprintf(stderr, "F32LSB\n");
+            break;
+        case ASIOSTFloat64LSB: // IEEE 754 64 bit double float, as found on Intel x86 architecture
+            fprintf(stderr, "F64LSB\n");
+            break;
+        default:
+            fprintf(stderr, "unkn type\n");
+            break;
+
+            // these are used for 32 bit data buffer, with different alignment of the data inside
+            // 32 bit PCI bus systems can more easily used with these
+			//case ASIOSTInt32LSB16:		// 32 bit data with 18 bit alignment
+			//case ASIOSTInt32LSB18:		// 32 bit data with 18 bit alignment
+			//case ASIOSTInt32LSB20:		// 32 bit data with 20 bit alignment
+			//case ASIOSTInt32LSB24:		// 32 bit data with 24 bit alignment
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 4);
+			//	break;
+
+			//case ASIOSTInt16MSB:
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 2);
+			//	break;
+			//case ASIOSTInt24MSB:		// used for 20 bits as well
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 3);
+			//	break;
+			//case ASIOSTInt32MSB:
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 4);
+			//	break;
+			//case ASIOSTFloat32MSB:		// IEEE 754 32 bit float, as found on Intel x86 architecture
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 4);
+			//	break;
+			//case ASIOSTFloat64MSB: 		// IEEE 754 64 bit double float, as found on Intel x86 architecture
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 8);
+			//	break;
+
+			//	// these are used for 32 bit data buffer, with different alignment of the data inside
+			//	// 32 bit PCI bus systems can more easily used with these
+			//case ASIOSTInt32MSB16:		// 32 bit data with 18 bit alignment
+			//case ASIOSTInt32MSB18:		// 32 bit data with 18 bit alignment
+			//case ASIOSTInt32MSB20:		// 32 bit data with 20 bit alignment
+			//case ASIOSTInt32MSB24:		// 32 bit data with 24 bit alignment
+			//	memset (asioDriverInfo.bufferInfos[i].buffers[index], 0, buffSize * 4);
+			//	break;
+			}
+    }
+
+    ASIOStart();
+
+    fprintf(stderr, "Starting asio loop");
+}
+
+void FE_ASIO_Stop()
+{
+    ASIOStop();
+    ASIODisposeBuffers();
+    ASIOExit();
+    drivers.removeCurrentDriver();
+}
+
+void FE_ASIO_Reset()
+{
+    ASIOStop();
+    FE_ASIO_Start();
+}
+
 bool FE_Init()
 {
-    if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
+    FE_ASIO_Start();
+
+    // TODO: no longer initializing audio here
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
         fprintf(stderr, "FATAL ERROR: Failed to initialize the SDL2: %s.\n", SDL_GetError());
         fflush(stderr);
@@ -578,6 +865,8 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
+    fe->stream = SDL_NewAudioStream(AUDIO_S32, 2, PCM_GetOutputFrequency(fe->emu.GetPCM()), AUDIO_S32, 2, 44100);
+
     return true;
 }
 
@@ -588,6 +877,7 @@ void FE_DestroyInstance(FE_Instance& fe)
 
 void FE_Quit(FE_Application& container)
 {
+    FE_ASIO_Stop();
     // Important to close audio devices first since this will stop the SDL
     // audio thread. Otherwise we might get a UAF destroying ringbuffers
     // while they're still in use.
@@ -887,6 +1177,7 @@ int main(int argc, char *argv[])
     }
 
     FE_Application frontend;
+    g_frontend = &frontend;
 
     std::filesystem::path base_path = P_GetProcessPath().parent_path();
 
@@ -962,7 +1253,6 @@ int main(int argc, char *argv[])
     }
 
     FE_Run(frontend);
-
     FE_Quit(frontend);
 
     return 0;
