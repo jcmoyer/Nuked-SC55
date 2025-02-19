@@ -322,31 +322,43 @@ FE_PickOutputResult FE_PickOutputDevice(std::string_view preferred_name, std::st
     return FE_PickOutputResult::NoMatchingName;
 }
 
+#include "output_common.h"
+#include "output_sdl.h"
+#include "output_asio.h"
+
 void FE_PrintAudioDevices()
 {
-    // we may want to print this information without initializing all of SDL
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
+    AudioOutputList outputs;
+
+    if (!Out_SDL_QueryOutputs(outputs))
     {
-        fprintf(stderr, "Failed to init audio: %s\n", SDL_GetError());
+        fprintf(stderr, "Failed to query SDL outputs: %s\n", SDL_GetError());
         return;
     }
 
-    const int num_audio_devs = SDL_GetNumAudioDevices(0);
-    if (num_audio_devs == 0)
+#ifdef NUKED_ENABLE_ASIO
+    if (!Out_ASIO_QueryOutputs(outputs))
+    {
+        fprintf(stderr, "Failed to query ASIO outputs.\n");
+        return;
+    }
+#endif
+
+    if (outputs.size() == 0)
     {
         fprintf(stderr, "No output devices found.\n");
     }
-
-    fprintf(stderr, "\nKnown output devices:\n\n");
-
-    for (int i = 0; i < num_audio_devs; ++i)
+    else
     {
-        fprintf(stderr, "  %d: %s\n", i, SDL_GetAudioDeviceName(i, 0));
+        fprintf(stderr, "\nKnown output devices:\n\n");
+
+        for (size_t i = 0; i < outputs.size(); ++i)
+        {
+            fprintf(stderr, "  %d: %s\n", i, outputs[i].name.c_str());
+        }
+
+        fprintf(stderr, "\n");
     }
-
-    fprintf(stderr, "\n");
-
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
 bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)

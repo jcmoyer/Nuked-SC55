@@ -97,6 +97,7 @@ add_executable(nuked-sc55)
 target_sources(nuked-sc55
     PRIVATE
     src/midi.h
+    src/output_sdl.cpp src/output_sdl.h
     src/main_frontend.cpp # main() is here!
 )
 
@@ -134,6 +135,7 @@ if(NUKED_ENABLE_ASIO)
 
     target_sources(nuked-sc55
         PRIVATE
+        src/output_asio.cpp src/output_asio.h
         "${NUKED_ASIO_SDK_DIR}/common/asio.cpp"
         "${NUKED_ASIO_SDK_DIR}/common/combase.cpp"
         "${NUKED_ASIO_SDK_DIR}/common/debugmessage.cpp"
