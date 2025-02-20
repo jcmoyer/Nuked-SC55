@@ -53,12 +53,6 @@
 #include "output_sdl.h"
 #include "output_asio.h"
 
-#ifdef NUKED_ENABLE_ASIO
-void FE_ASIO_Start();
-void FE_ASIO_Stop();
-void FE_ASIO_Reset();
-#endif
-
 // Workaround until all compilers implement CWG 2518 (at time of writing, MSVC
 // doesn't accept a static_assert(false) in a constexpr conditional branch)
 template <typename>
@@ -196,17 +190,24 @@ void FE_RouteMIDI(FE_Application& fe, std::span<const uint8_t> bytes)
 }
 
 template <typename SampleT>
-void FE_ReceiveSample(void* userdata, const AudioFrame<int32_t>& in)
+void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
 {
     FE_Instance& fe = *(FE_Instance*)userdata;
 
-    //AudioFrame<SampleT> out;
-    //Normalize(in, out);
+    AudioFrame<SampleT> out;
+    Normalize(in, out);
 
-    //fe.StaticSelectBuffer<SampleT>().UncheckedWriteOne(out);
+    fe.StaticSelectBuffer<SampleT>().UncheckedWriteOne(out);
+}
 
-    // TODO: asio hacked up to support S32 only
-    fe.frames.push_back(in);
+void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
+{
+    FE_Instance& fe = *(FE_Instance*)userdata;
+
+    AudioFrame<int32_t> out;
+    Normalize(in, out);
+
+    fe.frames.push_back(out);
 }
 
 template <typename SampleT>
@@ -268,26 +269,31 @@ enum class FE_PickOutputResult
     NoMatchingName,
 };
 
-FE_PickOutputResult FE_PickOutputDevice(std::string_view preferred_name, std::string& out_device_name)
-{
-    out_device_name.clear();
+void FE_QueryAllOutputs(AudioOutputList& outputs);
 
-    const int num_audio_devs = SDL_GetNumAudioDevices(0);
+FE_PickOutputResult FE_PickOutputDevice(std::string_view preferred_name, AudioOutput& out_device)
+{
+    AudioOutputList outputs;
+    FE_QueryAllOutputs(outputs);
+
+    const size_t num_audio_devs = outputs.size();
     if (num_audio_devs == 0)
     {
+        out_device = {.name = "Default device (SDL)", .kind = AudioOutputKind::SDL};
         return FE_PickOutputResult::NoOutputDevices;
     }
 
     if (preferred_name.size() == 0)
     {
+        out_device = {.name = "Default device (SDL)", .kind = AudioOutputKind::SDL};
         return FE_PickOutputResult::WantDefaultDevice;
     }
 
-    for (int i = 0; i < num_audio_devs; ++i)
+    for (size_t i = 0; i < num_audio_devs; ++i)
     {
-        if (SDL_GetAudioDeviceName(i, 0) == preferred_name)
+        if (outputs[i].name == preferred_name)
         {
-            out_device_name = SDL_GetAudioDeviceName(i, 0);
+            out_device = outputs[i];
             return FE_PickOutputResult::WantMatchedName;
         }
     }
@@ -295,14 +301,14 @@ FE_PickOutputResult FE_PickOutputDevice(std::string_view preferred_name, std::st
     // maybe we have an index instead of a name
     if (int out_device_id; TryParse(preferred_name, out_device_id))
     {
-        if (out_device_id >= 0 && out_device_id < num_audio_devs)
+        if (out_device_id >= 0 && out_device_id < (int)num_audio_devs)
         {
-            out_device_name = SDL_GetAudioDeviceName(out_device_id, 0);
+            out_device = outputs[out_device_id];
             return FE_PickOutputResult::WantMatchedName;
         }
     }
 
-    out_device_name = preferred_name;
+    out_device = {.name = std::string(preferred_name), .kind = AudioOutputKind::SDL};
     return FE_PickOutputResult::NoMatchingName;
 }
 
@@ -347,12 +353,12 @@ void FE_PrintAudioDevices()
     }
 }
 
-bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
+bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char* device_name)
 {
-    // TODO: quick hack to disable SDL audio
-    fe.audio_page_size = (params.page_size / 2) * 2; // must be even
-    fe.audio_buffer_size = fe.audio_page_size * params.page_num;
-    return true;
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
+    {
+        return false;
+    }
 
     SDL_AudioSpec spec = {};
     SDL_AudioSpec spec_actual = {};
@@ -380,42 +386,15 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
     spec.userdata = &fe;
     spec.samples = RangeCast<Uint16>(fe.audio_page_size / 4);
 
-    std::string output_device_name;
-    FE_PickOutputResult output_result = FE_PickOutputDevice(params.audio_device, output_device_name);
-    switch (output_result)
-    {
-    case FE_PickOutputResult::WantMatchedName:
-        fe.sdl_audio = SDL_OpenAudioDevice(output_device_name.c_str(), 0, &spec, &spec_actual, 0);
-        break;
-    case FE_PickOutputResult::WantDefaultDevice:
-        output_device_name = "Default device";
-        fe.sdl_audio = SDL_OpenAudioDevice(NULL, 0, &spec, &spec_actual, 0);
-        break;
-    case FE_PickOutputResult::NoOutputDevices:
-        // in some cases this may still work
-        fprintf(stderr, "No output devices found; attempting to open default device\n");
-        output_device_name = "Default device";
-        fe.sdl_audio = SDL_OpenAudioDevice(NULL, 0, &spec, &spec_actual, 0);
-        break;
-    case FE_PickOutputResult::NoMatchingName:
-        // in some cases SDL cannot list all audio devices so we should still try
-        fprintf(stderr, "No output device named '%s'; attempting to open it anyways...\n", params.audio_device.c_str());
-        fe.sdl_audio = SDL_OpenAudioDevice(output_device_name.c_str(), 0, &spec, &spec_actual, 0);
-        break;
-    }
+    fe.sdl_audio = SDL_OpenAudioDevice(device_name, 0, &spec, &spec_actual, 0);
 
     if (!fe.sdl_audio)
     {
         fprintf(stderr, "Failed to open audio device: %s\n", SDL_GetError());
-        // if we failed for this reason the user might want to know what valid devices exist
-        if (output_result == FE_PickOutputResult::NoMatchingName)
-        {
-            FE_PrintAudioDevices();
-        }
         return false;
     }
 
-    fprintf(stderr, "Audio device: %s\n", output_device_name.c_str());
+    fprintf(stderr, "Audio device: %s\n", fe.audio_output.name.c_str());
 
     fprintf(stderr, "Audio Requested: F=%s, C=%d, R=%d, B=%d\n",
            FE_AudioFormatStr(spec.format),
@@ -430,7 +409,77 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
            spec_actual.samples);
     fflush(stderr);
 
+    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    {
+        switch (fe.instances[i].format)
+        {
+        case AudioFormat::S16:
+            fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &fe.instances[i]);
+            break;
+        case AudioFormat::S32:
+            fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &fe.instances[i]);
+            break;
+        case AudioFormat::F32:
+            fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &fe.instances[i]);
+            break;
+        }
+    }
+
     SDL_PauseAudioDevice(fe.sdl_audio, 0);
+
+    return true;
+}
+
+bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
+{
+    if (!Out_ASIO_Start(name))
+    {
+        return false;
+    }
+
+    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    {
+        // TODO: destination needs to match what ASIO wants
+        fe.instances[i].stream =
+            SDL_NewAudioStream(AUDIO_S32, 2, PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()), AUDIO_S32, 2, 44100);
+        Out_ASIO_AddStream(fe.instances[i].stream);
+        fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleASIO, &fe.instances[i]);
+    }
+
+    return true;
+}
+
+bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
+{
+    AudioOutput output;
+    FE_PickOutputResult output_result = FE_PickOutputDevice(params.audio_device, output);
+
+    fe.audio_output = output;
+    printf("%s %d\n", fe.audio_output.name.c_str(), (int)fe.audio_output.kind);
+
+    switch (output_result)
+    {
+    case FE_PickOutputResult::WantMatchedName:
+        if (output.kind == AudioOutputKind::SDL)
+        {
+            return FE_OpenSDLAudio(fe, params, output.name.c_str());
+        }
+        else if (output.kind == AudioOutputKind::ASIO)
+        {
+            return FE_OpenASIOAudio(fe, params, output.name.c_str());
+        }
+        break;
+    case FE_PickOutputResult::WantDefaultDevice:
+        return FE_OpenSDLAudio(fe, params, nullptr);
+    case FE_PickOutputResult::NoOutputDevices:
+        // in some cases this may still work
+        fprintf(stderr, "No output devices found; attempting to open default device\n");
+        return FE_OpenSDLAudio(fe, params, nullptr);
+    case FE_PickOutputResult::NoMatchingName:
+        // in some cases SDL cannot list all audio devices so we should still try
+        fprintf(stderr, "No output device named '%s'; attempting to open it anyways...\n", params.audio_device.c_str());
+        return FE_OpenSDLAudio(fe, params, output.name.c_str());
+    }
 
     return true;
 }
@@ -444,8 +493,29 @@ bool FE_IsBufferFull(FE_Instance& instance)
 }
 
 template <typename SampleT>
-void FE_RunInstance(FE_Instance& instance)
+void FE_RunInstanceSDL(FE_Instance& instance)
 {
+    MCU_WorkThread_Lock(instance.emu.GetMCU());
+    while (instance.running)
+    {
+        if (FE_IsBufferFull<SampleT>(instance))
+        {
+            MCU_WorkThread_Unlock(instance.emu.GetMCU());
+            while (FE_IsBufferFull<SampleT>(instance))
+            {
+                SDL_Delay(1);
+            }
+            MCU_WorkThread_Lock(instance.emu.GetMCU());
+        }
+
+        MCU_Step(instance.emu.GetMCU());
+    }
+    MCU_WorkThread_Unlock(instance.emu.GetMCU());
+}
+
+void FE_RunInstanceASIO(FE_Instance& instance)
+{
+    // TODO: get from out_asio
     const size_t preferredSize = 1024;
 
     while (instance.running)
@@ -530,17 +600,24 @@ void FE_Run(FE_Application& fe)
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
         fe.instances[i].running = true;
-        switch (fe.instances[i].format)
+        if (fe.audio_output.kind == AudioOutputKind::SDL)
         {
+            switch (fe.instances[i].format)
+            {
             case AudioFormat::S16:
-                fe.instances[i].thread = std::thread(FE_RunInstance<int16_t>, std::ref(fe.instances[i]));
+                fe.instances[i].thread = std::thread(FE_RunInstanceSDL<int16_t>, std::ref(fe.instances[i]));
                 break;
             case AudioFormat::S32:
-                fe.instances[i].thread = std::thread(FE_RunInstance<int32_t>, std::ref(fe.instances[i]));
+                fe.instances[i].thread = std::thread(FE_RunInstanceSDL<int32_t>, std::ref(fe.instances[i]));
                 break;
             case AudioFormat::F32:
-                fe.instances[i].thread = std::thread(FE_RunInstance<float>, std::ref(fe.instances[i]));
+                fe.instances[i].thread = std::thread(FE_RunInstanceSDL<float>, std::ref(fe.instances[i]));
                 break;
+            }
+        }
+        else if (fe.audio_output.kind == AudioOutputKind::ASIO)
+        {
+            fe.instances[i].thread = std::thread(FE_RunInstanceASIO, std::ref(fe.instances[i]));
         }
     }
 
@@ -574,7 +651,6 @@ void FE_ASIO_Start()
 
 void FE_ASIO_Stop()
 {
-    Out_ASIO_Stop();
 }
 
 void FE_ASIO_Reset()
@@ -584,8 +660,6 @@ void FE_ASIO_Reset()
 
 bool FE_Init()
 {
-    FE_ASIO_Start();
-
     // TODO: no longer initializing audio here
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
@@ -619,19 +693,6 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    switch (fe->format)
-    {
-        case AudioFormat::S16:
-            fe->emu.SetSampleCallback(FE_ReceiveSample<int16_t>, fe);
-            break;
-        case AudioFormat::S32:
-            fe->emu.SetSampleCallback(FE_ReceiveSample<int32_t>, fe);
-            break;
-        case AudioFormat::F32:
-            fe->emu.SetSampleCallback(FE_ReceiveSample<float>, fe);
-            break;
-    }
-
     LCD_LoadBack(fe->emu.GetLCD(), base_path / "back.data");
 
     if (!fe->emu.LoadRoms(params.romset, *params.rom_directory))
@@ -648,10 +709,6 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    // TODO: destination needs to match what ASIO wants
-    fe->stream = SDL_NewAudioStream(AUDIO_S32, 2, PCM_GetOutputFrequency(fe->emu.GetPCM()), AUDIO_S32, 2, 44100);
-    Out_ASIO_AddStream(fe->stream);
-
     return true;
 }
 
@@ -664,7 +721,7 @@ void FE_Quit(FE_Application& container)
 {
     if (container.audio_output.kind == AudioOutputKind::ASIO)
     {
-        FE_ASIO_Stop();
+        Out_ASIO_Stop();
     }
     else
     {
@@ -672,12 +729,14 @@ void FE_Quit(FE_Application& container)
         // audio thread. Otherwise we might get a UAF destroying ringbuffers
         // while they're still in use.
         SDL_CloseAudioDevice(container.sdl_audio);
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
 
     for (size_t i = 0; i < container.instances_in_use; ++i)
     {
         FE_DestroyInstance(container.instances[i]);
     }
+
     MIDI_Quit();
     SDL_Quit();
 }
@@ -1044,6 +1103,7 @@ int main(int argc, char *argv[])
     }
 
     FE_Run(frontend);
+
     FE_Quit(frontend);
 
     return 0;

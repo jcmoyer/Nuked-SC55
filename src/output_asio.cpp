@@ -45,6 +45,10 @@ struct GlobalAsioState
     GenericBuffer mix_buffer;
 };
 
+// defined in ASIO SDK
+// we do actually need to do the loading through this function or else we'll segfault on exit
+bool loadAsioDriver(char *name);
+
 static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool directProcess);
 static void      bufferSwitch(long index, ASIOBool processNow);
 static void      sampleRateDidChange(ASIOSampleRate sRate);
@@ -141,7 +145,7 @@ bool Out_ASIO_Start(const char* driver_name)
         return false;
     }
 
-    if (!g_asio_state.drivers.loadDriver(internal_driver_name))
+    if (!loadAsioDriver(internal_driver_name))
     {
         fprintf(stderr, "Failed to load ASIO driver `%s`\n", internal_driver_name);
         return false;
@@ -236,7 +240,7 @@ bool Out_ASIO_Start(const char* driver_name)
     {
         if (g_asio_state.output_type != g_asio_state.channel_info[i].type)
         {
-            fprintf(stderr, "ASIO channel %" PRIu64 " has a different output type!\n");
+            fprintf(stderr, "ASIO channel %" PRIu64 " has a different output type!\n", i);
             return false;
         }
     }
@@ -259,10 +263,7 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream)
 
 void Out_ASIO_Stop()
 {
-    ASIOStop();
-    ASIODisposeBuffers();
     ASIOExit();
-    g_asio_state.drivers.removeCurrentDriver();
 }
 
 bool Out_ASIO_IsResetRequested()
