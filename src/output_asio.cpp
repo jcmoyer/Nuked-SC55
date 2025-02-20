@@ -261,6 +261,35 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream)
     ++g_asio_state.stream_count;
 }
 
+double Out_ASIO_GetFrequency()
+{
+    ASIOSampleRate rate;
+    ASIOGetSampleRate(&rate);
+    return rate;
+}
+
+SDL_AudioFormat Out_ASIO_GetFormat()
+{
+    switch (g_asio_state.output_type)
+    {
+    case ASIOSTInt16LSB:
+        return AUDIO_S16LSB;
+    case ASIOSTInt32LSB:
+        return AUDIO_S32LSB;
+    case ASIOSTFloat32LSB:
+        return AUDIO_F32LSB;
+    case ASIOSTInt16MSB:
+        return AUDIO_S16MSB;
+    case ASIOSTInt32MSB:
+        return AUDIO_S32MSB;
+    case ASIOSTFloat32MSB:
+        return AUDIO_F32MSB;
+    default:
+        fprintf(stderr, "PANIC: ASIO format conversion not implemented\n");
+        exit(1);
+    }
+}
+
 void Out_ASIO_Stop()
 {
     ASIOExit();
