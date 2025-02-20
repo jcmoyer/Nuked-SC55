@@ -439,9 +439,12 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
-        // TODO: destination needs to match what ASIO wants
-        fe.instances[i].stream =
-            SDL_NewAudioStream(AUDIO_S32, 2, PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()), AUDIO_S32, 2, 44100);
+        fe.instances[i].stream = SDL_NewAudioStream(AUDIO_S32,
+                                                    2,
+                                                    PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()),
+                                                    Out_ASIO_GetFormat(),
+                                                    2,
+                                                    Out_ASIO_GetFrequency());
         Out_ASIO_AddStream(fe.instances[i].stream);
         fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleASIO, &fe.instances[i]);
     }

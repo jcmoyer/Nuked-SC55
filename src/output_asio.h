@@ -15,3 +15,5 @@ void Out_ASIO_Reset();
 // Adds a stream to be mixed into the ASIO output. It should not be freed until ASIO shuts down.
 void Out_ASIO_AddStream(SDL_AudioStream* stream);
 
+double          Out_ASIO_GetFrequency();
+SDL_AudioFormat Out_ASIO_GetFormat();
