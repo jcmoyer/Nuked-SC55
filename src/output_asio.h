@@ -17,3 +17,6 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream);
 
 double          Out_ASIO_GetFrequency();
 SDL_AudioFormat Out_ASIO_GetFormat();
+
+// Returns the size of a single sample in bytes.
+size_t Out_ASIO_GetFormatSampleSizeBytes();
