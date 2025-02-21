@@ -47,6 +47,9 @@ struct GlobalAsioState
     GenericBuffer mix_buffer;
 };
 
+// there isn't a way around using globals here, the ASIO API doesn't accept arbitrary userdata in its callbacks
+static GlobalAsioState g_asio_state;
+
 // defined in ASIO SDK
 // we do actually need to do the loading through this function or else we'll segfault on exit
 bool loadAsioDriver(char* name);
@@ -106,10 +109,6 @@ static const char* SampleTypeToString(ASIOSampleType type)
         return "Unknown sample type";
     }
 }
-
-// there isn't a way around using globals here, the ASIO API doesn't accept
-// arbitrary userdata in its callbacks
-GlobalAsioState g_asio_state;
 
 bool Out_ASIO_QueryOutputs(AudioOutputList& list)
 {

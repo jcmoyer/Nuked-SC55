@@ -46,8 +46,9 @@
 
 #ifdef _WIN32
 #include <Windows.h>
-#include "asio_config.h"
 #endif
+
+#include "asio_config.h"
 
 #include "output_common.h"
 #include "output_sdl.h"
@@ -200,6 +201,7 @@ void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
     fe.StaticSelectBuffer<SampleT>().UncheckedWriteOne(out);
 }
 
+#ifdef NUKED_ENABLE_ASIO
 void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 {
     FE_Instance& fe = *(FE_Instance*)userdata;
@@ -209,6 +211,7 @@ void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 
     fe.frames.push_back(out);
 }
+#endif
 
 template <typename SampleT>
 void FE_AudioCallback(void* userdata, Uint8* stream, int len)
@@ -430,6 +433,7 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
     return true;
 }
 
+#ifdef NUKED_ENABLE_ASIO
 bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
 {
     if (!Out_ASIO_Start(name))
@@ -451,6 +455,7 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
     return true;
 }
+#endif
 
 bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 {
@@ -458,7 +463,6 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
     FE_PickOutputResult output_result = FE_PickOutputDevice(params.audio_device, output);
 
     fe.audio_output = output;
-    printf("%s %d\n", fe.audio_output.name.c_str(), (int)fe.audio_output.kind);
 
     switch (output_result)
     {
@@ -469,9 +473,13 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
         }
         else if (output.kind == AudioOutputKind::ASIO)
         {
+#ifdef NUKED_ENABLE_ASIO
             return FE_OpenASIOAudio(fe, params, output.name.c_str());
+#else
+            fprintf(stderr, "Attempted to open ASIO output without ASIO support\n");
+#endif
         }
-        break;
+        return false;
     case FE_PickOutputResult::WantDefaultDevice:
         return FE_OpenSDLAudio(fe, params, nullptr);
     case FE_PickOutputResult::NoOutputDevices:
@@ -516,6 +524,7 @@ void FE_RunInstanceSDL(FE_Instance& instance)
     MCU_WorkThread_Unlock(instance.emu.GetMCU());
 }
 
+#ifdef NUKED_ENABLE_ASIO
 void FE_RunInstanceASIO(FE_Instance& instance)
 {
     // TODO: get from out_asio
@@ -545,6 +554,7 @@ void FE_RunInstanceASIO(FE_Instance& instance)
     }
     MCU_WorkThread_Unlock(instance.emu.GetMCU());
 }
+#endif
 
 bool FE_HandleGlobalEvent(FE_Application& fe, const SDL_Event& ev)
 {
@@ -562,10 +572,12 @@ void FE_EventLoop(FE_Application& fe)
 {
     while (fe.running)
     {
+#ifdef NUKED_ENABLE_ASIO
         if (Out_ASIO_IsResetRequested())
         {
             Out_ASIO_Reset();
         }
+#endif
 
         for (size_t i = 0; i < fe.instances_in_use; ++i)
         {
@@ -627,7 +639,11 @@ void FE_Run(FE_Application& fe)
         }
         else if (fe.audio_output.kind == AudioOutputKind::ASIO)
         {
+#ifdef NUKED_ENABLE_ASIO
             fe.instances[i].thread = std::thread(FE_RunInstanceASIO, std::ref(fe.instances[i]));
+#else
+            fprintf(stderr, "Attempted to start ASIO instance without ASIO support\n");
+#endif
         }
     }
 
@@ -653,20 +669,6 @@ BOOL WINAPI FE_CtrlCHandler(DWORD dwCtrlType)
     return TRUE;
 }
 #endif
-
-void FE_ASIO_Start()
-{
-    Out_ASIO_Start("ASIO4ALL v2");
-}
-
-void FE_ASIO_Stop()
-{
-}
-
-void FE_ASIO_Reset()
-{
-    Out_ASIO_Reset();
-}
 
 bool FE_Init()
 {
@@ -731,7 +733,11 @@ void FE_Quit(FE_Application& container)
 {
     if (container.audio_output.kind == AudioOutputKind::ASIO)
     {
+#ifdef NUKED_ENABLE_ASIO
         Out_ASIO_Stop();
+#else
+        fprintf(stderr, "Out_ASIO_Stop() called without ASIO support\n");
+#endif
     }
     else
     {
