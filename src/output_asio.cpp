@@ -319,7 +319,7 @@ void Out_ASIO_Reset()
     g_asio_state.defer_reset = false;
 }
 
-// `src` contains `count` 16-bit words LRLRLRLR (here count = 8)
+// `src` contains `count` pairs of 16-bit words LRLRLRLR (here count = 4)
 // `dst_a` will receive LLLL
 // `dst_b` will receive RRRR
 inline void Deinterleave16(void* dst_a, void* dst_b, const void* src, size_t count)
