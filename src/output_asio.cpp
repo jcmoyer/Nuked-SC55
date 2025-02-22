@@ -260,7 +260,7 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream)
 {
     if (g_asio_state.stream_count == MAX_STREAMS)
     {
-        fprintf(stderr, "PANIC: attemped to add more than %" PRIu64 " ASIO streams\n", MAX_STREAMS);
+        fprintf(stderr, "PANIC: attempted to add more than %" PRIu64 " ASIO streams\n", MAX_STREAMS);
         exit(1);
     }
     g_asio_state.streams[g_asio_state.stream_count] = stream;

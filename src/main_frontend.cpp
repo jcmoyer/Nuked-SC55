@@ -73,6 +73,9 @@ struct FE_Instance
     bool        running;
     AudioFormat format;
 
+    // TODO: this is getting messy, we need to revisit how we manage buffers...
+    // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
+    // the stream one frame at a time is *slow* so we buffer a chunk of audio in `frames` and add it all at once.
     SDL_AudioStream *stream;
     std::vector<AudioFrame<int32_t>> frames;
 
@@ -358,79 +361,41 @@ void FE_PrintAudioDevices()
 
 bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char* device_name)
 {
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
-    {
-        return false;
-    }
-
-    SDL_AudioSpec spec = {};
-    SDL_AudioSpec spec_actual = {};
-
+    // TODO: revisit the frontend's idea of buffer sizes
     fe.audio_page_size = (params.page_size / 2) * 2; // must be even
     fe.audio_buffer_size = fe.audio_page_size * params.page_num;
 
-    switch (params.output_format)
-    {
-        case AudioFormat::S16:
-            spec.format = AUDIO_S16SYS;
-            spec.callback = FE_AudioCallback<int16_t>;
-            break;
-        case AudioFormat::S32:
-            spec.format = AUDIO_S32SYS;
-            spec.callback = FE_AudioCallback<int32_t>;
-            break;
-        case AudioFormat::F32:
-            spec.format = AUDIO_F32SYS;
-            spec.callback = FE_AudioCallback<float>;
-            break;
-    }
-    spec.freq = RangeCast<int>(PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM()));
-    spec.channels = 2;
-    spec.userdata = &fe;
-    spec.samples = RangeCast<Uint16>(fe.audio_page_size / 4);
-
-    fe.sdl_audio = SDL_OpenAudioDevice(device_name, 0, &spec, &spec_actual, 0);
-
-    if (!fe.sdl_audio)
-    {
-        fprintf(stderr, "Failed to open audio device: %s\n", SDL_GetError());
-        return false;
-    }
-
-    fprintf(stderr, "Audio device: %s\n", fe.audio_output.name.c_str());
-
-    fprintf(stderr, "Audio Requested: F=%s, C=%d, R=%d, B=%d\n",
-           FE_AudioFormatStr(spec.format),
-           spec.channels,
-           spec.freq,
-           spec.samples);
-
-    fprintf(stderr, "Audio Actual: F=%s, C=%d, R=%d, B=%d\n",
-           FE_AudioFormatStr(spec_actual.format),
-           spec_actual.channels,
-           spec_actual.freq,
-           spec_actual.samples);
-    fflush(stderr);
+    Out_SDL_SetFormat(params.output_format);
+    Out_SDL_SetFrequency((int)PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM()));
+    Out_SDL_SetBufferSize((int)fe.audio_page_size / 4);
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
-        switch (fe.instances[i].format)
+        FE_Instance& inst = fe.instances[i];
+        switch (inst.format)
         {
         case AudioFormat::S16:
-            fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &fe.instances[i]);
+            inst.sample_buffer.Init(sizeof(int16_t) * fe.audio_buffer_size);
+            inst.view_s16 = RingbufferView<AudioFrame<int16_t>>(inst.sample_buffer);
+            inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &inst);
+            Out_SDL_AddStream(&fe.instances[i].view_s16);
             break;
         case AudioFormat::S32:
-            fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &fe.instances[i]);
+            inst.sample_buffer.Init(sizeof(int32_t) * fe.audio_buffer_size);
+            inst.view_s32 = RingbufferView<AudioFrame<int32_t>>(inst.sample_buffer);
+            inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &inst);
+            Out_SDL_AddStream(&fe.instances[i].view_s32);
             break;
         case AudioFormat::F32:
-            fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &fe.instances[i]);
+            inst.sample_buffer.Init(sizeof(float) * fe.audio_buffer_size);
+            inst.view_f32 = RingbufferView<AudioFrame<float>>(inst.sample_buffer);
+            inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &inst);
+            Out_SDL_AddStream(&fe.instances[i].view_f32);
             break;
         }
     }
 
-    SDL_PauseAudioDevice(fe.sdl_audio, 0);
-
-    return true;
+    return Out_SDL_Start(device_name);
 }
 
 #ifdef NUKED_ENABLE_ASIO
@@ -734,11 +699,7 @@ void FE_Quit(FE_Application& container)
     }
     else
     {
-        // Important to close audio devices first since this will stop the SDL
-        // audio thread. Otherwise we might get a UAF destroying ringbuffers
-        // while they're still in use.
-        SDL_CloseAudioDevice(container.sdl_audio);
-        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        Out_SDL_Stop();
     }
 
     for (size_t i = 0; i < container.instances_in_use; ++i)
@@ -1078,26 +1039,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "FATAL ERROR: Failed to open the audio stream.\n");
         fflush(stderr);
         return 1;
-    }
-
-    for (size_t i = 0; i < frontend.instances_in_use; ++i)
-    {
-        FE_Instance& fe = frontend.instances[i];
-        switch (fe.format)
-        {
-        case AudioFormat::S16:
-            fe.sample_buffer.Init(sizeof(int16_t) * frontend.audio_buffer_size);
-            fe.view_s16 = RingbufferView<AudioFrame<int16_t>>(fe.sample_buffer);
-            break;
-        case AudioFormat::S32:
-            fe.sample_buffer.Init(sizeof(int32_t) * frontend.audio_buffer_size);
-            fe.view_s32 = RingbufferView<AudioFrame<int32_t>>(fe.sample_buffer);
-            break;
-        case AudioFormat::F32:
-            fe.sample_buffer.Init(sizeof(float) * frontend.audio_buffer_size);
-            fe.view_f32 = RingbufferView<AudioFrame<float>>(fe.sample_buffer);
-            break;
-        }
     }
 
     if (!MIDI_Init(frontend, params.midi_device))
