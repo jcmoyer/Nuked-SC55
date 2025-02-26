@@ -38,6 +38,14 @@ endif()
 #==============================================================================
 # Support functions
 #==============================================================================
+function(target_disable_warnings tgt)
+    if(MSVC)
+        target_compile_options(${tgt} PRIVATE /W0)
+    else()
+        target_compile_options(${tgt} PRIVATE -w)
+    endif()
+endfunction()
+
 function(target_enable_warnings tgt)
     if(MSVC)
         target_compile_options(${tgt} PRIVATE /W4
@@ -132,13 +140,9 @@ configure_file(src/asio_config.h.in asio_config.h @ONLY)
 target_include_directories(nuked-sc55 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 if(NUKED_ENABLE_ASIO)
-    target_include_directories(nuked-sc55 PRIVATE "${NUKED_ASIO_SDK_DIR}/common")
-    target_include_directories(nuked-sc55 PRIVATE "${NUKED_ASIO_SDK_DIR}/host")
-    target_include_directories(nuked-sc55 PRIVATE "${NUKED_ASIO_SDK_DIR}/host/pc")
-
-    target_sources(nuked-sc55
+    add_library(asio_sdk)
+    target_sources(asio_sdk
         PRIVATE
-        src/output_asio.cpp src/output_asio.h
         "${NUKED_ASIO_SDK_DIR}/common/asio.cpp"
         "${NUKED_ASIO_SDK_DIR}/common/combase.cpp"
         "${NUKED_ASIO_SDK_DIR}/common/debugmessage.cpp"
@@ -146,6 +150,16 @@ if(NUKED_ENABLE_ASIO)
         "${NUKED_ASIO_SDK_DIR}/host/asiodrivers.cpp"
         "${NUKED_ASIO_SDK_DIR}/host/pc/asiolist.cpp"
     )
+    target_include_directories(asio_sdk PUBLIC "${NUKED_ASIO_SDK_DIR}/common")
+    target_include_directories(asio_sdk PUBLIC "${NUKED_ASIO_SDK_DIR}/host")
+    target_include_directories(asio_sdk PUBLIC "${NUKED_ASIO_SDK_DIR}/host/pc")
+    target_disable_warnings(asio_sdk)
+
+    target_sources(nuked-sc55
+        PRIVATE
+        src/output_asio.cpp src/output_asio.h
+    )
+    target_link_libraries(nuked-sc55 PRIVATE asio_sdk)
 endif()
 
 #==============================================================================
