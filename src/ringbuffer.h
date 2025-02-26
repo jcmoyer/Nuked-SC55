@@ -38,6 +38,7 @@
 #include <cassert>
 #include <memory>
 #include <span>
+#include <atomic>
 
 // This type has reference semantics.
 class GenericBuffer
@@ -121,6 +122,36 @@ public:
         m_write_head = 0;
     }
 
+    RingbufferView(const RingbufferView& rhs)
+    {
+        m_read_head  = rhs.m_read_head.load();
+        m_write_head = rhs.m_write_head.load();
+        m_buffer     = rhs.m_buffer;
+    }
+
+    RingbufferView& operator=(const RingbufferView& rhs)
+    {
+        m_read_head  = rhs.m_read_head.load();
+        m_write_head = rhs.m_write_head.load();
+        m_buffer     = rhs.m_buffer;
+        return *this;
+    }
+
+    RingbufferView(RingbufferView&& rhs) noexcept
+    {
+        m_read_head  = rhs.m_read_head.load();
+        m_write_head = rhs.m_write_head.load();
+        m_buffer     = rhs.m_buffer;
+    }
+
+    RingbufferView& operator=(RingbufferView&& rhs) noexcept
+    {
+        m_read_head  = rhs.m_read_head.load();
+        m_write_head = rhs.m_write_head.load();
+        m_buffer     = rhs.m_buffer;
+        return *this;
+    }
+
     template <typename ElemT>
     void UncheckedWriteOne(const ElemT& value)
     {
@@ -199,9 +230,9 @@ private:
     }
 
 private:
-    std::span<uint8_t> m_buffer;
-    size_t             m_read_head  = 0;
-    size_t             m_write_head = 0;
+    std::span<uint8_t>  m_buffer;
+    std::atomic<size_t> m_read_head  = 0;
+    std::atomic<size_t> m_write_head = 0;
 };
 
 inline void MixFrame(AudioFrame<int16_t>& dest, const AudioFrame<int16_t>& src)
