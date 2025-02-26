@@ -35,6 +35,7 @@
 
 #include "audio.h"
 #include "math_util.h"
+#include <cassert>
 #include <memory>
 #include <span>
 
@@ -132,6 +133,38 @@ public:
     {
         memcpy(&dest, GetReadPtr(), sizeof(ElemT));
         m_read_head = Mask2(m_read_head + sizeof(ElemT));
+    }
+
+    template <typename ElemT>
+    std::span<ElemT> UncheckedPrepareWrite(size_t count)
+    {
+        assert((m_buffer.size() / sizeof(ElemT)) % count == 0);
+        assert(m_write_head % count == 0);
+        assert(GetWritableCount() >= count);
+        return {(ElemT*)GetWritePtr(), count};
+    }
+
+    template <typename ElemT>
+    void UncheckedFinishWrite(size_t count)
+    {
+        assert(m_write_head % count == 0);
+        m_write_head = Mask2(m_write_head + count * sizeof(ElemT));
+    }
+
+    template <typename ElemT>
+    std::span<ElemT> UncheckedPrepareRead(size_t count)
+    {
+        assert((m_buffer.size() / sizeof(ElemT)) % count == 0);
+        assert(m_read_head % count == 0);
+        assert(GetWritableCount() >= count);
+        return {(ElemT*)GetReadPtr(), count};
+    }
+
+    template <typename ElemT>
+    void UncheckedFinishRead(size_t count)
+    {
+        assert(m_read_head % count == 0);
+        m_read_head = Mask2(m_read_head + count * sizeof(ElemT));
     }
 
     size_t GetReadableCount() const

@@ -60,6 +60,8 @@ struct FE_Instance
 
     GenericBuffer  sample_buffer;
     RingbufferView view;
+    void*          chunk_first = nullptr;
+    void*          chunk_last  = nullptr;
 
     std::thread thread;
     bool        running;
@@ -70,6 +72,20 @@ struct FE_Instance
     // the stream one frame at a time is *slow* so we buffer a chunk of audio in `frames` and add it all at once.
     SDL_AudioStream *stream;
     std::vector<AudioFrame<int32_t>> frames;
+
+    template <typename SampleT>
+    void Prepare()
+    {
+        auto span   = view.UncheckedPrepareWrite<AudioFrame<SampleT>>(128);
+        chunk_first = span.data();
+        chunk_last  = span.data() + span.size();
+    }
+
+    template <typename SampleT>
+    void Finish()
+    {
+        view.UncheckedFinishWrite<AudioFrame<SampleT>>(128);
+    }
 };
 
 const size_t FE_MAX_INSTANCES = 16;
@@ -168,10 +184,15 @@ void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
 {
     FE_Instance& fe = *(FE_Instance*)userdata;
 
-    AudioFrame<SampleT> out;
-    Normalize(in, out);
+    AudioFrame<SampleT>* out = (AudioFrame<SampleT>*)fe.chunk_first;
+    Normalize(in, *out);
+    fe.chunk_first = out + 1;
 
-    fe.view.UncheckedWriteOne(out);
+    if (fe.chunk_first == fe.chunk_last)
+    {
+        fe.Finish<SampleT>();
+        fe.Prepare<SampleT>();
+    }
 }
 
 #ifdef NUKED_ENABLE_ASIO
@@ -291,21 +312,24 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
         FE_Instance& inst = fe.instances[i];
+        // TODO: probably base this off of user's buffer size
+        inst.sample_buffer.Init(65536);
+        inst.view = RingbufferView(inst.sample_buffer);
         switch (inst.format)
         {
         case AudioFormat::S16:
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &inst);
+            inst.Prepare<int16_t>();
             break;
         case AudioFormat::S32:
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &inst);
+            inst.Prepare<int32_t>();
             break;
         case AudioFormat::F32:
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &inst);
+            inst.Prepare<float>();
             break;
         }
-        // TODO: probably base this off of user's buffer size
-        inst.sample_buffer.Init(65536);
-        inst.view = RingbufferView(inst.sample_buffer);
         Out_SDL_AddStream(&fe.instances[i].view);
     }
 

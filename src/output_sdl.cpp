@@ -22,18 +22,21 @@ void AudioCallback(void* userdata, Uint8* stream, int len)
 {
     (void)userdata;
 
-    const size_t num_frames = (size_t)len / sizeof(AudioFrame<SampleT>);
+    using Frame = AudioFrame<SampleT>;
+
     memset(stream, 0, (size_t)len);
 
-    size_t renderable_count = num_frames;
     for (size_t i = 0; i < g_stream_count; ++i)
     {
-        renderable_count = Min(renderable_count, g_views[i]->GetReadableCount() / sizeof(AudioFrame<SampleT>));
-    }
-
-    for (size_t i = 0; i < g_stream_count; ++i)
-    {
-        ReadMix<SampleT>(*g_views[i], (AudioFrame<SampleT>*)stream, renderable_count);
+        if (g_views[i]->GetReadableCount() >= g_buffer_size)
+        {
+            auto span = g_views[i]->UncheckedPrepareRead<Frame>(g_buffer_size);
+            for (size_t samp = 0; samp < span.size(); ++samp)
+            {
+                MixFrame(*((Frame*)stream + samp), span[samp]);
+            }
+            g_views[i]->UncheckedFinishRead<Frame>(g_buffer_size);
+        }
     }
 }
 
