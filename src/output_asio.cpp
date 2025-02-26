@@ -9,6 +9,7 @@
 
 #include "ringbuffer.h"
 #include <atomic>
+#include <cinttypes>
 
 // number of buffers, one per stereo channel
 const size_t N_BUFFERS = 2;

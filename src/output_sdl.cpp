@@ -2,6 +2,7 @@
 
 #include "audio.h"
 #include <SDL.h>
+#include <cinttypes>
 
 // one per instance
 const size_t MAX_STREAMS = 16;
