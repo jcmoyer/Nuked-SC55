@@ -108,7 +108,6 @@ private:
     void*  m_alloc_base  = nullptr;
 };
 
-template <typename ElemT>
 class RingbufferView
 {
 public:
@@ -119,61 +118,57 @@ public:
     {
         m_read_head  = 0;
         m_write_head = 0;
-        m_elem_count = buffer.GetByteLength() / sizeof(ElemT);
     }
 
+    template <typename ElemT>
     void UncheckedWriteOne(const ElemT& value)
     {
-        *GetWritePtr() = value;
-        m_write_head   = (m_write_head + 1) % m_elem_count;
+        memcpy(GetWritePtr(), &value, sizeof(ElemT));
+        m_write_head = Mask2(m_write_head + sizeof(ElemT));
     }
 
+    template <typename ElemT>
     void UncheckedReadOne(ElemT& dest)
     {
-        dest        = *GetReadPtr();
-        m_read_head = (m_read_head + 1) % m_elem_count;
+        memcpy(&dest, GetReadPtr(), sizeof(ElemT));
+        m_read_head = Mask2(m_read_head + sizeof(ElemT));
     }
 
     size_t GetReadableCount() const
     {
-        if (m_read_head <= m_write_head)
-        {
-            return m_write_head - m_read_head;
-        }
-        else
-        {
-            return m_elem_count - (m_read_head - m_write_head);
-        }
+        return Mask(m_write_head - m_read_head);
     }
 
     size_t GetWritableCount() const
     {
-        if (m_read_head <= m_write_head)
-        {
-            return m_elem_count - (m_write_head - m_read_head) - 1;
-        }
-        else
-        {
-            return m_read_head - m_write_head - 1;
-        }
+        return m_buffer.size() - GetReadableCount();
     }
 
 private:
-    ElemT* GetWritePtr()
+    uint8_t* GetWritePtr()
     {
-        return (ElemT*)m_buffer.data() + m_write_head;
+        return m_buffer.data() + Mask(m_write_head);
     }
 
-    const ElemT* GetReadPtr() const
+    const uint8_t* GetReadPtr() const
     {
-        return (ElemT*)m_buffer.data() + m_read_head;
+        return m_buffer.data() + Mask(m_read_head);
+    }
+
+    size_t Mask(size_t index) const
+    {
+        return index & (m_buffer.size() - 1);
+    }
+
+    size_t Mask2(size_t index) const
+    {
+        return index & (2 * m_buffer.size() - 1);
     }
 
 private:
     std::span<uint8_t> m_buffer;
     size_t             m_read_head  = 0;
     size_t             m_write_head = 0;
-    size_t             m_elem_count = 0;
 };
 
 inline void MixFrame(AudioFrame<int16_t>& dest, const AudioFrame<int16_t>& src)
@@ -197,9 +192,9 @@ inline void MixFrame(AudioFrame<float>& dest, const AudioFrame<float>& src)
 // Reads up to `frame_count` frames and returns the number of frames
 // actually read. Mixes samples into dest by adding and clipping.
 template <typename SampleT>
-size_t ReadMix(RingbufferView<AudioFrame<SampleT>>& rb, AudioFrame<SampleT>* dest, size_t frame_count)
+size_t ReadMix(RingbufferView& rb, AudioFrame<SampleT>* dest, size_t frame_count)
 {
-    const size_t have_count = rb.GetReadableCount();
+    const size_t have_count = rb.GetReadableCount() / sizeof(SampleT);
     const size_t read_count = Min(have_count, frame_count);
     for (size_t i = 0; i < read_count; ++i)
     {

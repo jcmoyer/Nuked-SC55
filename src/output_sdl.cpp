@@ -13,34 +13,8 @@ static SDL_AudioDeviceID g_device      = 0;
 static SDL_AudioFormat   g_format      = 0;
 static SDL_AudioCallback g_callback    = 0;
 
-// TODO IMPORTANT next thing to fix - this buffer design is awful
-//static GenericBuffer*                       g_buffers[MAX_STREAMS]{};
-static RingbufferView<AudioFrame<int16_t>>* g_views_s16[MAX_STREAMS];
-static RingbufferView<AudioFrame<int32_t>>* g_views_s32[MAX_STREAMS];
-static RingbufferView<AudioFrame<float>>*   g_views_f32[MAX_STREAMS];
-static size_t                               g_stream_count = 0;
-
-// Statically selects the correct ringbuffer field into based on SampleT.
-template <typename SampleT>
-RingbufferView<AudioFrame<SampleT>>* StaticSelectBuffer(size_t i)
-{
-    if constexpr (std::is_same_v<SampleT, int16_t>)
-    {
-        return g_views_s16[i];
-    }
-    else if constexpr (std::is_same_v<SampleT, int32_t>)
-    {
-        return g_views_s32[i];
-    }
-    else if constexpr (std::is_same_v<SampleT, float>)
-    {
-        return g_views_f32[i];
-    }
-    else
-    {
-        // static_assert(DependentFalse<SampleT>, "No valid case for SampleT");
-    }
-}
+static RingbufferView* g_views[MAX_STREAMS];
+static size_t          g_stream_count = 0;
 
 template <typename SampleT>
 void AudioCallback(void* userdata, Uint8* stream, int len)
@@ -53,12 +27,12 @@ void AudioCallback(void* userdata, Uint8* stream, int len)
     size_t renderable_count = num_frames;
     for (size_t i = 0; i < g_stream_count; ++i)
     {
-        renderable_count = Min(renderable_count, StaticSelectBuffer<SampleT>(i)->GetReadableCount());
+        renderable_count = Min(renderable_count, g_views[i]->GetReadableCount() / sizeof(AudioFrame<SampleT>));
     }
 
     for (size_t i = 0; i < g_stream_count; ++i)
     {
-        ReadMix<SampleT>(*StaticSelectBuffer<SampleT>(i), (AudioFrame<SampleT>*)stream, renderable_count);
+        ReadMix<SampleT>(*g_views[i], (AudioFrame<SampleT>*)stream, renderable_count);
     }
 }
 
@@ -162,8 +136,7 @@ void Out_SDL_Stop()
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
-template <int Format, typename SampleT>
-void Out_SDL_AddStream(RingbufferView<AudioFrame<SampleT>>* view)
+void Out_SDL_AddStream(RingbufferView* view)
 {
     if (g_stream_count == MAX_STREAMS)
     {
@@ -171,41 +144,9 @@ void Out_SDL_AddStream(RingbufferView<AudioFrame<SampleT>>* view)
         exit(1);
     }
 
-    if (g_format != Format)
-    {
-        fprintf(stderr, "PANIC: attempted to add ringbuffer with wrong type\n");
-        exit(1);
-    }
-
-    if constexpr (std::is_same_v<SampleT, int16_t>)
-    {
-        g_views_s16[g_stream_count] = view;
-    }
-    else if constexpr (std::is_same_v<SampleT, int32_t>)
-    {
-        g_views_s32[g_stream_count] = view;
-    }
-    else if constexpr (std::is_same_v<SampleT, float>)
-    {
-        g_views_f32[g_stream_count] = view;
-    }
+    g_views[g_stream_count] = view;
 
     ++g_stream_count;
-}
-
-void Out_SDL_AddStream(RingbufferView<AudioFrame<int16_t>>* view)
-{
-    Out_SDL_AddStream<AUDIO_S16SYS>(view);
-}
-
-void Out_SDL_AddStream(RingbufferView<AudioFrame<int32_t>>* view)
-{
-    Out_SDL_AddStream<AUDIO_S32SYS>(view);
-}
-
-void Out_SDL_AddStream(RingbufferView<AudioFrame<float>>* view)
-{
-    Out_SDL_AddStream<AUDIO_F32SYS>(view);
 }
 
 void Out_SDL_SetFrequency(int frequency)

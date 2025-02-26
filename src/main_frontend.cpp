@@ -54,20 +54,12 @@
 #include "output_sdl.h"
 #include "output_asio.h"
 
-// Workaround until all compilers implement CWG 2518 (at time of writing, MSVC
-// doesn't accept a static_assert(false) in a constexpr conditional branch)
-template <typename>
-constexpr bool DependentFalse = false;
-
 struct FE_Instance
 {
     Emulator emu;
 
-    GenericBuffer sample_buffer;
-
-    RingbufferView<AudioFrame<int16_t>> view_s16;
-    RingbufferView<AudioFrame<int32_t>> view_s32;
-    RingbufferView<AudioFrame<float>>   view_f32;
+    GenericBuffer  sample_buffer;
+    RingbufferView view;
 
     std::thread thread;
     bool        running;
@@ -78,28 +70,6 @@ struct FE_Instance
     // the stream one frame at a time is *slow* so we buffer a chunk of audio in `frames` and add it all at once.
     SDL_AudioStream *stream;
     std::vector<AudioFrame<int32_t>> frames;
-
-    // Statically selects the correct ringbuffer field into based on SampleT.
-    template <typename SampleT>
-    RingbufferView<AudioFrame<SampleT>>& StaticSelectBuffer()
-    {
-        if constexpr (std::is_same_v<SampleT, int16_t>)
-        {
-            return view_s16;
-        }
-        else if constexpr (std::is_same_v<SampleT, int32_t>)
-        {
-            return view_s32;
-        }
-        else if constexpr (std::is_same_v<SampleT, float>)
-        {
-            return view_f32;
-        }
-        else
-        {
-            static_assert(DependentFalse<SampleT>, "No valid case for SampleT");
-        }
-    }
 };
 
 const size_t FE_MAX_INSTANCES = 16;
@@ -201,7 +171,7 @@ void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
     AudioFrame<SampleT> out;
     Normalize(in, out);
 
-    fe.StaticSelectBuffer<SampleT>().UncheckedWriteOne(out);
+    fe.view.UncheckedWriteOne(out);
 }
 
 #ifdef NUKED_ENABLE_ASIO
@@ -227,15 +197,12 @@ void FE_AudioCallback(void* userdata, Uint8* stream, int len)
     size_t renderable_count = num_frames;
     for (size_t i = 0; i < frontend.instances_in_use; ++i)
     {
-        renderable_count = Min(
-            renderable_count,
-            frontend.instances[i].StaticSelectBuffer<SampleT>().GetReadableCount()
-        );
+        renderable_count = Min(renderable_count, frontend.instances[i].view.GetReadableCount() / sizeof(AudioFrame<SampleT>));
     }
 
     for (size_t i = 0; i < frontend.instances_in_use; ++i)
     {
-        ReadMix<SampleT>(frontend.instances[i].StaticSelectBuffer<SampleT>(), (AudioFrame<SampleT>*)stream, renderable_count);
+        ReadMix<SampleT>(frontend.instances[i].view, (AudioFrame<SampleT>*)stream, renderable_count);
     }
 }
 
@@ -375,24 +342,19 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
         switch (inst.format)
         {
         case AudioFormat::S16:
-            inst.sample_buffer.Init(sizeof(int16_t) * fe.audio_buffer_size);
-            inst.view_s16 = RingbufferView<AudioFrame<int16_t>>(inst.sample_buffer);
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &inst);
-            Out_SDL_AddStream(&fe.instances[i].view_s16);
             break;
         case AudioFormat::S32:
-            inst.sample_buffer.Init(sizeof(int32_t) * fe.audio_buffer_size);
-            inst.view_s32 = RingbufferView<AudioFrame<int32_t>>(inst.sample_buffer);
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &inst);
-            Out_SDL_AddStream(&fe.instances[i].view_s32);
             break;
         case AudioFormat::F32:
-            inst.sample_buffer.Init(sizeof(float) * fe.audio_buffer_size);
-            inst.view_f32 = RingbufferView<AudioFrame<float>>(inst.sample_buffer);
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &inst);
-            Out_SDL_AddStream(&fe.instances[i].view_f32);
             break;
         }
+        // TODO: probably base this off of user's buffer size
+        inst.sample_buffer.Init(65536);
+        inst.view = RingbufferView(inst.sample_buffer);
+        Out_SDL_AddStream(&fe.instances[i].view);
     }
 
     return Out_SDL_Start(device_name);
@@ -461,23 +423,16 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 }
 
 template <typename SampleT>
-bool FE_IsBufferFull(FE_Instance& instance)
-{
-    // MCU_Step will always produce 1 or 2 samples. It's simplest to always leave enough space for oversampling because
-    // then we don't need to re-align the write head every time.
-    return instance.StaticSelectBuffer<SampleT>().GetWritableCount() < 2;
-}
-
-template <typename SampleT>
 void FE_RunInstanceSDL(FE_Instance& instance)
 {
     MCU_WorkThread_Lock(instance.emu.GetMCU());
     while (instance.running)
     {
-        if (FE_IsBufferFull<SampleT>(instance))
+        // TODO review this condition
+        if (instance.view.GetReadableCount() >= 8 * 128 * sizeof(AudioFrame<SampleT>))
         {
             MCU_WorkThread_Unlock(instance.emu.GetMCU());
-            while (FE_IsBufferFull<SampleT>(instance))
+            while (instance.view.GetReadableCount() >= 8 * 128 * sizeof(AudioFrame<SampleT>))
             {
                 SDL_Delay(1);
             }
