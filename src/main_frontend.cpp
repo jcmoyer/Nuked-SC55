@@ -186,54 +186,6 @@ void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 }
 #endif
 
-template <typename SampleT>
-void FE_AudioCallback(void* userdata, Uint8* stream, int len)
-{
-    FE_Application& frontend = *(FE_Application*)userdata;
-
-    const size_t num_frames = (size_t)len / sizeof(AudioFrame<SampleT>);
-    memset(stream, 0, (size_t)len);
-
-    size_t renderable_count = num_frames;
-    for (size_t i = 0; i < frontend.instances_in_use; ++i)
-    {
-        renderable_count = Min(renderable_count, frontend.instances[i].view.GetReadableCount() / sizeof(AudioFrame<SampleT>));
-    }
-
-    for (size_t i = 0; i < frontend.instances_in_use; ++i)
-    {
-        ReadMix<SampleT>(frontend.instances[i].view, (AudioFrame<SampleT>*)stream, renderable_count);
-    }
-}
-
-static const char* FE_AudioFormatStr(SDL_AudioFormat format)
-{
-    switch(format)
-    {
-    case AUDIO_S8:
-        return "S8";
-    case AUDIO_U8:
-        return "U8";
-    case AUDIO_S16MSB:
-        return "S16MSB";
-    case AUDIO_S16LSB:
-        return "S16LSB";
-    case AUDIO_U16MSB:
-        return "U16MSB";
-    case AUDIO_U16LSB:
-        return "U16LSB";
-    case AUDIO_S32MSB:
-        return "S32MSB";
-    case AUDIO_S32LSB:
-        return "S32LSB";
-    case AUDIO_F32MSB:
-        return "F32MSB";
-    case AUDIO_F32LSB:
-        return "F32LSB";
-    }
-    return "UNK";
-}
-
 enum class FE_PickOutputResult
 {
     WantMatchedName,
