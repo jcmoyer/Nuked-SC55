@@ -485,7 +485,7 @@ void FE_RunInstanceASIO(FE_Instance& instance)
         while (instance.view.GetReadableElements<AudioFrame<int32_t>>() >= buffer_size)
         {
             auto span = instance.view.UncheckedPrepareRead<AudioFrame<int32_t>>(buffer_size);
-            SDL_AudioStreamPut(instance.stream, span.data(), (int)span.size() * sizeof(AudioFrame<int32_t>));
+            SDL_AudioStreamPut(instance.stream, span.data(), (int)(span.size() * sizeof(AudioFrame<int32_t>)));
             instance.view.UncheckedFinishRead<AudioFrame<int32_t>>(buffer_size);
         }
 
