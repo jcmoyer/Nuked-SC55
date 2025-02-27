@@ -54,6 +54,12 @@
 #include "output_sdl.h"
 #include "output_asio.h"
 
+template <typename ElemT>
+size_t FE_CalcRingbufferSizeBytes(uint32_t buffer_size, uint32_t buffer_count)
+{
+    return std::bit_ceil<size_t>(1 + (size_t)buffer_size * (size_t)buffer_count * sizeof(ElemT));
+}
+
 struct FE_Instance
 {
     Emulator emu;
@@ -67,8 +73,8 @@ struct FE_Instance
     bool        running;
     AudioFormat format;
 
-    size_t buffer_size;
-    size_t buffer_count;
+    uint32_t buffer_size;
+    uint32_t buffer_count;
 
     // TODO: this is getting messy, we need to revisit how we manage buffers...
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
@@ -88,6 +94,14 @@ struct FE_Instance
     void Finish()
     {
         view.UncheckedFinishWrite<AudioFrame<SampleT>>(buffer_size);
+    }
+
+    template <typename SampleT>
+    void CreateAndPrepareBuffer()
+    {
+        sample_buffer.Init(FE_CalcRingbufferSizeBytes<AudioFrame<SampleT>>(buffer_size, buffer_count));
+        view = RingbufferView(sample_buffer);
+        Prepare<SampleT>();
     }
 };
 
@@ -308,25 +322,23 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
         FE_Instance& inst = fe.instances[i];
-        // TODO: probably base this off of user's buffer size
-        inst.sample_buffer.Init(65536);
-        inst.view = RingbufferView(inst.sample_buffer);
         switch (inst.format)
         {
         case AudioFormat::S16:
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int16_t>, &inst);
-            inst.Prepare<int16_t>();
+            inst.CreateAndPrepareBuffer<int16_t>();
             break;
         case AudioFormat::S32:
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<int32_t>, &inst);
-            inst.Prepare<int32_t>();
+            inst.CreateAndPrepareBuffer<int32_t>();
             break;
         case AudioFormat::F32:
             inst.emu.SetSampleCallback(FE_ReceiveSampleSDL<float>, &inst);
-            inst.Prepare<float>();
+            inst.CreateAndPrepareBuffer<float>();
             break;
         }
         Out_SDL_AddStream(&fe.instances[i].view);
+        fprintf(stderr, "#%02" PRIu64 ": allocated %" PRIu64 " bytes for audio\n", i, inst.sample_buffer.GetByteLength());
     }
 
     return Out_SDL_Start(device_name);
