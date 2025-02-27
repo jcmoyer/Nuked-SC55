@@ -7,6 +7,7 @@
 - The renderer frontend will now run the emulator for a bit before sending any
   MIDI events even if you don't specify a reset with `-r` or `--reset`. This
   should ensure it's ready to accept program changes. (#20)
+- Added [documentation](doc/standard_frontend.md) for the standard frontend.
 - Added ASIO support for Windows users who compile from source. See
   [BUILDING.md](BUILDING.md) for instructions. Precompiled ASIO builds cannot
   be provided because of the ASIO SDK license.
