@@ -420,7 +420,7 @@ void FE_RunInstanceSDL(FE_Instance& instance)
 
     while (instance.running)
     {
-        while (instance.view.GetReadableCount() >= max_byte_count)
+        while (instance.view.GetReadableBytes() >= max_byte_count)
         {
             SDL_Delay(1);
         }

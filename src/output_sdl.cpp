@@ -28,7 +28,7 @@ void AudioCallback(void* userdata, Uint8* stream, int len)
 
     for (size_t i = 0; i < g_stream_count; ++i)
     {
-        if (g_views[i]->GetReadableCount() >= g_buffer_size)
+        if (g_views[i]->GetReadableBytes() >= g_buffer_size)
         {
             auto span = g_views[i]->UncheckedPrepareRead<Frame>(g_buffer_size);
             for (size_t samp = 0; samp < span.size(); ++samp)

@@ -174,7 +174,7 @@ public:
         // write must start at the end of a prior `count`-long write
         assert((m_write_head / sizeof(ElemT)) % count == 0);
         // must have space for `count` elements
-        assert(GetWritableCount() >= count * sizeof(ElemT));
+        assert(GetWritableElements<ElemT>() >= count);
         return {(ElemT*)GetWritePtr(), count};
     }
 
@@ -193,7 +193,7 @@ public:
         // read must start at the end of a prior `count`-long read
         assert((m_read_head / sizeof(ElemT)) % count == 0);
         // must have `count` elements
-        assert(GetReadableCount() >= count * sizeof(ElemT));
+        assert(GetReadableElements<ElemT>() >= count);
         return {(ElemT*)GetReadPtr(), count};
     }
 
@@ -204,14 +204,26 @@ public:
         m_read_head = Mask2(m_read_head + count * sizeof(ElemT));
     }
 
-    size_t GetReadableCount() const
+    size_t GetReadableBytes() const
     {
         return Mask(m_write_head - m_read_head);
     }
 
-    size_t GetWritableCount() const
+    size_t GetWritableBytes() const
     {
-        return m_buffer.size() - GetReadableCount();
+        return m_buffer.size() - GetReadableBytes();
+    }
+
+    template <typename ElemT>
+    size_t GetReadableElements() const
+    {
+        return GetReadableBytes() / sizeof(ElemT);
+    }
+
+    template <typename ElemT>
+    size_t GetWritableElements() const
+    {
+        return GetWritableBytes() / sizeof(ElemT);
     }
 
 private:
@@ -264,7 +276,7 @@ inline void MixFrame(AudioFrame<float>& dest, const AudioFrame<float>& src)
 template <typename SampleT>
 size_t ReadMix(RingbufferView& rb, AudioFrame<SampleT>* dest, size_t frame_count)
 {
-    const size_t have_count = rb.GetReadableCount() / sizeof(SampleT);
+    const size_t have_count = rb.GetReadableElements<SampleT>();
     const size_t read_count = Min(have_count, frame_count);
     for (size_t i = 0; i < read_count; ++i)
     {
