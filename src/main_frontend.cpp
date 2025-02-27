@@ -67,6 +67,9 @@ struct FE_Instance
     bool        running;
     AudioFormat format;
 
+    size_t buffer_size;
+    size_t max_inflight;
+
     // TODO: this is getting messy, we need to revisit how we manage buffers...
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
     // the stream one frame at a time is *slow* so we buffer a chunk of audio in `frames` and add it all at once.
@@ -76,7 +79,7 @@ struct FE_Instance
     template <typename SampleT>
     void Prepare()
     {
-        auto span   = view.UncheckedPrepareWrite<AudioFrame<SampleT>>(128);
+        auto span   = view.UncheckedPrepareWrite<AudioFrame<SampleT>>(buffer_size);
         chunk_first = span.data();
         chunk_last  = span.data() + span.size();
     }
@@ -84,7 +87,7 @@ struct FE_Instance
     template <typename SampleT>
     void Finish()
     {
-        view.UncheckedFinishWrite<AudioFrame<SampleT>>(128);
+        view.UncheckedFinishWrite<AudioFrame<SampleT>>(buffer_size);
     }
 };
 
@@ -109,7 +112,7 @@ struct FE_Parameters
     std::string midi_device;
     std::string audio_device;
     uint32_t page_size = 512;
-    uint32_t page_num = 32;
+    uint32_t page_num = 16;
     bool autodetect = true;
     EMU_SystemReset reset = EMU_SystemReset::NONE;
     size_t instances = 1;
@@ -301,13 +304,9 @@ void FE_PrintAudioDevices()
 
 bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char* device_name)
 {
-    // TODO: revisit the frontend's idea of buffer sizes
-    fe.audio_page_size = (params.page_size / 2) * 2; // must be even
-    fe.audio_buffer_size = fe.audio_page_size * params.page_num;
-
     Out_SDL_SetFormat(params.output_format);
     Out_SDL_SetFrequency((int)PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM()));
-    Out_SDL_SetBufferSize((int)fe.audio_page_size / 4);
+    Out_SDL_SetBufferSize((int)fe.audio_buffer_size);
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
@@ -315,6 +314,8 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
         // TODO: probably base this off of user's buffer size
         inst.sample_buffer.Init(65536);
         inst.view = RingbufferView(inst.sample_buffer);
+        inst.buffer_size = fe.audio_buffer_size;
+        inst.max_inflight = params.page_num;
         switch (inst.format)
         {
         case AudioFormat::S16:
@@ -339,6 +340,8 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
 #ifdef NUKED_ENABLE_ASIO
 bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
 {
+    Out_ASIO_SetBufferSize((int)fe.audio_buffer_size);
+
     if (!Out_ASIO_Start(name))
     {
         return false;
@@ -346,6 +349,8 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
+        fe.instances[i].buffer_size = fe.audio_buffer_size;
+        fe.instances[i].max_inflight = params.page_num;
         fe.instances[i].stream = SDL_NewAudioStream(AUDIO_S32,
                                                     2,
                                                     PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()),
@@ -362,7 +367,17 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
 bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 {
-    AudioOutput output;
+    // TODO rename/reduce the number of these fields
+    fe.audio_page_size   = params.page_size;
+    fe.audio_buffer_size = fe.audio_page_size;
+
+    if (!std::has_single_bit(fe.audio_buffer_size))
+    {
+        fprintf(stderr, "Audio buffer size must be a power-of-two; got %d\n", fe.audio_buffer_size);
+        return false;
+    }
+
+    AudioOutput         output;
     FE_PickOutputResult output_result = FE_PickOutputDevice(params.audio_device, output);
 
     fe.audio_output = output;
@@ -401,41 +416,35 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 template <typename SampleT>
 void FE_RunInstanceSDL(FE_Instance& instance)
 {
-    MCU_WorkThread_Lock(instance.emu.GetMCU());
+    const size_t max_byte_count = instance.max_inflight * instance.buffer_size * sizeof(AudioFrame<SampleT>);
+
     while (instance.running)
     {
-        // TODO review this condition
-        if (instance.view.GetReadableCount() >= 8 * 128 * sizeof(AudioFrame<SampleT>))
+        while (instance.view.GetReadableCount() >= max_byte_count)
         {
-            MCU_WorkThread_Unlock(instance.emu.GetMCU());
-            while (instance.view.GetReadableCount() >= 8 * 128 * sizeof(AudioFrame<SampleT>))
-            {
-                SDL_Delay(1);
-            }
-            MCU_WorkThread_Lock(instance.emu.GetMCU());
+            SDL_Delay(1);
         }
 
         MCU_Step(instance.emu.GetMCU());
     }
-    MCU_WorkThread_Unlock(instance.emu.GetMCU());
 }
 
 #ifdef NUKED_ENABLE_ASIO
 void FE_RunInstanceASIO(FE_Instance& instance)
 {
-    // TODO: get from out_asio
-    const size_t preferredSize = 1024;
-
     while (instance.running)
     {
-        // TODO: how to pick flush size? make configurable?
-        if (instance.frames.size() >= preferredSize*2)
+        // we recalc every time because ASIO reset might change this
+        const size_t buffer_size = Out_ASIO_GetBufferSize();
+        const size_t max_byte_count = instance.max_inflight * buffer_size * sizeof(AudioFrame<int32_t>);
+
+        if (instance.frames.size() >= buffer_size)
         {
             SDL_AudioStreamPut(instance.stream, instance.frames.data(), instance.frames.size() * sizeof(AudioFrame<int32_t>));
             instance.frames.clear();
         }
 
-        while (SDL_AudioStreamAvailable(instance.stream) >= preferredSize*8*2)
+        while (SDL_AudioStreamAvailable(instance.stream) >= max_byte_count)
         {
             SDL_Delay(1);
         }
@@ -587,6 +596,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     }
 
     fe->format = params.output_format;
+    fe->buffer_size = container.audio_buffer_size;
 
     if (!fe->emu.Init(EMU_Options { .enable_lcd = !params.no_lcd }))
     {

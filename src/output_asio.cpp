@@ -33,6 +33,8 @@ struct GlobalAsioState
     long preferred_size;
     long granularity;
 
+    long user_size;
+
     // Size of one ASIO buffer in bytes
     size_t buffer_size_bytes;
 
@@ -174,6 +176,7 @@ bool Out_ASIO_Start(const char* driver_name)
         ASE_OK)
     {
         fprintf(stderr, "ASIOGetBufferSize failed\n");
+        ASIOExit();
         return false;
     }
 
@@ -194,6 +197,7 @@ bool Out_ASIO_Start(const char* driver_name)
     if (ASIOGetChannels(&g_asio_state.input_channel_count, &g_asio_state.output_channel_count))
     {
         fprintf(stderr, "ASIOGetChannels failed\n");
+        ASIOExit();
         return false;
     }
 
@@ -205,6 +209,7 @@ bool Out_ASIO_Start(const char* driver_name)
     if ((size_t)g_asio_state.output_channel_count < N_BUFFERS)
     {
         fprintf(stderr, "%" PRIu64 " channels required; aborting\n", N_BUFFERS);
+        ASIOExit();
         return false;
     }
 
@@ -221,8 +226,13 @@ bool Out_ASIO_Start(const char* driver_name)
     g_asio_state.callbacks.sampleRateDidChange  = sampleRateDidChange;
     g_asio_state.callbacks.asioMessage          = asioMessage;
 
-    // TODO error handling
-    ASIOCreateBuffers(g_asio_state.buffer_info, N_BUFFERS, g_asio_state.preferred_size, &g_asio_state.callbacks);
+    if (ASIOCreateBuffers(g_asio_state.buffer_info, N_BUFFERS, g_asio_state.user_size, &g_asio_state.callbacks) !=
+        ASE_OK)
+    {
+        fprintf(stderr, "ASIOCreateBuffers failed\n");
+        ASIOExit();
+        return false;
+    }
 
     for (size_t i = 0; i < N_BUFFERS; ++i)
     {
@@ -243,6 +253,7 @@ bool Out_ASIO_Start(const char* driver_name)
         if (g_asio_state.output_type != g_asio_state.channel_info[i].type)
         {
             fprintf(stderr, "ASIO channel %" PRIu64 " has a different output type!\n", i);
+            ASIOExit();
             return false;
         }
     }
@@ -317,6 +328,16 @@ void Out_ASIO_Reset()
     ASIOStop();
     Out_ASIO_Start(g_asio_state.driver_info.name);
     g_asio_state.defer_reset = false;
+}
+
+void Out_ASIO_SetBufferSize(int size)
+{
+    g_asio_state.user_size = size;
+}
+
+int Out_ASIO_GetBufferSize()
+{
+    return g_asio_state.user_size;
 }
 
 // `src` contains `count` pairs of 16-bit words LRLRLRLR (here count = 4)

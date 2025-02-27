@@ -20,3 +20,6 @@ SDL_AudioFormat Out_ASIO_GetFormat();
 
 // Returns the size of a single sample in bytes.
 size_t Out_ASIO_GetFormatSampleSizeBytes();
+
+void Out_ASIO_SetBufferSize(int size);
+int  Out_ASIO_GetBufferSize();
