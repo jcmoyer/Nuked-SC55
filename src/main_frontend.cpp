@@ -42,7 +42,6 @@
 #include <SDL.h>
 #include <cinttypes>
 #include <optional>
-#include <vector>
 #include <bit>
 
 #ifdef _WIN32
@@ -77,11 +76,9 @@ struct FE_Instance
     uint32_t buffer_size;
     uint32_t buffer_count;
 
-    // TODO: this is getting messy, we need to revisit how we manage buffers...
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
-    // the stream one frame at a time is *slow* so we buffer a chunk of audio in `frames` and add it all at once.
-    SDL_AudioStream *stream;
-    std::vector<AudioFrame<int32_t>> frames;
+    // the stream one frame at a time is *slow* so we buffer audio in `sample_buffer` and add it all at once.
+    SDL_AudioStream* stream;
 
     template <typename SampleT>
     void Prepare()
@@ -213,12 +210,19 @@ void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
 #ifdef NUKED_ENABLE_ASIO
 void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 {
+    using SampleT = int32_t;
+
     FE_Instance& fe = *(FE_Instance*)userdata;
 
-    AudioFrame<int32_t> out;
-    Normalize(in, out);
+    AudioFrame<SampleT>* out = (AudioFrame<SampleT>*)fe.chunk_first;
+    Normalize(in, *out);
+    fe.chunk_first = out + 1;
 
-    fe.frames.push_back(out);
+    if (fe.chunk_first == fe.chunk_last)
+    {
+        fe.Finish<SampleT>();
+        fe.Prepare<SampleT>();
+    }
 }
 #endif
 
@@ -357,14 +361,18 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
-        fe.instances[i].stream = SDL_NewAudioStream(AUDIO_S32,
-                                                    2,
-                                                    (int)PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()),
-                                                    Out_ASIO_GetFormat(),
-                                                    2,
-                                                    (int)Out_ASIO_GetFrequency());
-        Out_ASIO_AddStream(fe.instances[i].stream);
-        fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleASIO, &fe.instances[i]);
+        FE_Instance& inst = fe.instances[i];
+        inst.CreateAndPrepareBuffer<int32_t>();
+        inst.stream = SDL_NewAudioStream(AUDIO_S32,
+                                         2,
+                                         (int)PCM_GetOutputFrequency(inst.emu.GetPCM()),
+                                         Out_ASIO_GetFormat(),
+                                         2,
+                                         (int)Out_ASIO_GetFrequency());
+        Out_ASIO_AddStream(inst.stream);
+        inst.emu.SetSampleCallback(FE_ReceiveSampleASIO, &inst);
+        fprintf(
+            stderr, "#%02" PRIu64 ": allocated %" PRIu64 " bytes for audio\n", i, inst.sample_buffer.GetByteLength());
     }
 
     return true;
@@ -444,11 +452,11 @@ void FE_RunInstanceASIO(FE_Instance& instance)
         const size_t buffer_size = (size_t)Out_ASIO_GetBufferSize();
         const size_t max_byte_count = instance.buffer_count * buffer_size * sizeof(AudioFrame<int32_t>);
 
-        if (instance.frames.size() >= buffer_size)
+        while (instance.view.GetReadableElements<AudioFrame<int32_t>>() >= buffer_size)
         {
-            SDL_AudioStreamPut(
-                instance.stream, instance.frames.data(), (int)(instance.frames.size() * sizeof(AudioFrame<int32_t>)));
-            instance.frames.clear();
+            auto span = instance.view.UncheckedPrepareRead<AudioFrame<int32_t>>(buffer_size);
+            SDL_AudioStreamPut(instance.stream, span.data(), (int)span.size() * sizeof(AudioFrame<int32_t>));
+            instance.view.UncheckedFinishRead<AudioFrame<int32_t>>(buffer_size);
         }
 
         while ((size_t)SDL_AudioStreamAvailable(instance.stream) >= max_byte_count)
