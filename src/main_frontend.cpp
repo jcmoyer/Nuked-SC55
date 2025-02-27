@@ -208,10 +208,9 @@ void FE_ReceiveSampleSDL(void* userdata, const AudioFrame<int32_t>& in)
 }
 
 #ifdef NUKED_ENABLE_ASIO
+template <typename SampleT>
 void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 {
-    using SampleT = int32_t;
-
     FE_Instance& fe = *(FE_Instance*)userdata;
 
     AudioFrame<SampleT>* out = (AudioFrame<SampleT>*)fe.chunk_first;
@@ -349,6 +348,22 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
     return Out_SDL_Start(device_name);
 }
 
+SDL_AudioFormat FE_ToSDLFormat(AudioFormat internal)
+{
+    switch (internal)
+    {
+    case AudioFormat::S16:
+        return AUDIO_S16;
+    case AudioFormat::S32:
+        return AUDIO_S32;
+    case AudioFormat::F32:
+        return AUDIO_F32;
+    default:
+        fprintf(stderr, "Invalid audio format conversion\n");
+        exit(1);
+    }
+}
+
 #ifdef NUKED_ENABLE_ASIO
 bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
 {
@@ -362,15 +377,30 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
         FE_Instance& inst = fe.instances[i];
-        inst.CreateAndPrepareBuffer<int32_t>();
-        inst.stream = SDL_NewAudioStream(AUDIO_S32,
+
+        inst.stream = SDL_NewAudioStream(FE_ToSDLFormat(inst.format),
                                          2,
                                          (int)PCM_GetOutputFrequency(inst.emu.GetPCM()),
                                          Out_ASIO_GetFormat(),
                                          2,
                                          (int)Out_ASIO_GetFrequency());
         Out_ASIO_AddStream(inst.stream);
-        inst.emu.SetSampleCallback(FE_ReceiveSampleASIO, &inst);
+
+        switch (inst.format)
+        {
+        case AudioFormat::S16:
+            inst.CreateAndPrepareBuffer<int16_t>();
+            inst.emu.SetSampleCallback(FE_ReceiveSampleASIO<int16_t>, &inst);
+            break;
+        case AudioFormat::S32:
+            inst.CreateAndPrepareBuffer<int32_t>();
+            inst.emu.SetSampleCallback(FE_ReceiveSampleASIO<int32_t>, &inst);
+            break;
+        case AudioFormat::F32:
+            inst.CreateAndPrepareBuffer<float>();
+            inst.emu.SetSampleCallback(FE_ReceiveSampleASIO<float>, &inst);
+            break;
+        }
         fprintf(
             stderr, "#%02" PRIu64 ": allocated %" PRIu64 " bytes for audio\n", i, inst.sample_buffer.GetByteLength());
     }

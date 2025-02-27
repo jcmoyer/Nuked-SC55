@@ -83,6 +83,12 @@ probably a good idea to make them equal.
 
 Sets the output format. Some formats may not be available on all hardware.
 
+### ASIO
+
+ASIO drivers will request a specific output format. In this case, `-f` will
+only control the internal audio format, and it will be converted to the format
+the ASIO driver requests when handed off for output.
+
 ## `--disable-oversampling`
 
 Disables oversampling, halving output frequency. Normally the emulator produces
