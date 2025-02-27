@@ -68,7 +68,7 @@ struct FE_Instance
     AudioFormat format;
 
     size_t buffer_size;
-    size_t max_inflight;
+    size_t buffer_count;
 
     // TODO: this is getting messy, we need to revisit how we manage buffers...
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
@@ -97,9 +97,6 @@ struct FE_Application {
     FE_Instance instances[FE_MAX_INSTANCES];
     size_t instances_in_use = 0;
 
-    uint32_t audio_buffer_size = 0;
-    uint32_t audio_page_size = 0;
-
     SDL_AudioDeviceID sdl_audio = 0;
     AudioOutput audio_output{};
 
@@ -111,8 +108,8 @@ struct FE_Parameters
     bool help = false;
     std::string midi_device;
     std::string audio_device;
-    uint32_t page_size = 512;
-    uint32_t page_num = 16;
+    uint32_t buffer_size = 512;
+    uint32_t buffer_count = 16;
     bool autodetect = true;
     EMU_SystemReset reset = EMU_SystemReset::NONE;
     size_t instances = 1;
@@ -306,7 +303,7 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
 {
     Out_SDL_SetFormat(params.output_format);
     Out_SDL_SetFrequency((int)PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM()));
-    Out_SDL_SetBufferSize((int)fe.audio_buffer_size);
+    Out_SDL_SetBufferSize((int)params.buffer_size);
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
@@ -314,8 +311,6 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
         // TODO: probably base this off of user's buffer size
         inst.sample_buffer.Init(65536);
         inst.view = RingbufferView(inst.sample_buffer);
-        inst.buffer_size = fe.audio_buffer_size;
-        inst.max_inflight = params.page_num;
         switch (inst.format)
         {
         case AudioFormat::S16:
@@ -340,7 +335,7 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
 #ifdef NUKED_ENABLE_ASIO
 bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
 {
-    Out_ASIO_SetBufferSize((int)fe.audio_buffer_size);
+    Out_ASIO_SetBufferSize((int)params.buffer_size);
 
     if (!Out_ASIO_Start(name))
     {
@@ -349,8 +344,6 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
-        fe.instances[i].buffer_size = fe.audio_buffer_size;
-        fe.instances[i].max_inflight = params.page_num;
         fe.instances[i].stream = SDL_NewAudioStream(AUDIO_S32,
                                                     2,
                                                     PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()),
@@ -367,13 +360,9 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 
 bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 {
-    // TODO rename/reduce the number of these fields
-    fe.audio_page_size   = params.page_size;
-    fe.audio_buffer_size = fe.audio_page_size;
-
-    if (!std::has_single_bit(fe.audio_buffer_size))
+    if (!std::has_single_bit(params.buffer_size))
     {
-        fprintf(stderr, "Audio buffer size must be a power-of-two; got %d\n", fe.audio_buffer_size);
+        fprintf(stderr, "Audio buffer size must be a power-of-two; got %d\n", params.buffer_size);
         return false;
     }
 
@@ -416,7 +405,7 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 template <typename SampleT>
 void FE_RunInstanceSDL(FE_Instance& instance)
 {
-    const size_t max_byte_count = instance.max_inflight * instance.buffer_size * sizeof(AudioFrame<SampleT>);
+    const size_t max_byte_count = instance.buffer_count * instance.buffer_size * sizeof(AudioFrame<SampleT>);
 
     while (instance.running)
     {
@@ -436,7 +425,7 @@ void FE_RunInstanceASIO(FE_Instance& instance)
     {
         // we recalc every time because ASIO reset might change this
         const size_t buffer_size = Out_ASIO_GetBufferSize();
-        const size_t max_byte_count = instance.max_inflight * buffer_size * sizeof(AudioFrame<int32_t>);
+        const size_t max_byte_count = instance.buffer_count * buffer_size * sizeof(AudioFrame<int32_t>);
 
         if (instance.frames.size() >= buffer_size)
         {
@@ -595,8 +584,9 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    fe->format = params.output_format;
-    fe->buffer_size = container.audio_buffer_size;
+    fe->format       = params.output_format;
+    fe->buffer_size  = params.buffer_size;
+    fe->buffer_count = params.buffer_count;
 
     if (!fe->emu.Init(EMU_Options { .enable_lcd = !params.no_lcd }))
     {
@@ -658,8 +648,8 @@ enum class FE_ParseError
     InstancesInvalid,
     InstancesOutOfRange,
     UnexpectedEnd,
-    PageSizeInvalid,
-    PageCountInvalid,
+    BufferSizeInvalid,
+    BufferCountInvalid,
     UnknownArgument,
     RomDirectoryNotFound,
     FormatInvalid,
@@ -677,10 +667,10 @@ const char* FE_ParseErrorStr(FE_ParseError err)
             return "Instances out of range (should be 1-16)";
         case FE_ParseError::UnexpectedEnd:
             return "Expected another argument";
-        case FE_ParseError::PageSizeInvalid:
-            return "Page size invalid";
-        case FE_ParseError::PageCountInvalid:
-            return "Page count invalid";
+        case FE_ParseError::BufferSizeInvalid:
+            return "Buffer size invalid";
+        case FE_ParseError::BufferCountInvalid:
+            return "Buffer count invalid (should be greater than zero)";
         case FE_ParseError::UnknownArgument:
             return "Unknown argument";
         case FE_ParseError::RomDirectoryNotFound:
@@ -754,22 +744,27 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
             std::string_view arg = reader.Arg();
             if (size_t colon = arg.find(':'); colon != std::string_view::npos)
             {
-                auto page_size_sv = arg.substr(0, colon);
-                auto page_num_sv  = arg.substr(colon + 1);
+                auto buffer_size_sv  = arg.substr(0, colon);
+                auto buffer_count_sv = arg.substr(colon + 1);
 
-                if (!TryParse(page_size_sv, result.page_size))
+                if (!TryParse(buffer_size_sv, result.buffer_size))
                 {
-                    return FE_ParseError::PageSizeInvalid;
+                    return FE_ParseError::BufferSizeInvalid;
                 }
 
-                if (!TryParse(page_num_sv, result.page_num))
+                if (!TryParse(buffer_count_sv, result.buffer_count))
                 {
-                    return FE_ParseError::PageCountInvalid;
+                    return FE_ParseError::BufferCountInvalid;
+                }
+
+                if (result.buffer_count == 0)
+                {
+                    return FE_ParseError::BufferCountInvalid;
                 }
             }
-            else if (!reader.TryParse(result.page_size))
+            else if (!reader.TryParse(result.buffer_size))
             {
-                return FE_ParseError::PageSizeInvalid;
+                return FE_ParseError::BufferSizeInvalid;
             }
         }
         else if (reader.Any("-r", "--reset"))
@@ -895,7 +890,7 @@ General options:
 Audio options:
   -p, --port         <device_name_or_number>    Set MIDI input port.
   -a, --audio-device <device_name_or_number>    Set output audio device.
-  -b, --buffer-size  <page_size>[:page_count]   Set Audio Buffer size.
+  -b, --buffer-size  <size>[:count]             Set buffer size, number of buffers.
   -f, --format       s16|s32|f32                Set output format.
   --disable-oversampling                        Halves output frequency.
 

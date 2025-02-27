@@ -22,19 +22,18 @@ Sets the MIDI input port.
 
 Sets the audio device to play sound from.
 
-## `-b, --buffer-size <page_size>[:page_count]`
+## `-b, --buffer-size <size>[:count]`
 
 Controls the amount of audio to produce or output at a time. Lower values
 reduce latency; higher values reduce playback glitches. Optimal settings are
 hardware dependent, so experiment with this option. If no value is provided, it
 will default to `512:16` roughly mirroring upstream's intent.
 
-`page_size` is the number of audio frames that the emulator will produce and
-the output will consume in a single chunk. It must be a power of 2.
+`size` is the number of audio frames that the emulator will produce and the
+output will consume in a single chunk. It must be a power of 2.
 
-`page_count` is the number of `page_size` pages that can be queued up. It can
-be any value greater than zero, but the best value is likely in the range
-`2..32`.
+`count` is the number of `size` pages that can be queued up. It can be any
+value greater than zero, but the best value is likely in the range `2..32`.
 
 Having queued chunks is helpful if the emulator produces audio fast enough most
 of the time but sometimes falls behind. This can happen for music containing
