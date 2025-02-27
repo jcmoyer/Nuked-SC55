@@ -409,18 +409,34 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 }
 #endif
 
-bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
+uint32_t FE_PickCloser(uint32_t to, uint32_t a, uint32_t b)
+{
+    if (abs((int32_t)(to - a)) < abs((int32_t)(to - b)))
+    {
+        return a;
+    }
+    else
+    {
+        return b;
+    }
+}
+
+void FE_FixupParameters(FE_Parameters& params)
 {
     if (!std::has_single_bit(params.buffer_size))
     {
-        fprintf(stderr, "Audio buffer size must be a power-of-two; got %d\n", params.buffer_size);
-        fprintf(stderr,
-                "The closest valid values are %d and %d\n",
-                std::bit_floor(params.buffer_size),
-                std::bit_ceil(params.buffer_size));
-        return false;
+        const uint32_t next_low  = std::bit_floor(params.buffer_size);
+        const uint32_t next_high = std::bit_ceil(params.buffer_size);
+        const uint32_t closer    = FE_PickCloser(params.buffer_size, next_low, next_high);
+        fprintf(stderr, "WARNING: Audio buffer size must be a power-of-two; got %d\n", params.buffer_size);
+        fprintf(stderr, "         The next valid values are %d and %d\n", next_low, next_high);
+        fprintf(stderr, "         Continuing with the closer value %d\n", closer);
+        params.buffer_size = closer;
     }
+}
 
+bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
+{
     AudioOutput         output;
     FE_PickOutputResult output_result = FE_PickOutputDevice(params.audio_device, output);
 
@@ -987,6 +1003,8 @@ int main(int argc, char *argv[])
         FE_Usage();
         return 0;
     }
+
+    FE_FixupParameters(params);
 
     FE_Application frontend;
 
