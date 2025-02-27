@@ -577,7 +577,6 @@ BOOL WINAPI FE_CtrlCHandler(DWORD dwCtrlType)
 
 bool FE_Init()
 {
-    // TODO: no longer initializing audio here
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
         fprintf(stderr, "FATAL ERROR: Failed to initialize the SDL2: %s.\n", SDL_GetError());
