@@ -1,6 +1,7 @@
 #include "output_sdl.h"
 
 #include "audio.h"
+#include "cast.h"
 #include <SDL.h>
 #include <cinttypes>
 
@@ -160,7 +161,7 @@ void Out_SDL_SetFrequency(int frequency)
 
 void Out_SDL_SetBufferSize(int size_frames)
 {
-    g_buffer_size = size_frames;
+    g_buffer_size = RangeCast<Uint16>(size_frames);
 }
 
 void Out_SDL_SetFormat(AudioFormat format)

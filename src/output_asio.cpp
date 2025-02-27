@@ -258,7 +258,7 @@ bool Out_ASIO_Start(const char* driver_name)
         }
     }
 
-    g_asio_state.buffer_size_bytes = g_asio_state.preferred_size * Out_ASIO_GetFormatSampleSizeBytes();
+    g_asio_state.buffer_size_bytes = (size_t)g_asio_state.preferred_size * Out_ASIO_GetFormatSampleSizeBytes();
 
     g_asio_state.mix_buffer.Free();
     g_asio_state.mix_buffer.Init(2 * g_asio_state.buffer_size_bytes);
@@ -381,8 +381,9 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
     {
         for (size_t i = 0; i < g_asio_state.stream_count; ++i)
         {
-            SDL_AudioStreamGet(
-                g_asio_state.streams[i], g_asio_state.mix_buffer.DataFirst(), g_asio_state.mix_buffer.GetByteLength());
+            SDL_AudioStreamGet(g_asio_state.streams[i],
+                               g_asio_state.mix_buffer.DataFirst(),
+                               (int)g_asio_state.mix_buffer.GetByteLength());
 
             switch (Out_ASIO_GetFormatSampleSizeBytes())
             {
@@ -390,13 +391,13 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
                 Deinterleave32(g_asio_state.buffer_info[0].buffers[index],
                                g_asio_state.buffer_info[1].buffers[index],
                                g_asio_state.mix_buffer.DataFirst(),
-                               g_asio_state.preferred_size);
+                               (size_t)g_asio_state.preferred_size);
                 break;
             case 2:
                 Deinterleave16(g_asio_state.buffer_info[0].buffers[index],
                                g_asio_state.buffer_info[1].buffers[index],
                                g_asio_state.mix_buffer.DataFirst(),
-                               g_asio_state.preferred_size);
+                               (size_t)g_asio_state.preferred_size);
                 break;
             default:
                 fprintf(stderr, "PANIC: Deinterleave not implemented for this sample size\n");

@@ -43,6 +43,7 @@
 #include <cinttypes>
 #include <optional>
 #include <vector>
+#include <bit>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -259,9 +260,9 @@ FE_PickOutputResult FE_PickOutputDevice(std::string_view preferred_name, AudioOu
     }
 
     // maybe we have an index instead of a name
-    if (int out_device_id; TryParse(preferred_name, out_device_id))
+    if (size_t out_device_id; TryParse(preferred_name, out_device_id))
     {
-        if (out_device_id >= 0 && out_device_id < (int)num_audio_devs)
+        if (out_device_id < num_audio_devs)
         {
             out_device = outputs[out_device_id];
             return FE_PickOutputResult::WantMatchedName;
@@ -306,7 +307,7 @@ void FE_PrintAudioDevices()
 
         for (size_t i = 0; i < outputs.size(); ++i)
         {
-            fprintf(stderr, "  %d: %s\n", i, outputs[i].name.c_str());
+            fprintf(stderr, "  %" PRIu64 ": %s\n", i, outputs[i].name.c_str());
         }
 
         fprintf(stderr, "\n");
@@ -358,10 +359,10 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
     {
         fe.instances[i].stream = SDL_NewAudioStream(AUDIO_S32,
                                                     2,
-                                                    PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()),
+                                                    (int)PCM_GetOutputFrequency(fe.instances[i].emu.GetPCM()),
                                                     Out_ASIO_GetFormat(),
                                                     2,
-                                                    Out_ASIO_GetFrequency());
+                                                    (int)Out_ASIO_GetFrequency());
         Out_ASIO_AddStream(fe.instances[i].stream);
         fe.instances[i].emu.SetSampleCallback(FE_ReceiveSampleASIO, &fe.instances[i]);
     }
@@ -440,16 +441,17 @@ void FE_RunInstanceASIO(FE_Instance& instance)
     while (instance.running)
     {
         // we recalc every time because ASIO reset might change this
-        const size_t buffer_size = Out_ASIO_GetBufferSize();
+        const size_t buffer_size = (size_t)Out_ASIO_GetBufferSize();
         const size_t max_byte_count = instance.buffer_count * buffer_size * sizeof(AudioFrame<int32_t>);
 
         if (instance.frames.size() >= buffer_size)
         {
-            SDL_AudioStreamPut(instance.stream, instance.frames.data(), instance.frames.size() * sizeof(AudioFrame<int32_t>));
+            SDL_AudioStreamPut(
+                instance.stream, instance.frames.data(), (int)(instance.frames.size() * sizeof(AudioFrame<int32_t>)));
             instance.frames.clear();
         }
 
-        while (SDL_AudioStreamAvailable(instance.stream) >= max_byte_count)
+        while ((size_t)SDL_AudioStreamAvailable(instance.stream) >= max_byte_count)
         {
             SDL_Delay(1);
         }
