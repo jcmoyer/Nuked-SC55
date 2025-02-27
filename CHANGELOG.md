@@ -12,7 +12,9 @@
   [BUILDING.md](BUILDING.md) for instructions. Precompiled ASIO builds cannot
   be provided because of the ASIO SDK license.
 - The `-b, --buffer-size <page_size>[:page_count]` flag has been **changed** to
-  actually mean buffer size. This is a divergence from upstream.
+  actually mean buffer size. This is a divergence from upstream. The
+  differences are documented
+  [here](doc/standard_frontend.md#-b---buffer-size-page_sizepage_count).
 
 # Version 0.4.2 (2025-02-23)
 
