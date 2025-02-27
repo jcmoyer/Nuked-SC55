@@ -253,36 +253,3 @@ private:
     std::atomic<size_t> m_write_head = 0;
 };
 
-inline void MixFrame(AudioFrame<int16_t>& dest, const AudioFrame<int16_t>& src)
-{
-    dest.left  = SaturatingAdd(dest.left, src.left);
-    dest.right = SaturatingAdd(dest.right, src.right);
-}
-
-inline void MixFrame(AudioFrame<int32_t>& dest, const AudioFrame<int32_t>& src)
-{
-    dest.left  = SaturatingAdd(dest.left, src.left);
-    dest.right = SaturatingAdd(dest.right, src.right);
-}
-
-inline void MixFrame(AudioFrame<float>& dest, const AudioFrame<float>& src)
-{
-    dest.left  += src.left;
-    dest.right += src.right;
-}
-
-// Reads up to `frame_count` frames and returns the number of frames
-// actually read. Mixes samples into dest by adding and clipping.
-template <typename SampleT>
-size_t ReadMix(RingbufferView& rb, AudioFrame<SampleT>* dest, size_t frame_count)
-{
-    const size_t have_count = rb.GetReadableElements<SampleT>();
-    const size_t read_count = Min(have_count, frame_count);
-    for (size_t i = 0; i < read_count; ++i)
-    {
-        AudioFrame<SampleT> src;
-        rb.UncheckedReadOne(src);
-        MixFrame(dest[i], src);
-    }
-    return read_count;
-}

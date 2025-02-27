@@ -39,3 +39,21 @@ inline void Normalize(const AudioFrame<int32_t>& in, AudioFrame<float>& out)
     out.left  = (float)in.left * DIV_REC;
     out.right = (float)in.right * DIV_REC;
 }
+
+inline void MixFrame(AudioFrame<int16_t>& dest, const AudioFrame<int16_t>& src)
+{
+    dest.left  = SaturatingAdd(dest.left, src.left);
+    dest.right = SaturatingAdd(dest.right, src.right);
+}
+
+inline void MixFrame(AudioFrame<int32_t>& dest, const AudioFrame<int32_t>& src)
+{
+    dest.left  = SaturatingAdd(dest.left, src.left);
+    dest.right = SaturatingAdd(dest.right, src.right);
+}
+
+inline void MixFrame(AudioFrame<float>& dest, const AudioFrame<float>& src)
+{
+    dest.left  += src.left;
+    dest.right += src.right;
+}
