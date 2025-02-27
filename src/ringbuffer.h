@@ -169,9 +169,12 @@ public:
     template <typename ElemT>
     std::span<ElemT> UncheckedPrepareWrite(size_t count)
     {
+        // count must be an integer divisor of the buffer size
         assert((m_buffer.size() / sizeof(ElemT)) % count == 0);
-        assert(m_write_head % count == 0);
-        assert(GetWritableCount() >= count);
+        // write must start at the end of a prior `count`-long write
+        assert((m_write_head / sizeof(ElemT)) % count == 0);
+        // must have space for `count` elements
+        assert(GetWritableCount() >= count * sizeof(ElemT));
         return {(ElemT*)GetWritePtr(), count};
     }
 
@@ -185,9 +188,12 @@ public:
     template <typename ElemT>
     std::span<ElemT> UncheckedPrepareRead(size_t count)
     {
+        // count must be an integer divisor of the buffer size
         assert((m_buffer.size() / sizeof(ElemT)) % count == 0);
-        assert(m_read_head % count == 0);
-        assert(GetWritableCount() >= count);
+        // read must start at the end of a prior `count`-long read
+        assert((m_read_head / sizeof(ElemT)) % count == 0);
+        // must have `count` elements
+        assert(GetReadableCount() >= count * sizeof(ElemT));
         return {(ElemT*)GetReadPtr(), count};
     }
 
