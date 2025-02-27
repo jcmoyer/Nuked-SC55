@@ -375,6 +375,10 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
     if (!std::has_single_bit(params.buffer_size))
     {
         fprintf(stderr, "Audio buffer size must be a power-of-two; got %d\n", params.buffer_size);
+        fprintf(stderr,
+                "The closest valid values are %d and %d\n",
+                std::bit_floor(params.buffer_size),
+                std::bit_ceil(params.buffer_size));
         return false;
     }
 
