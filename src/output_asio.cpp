@@ -28,15 +28,18 @@ struct GlobalAsioState
     SDL_AudioStream* streams[MAX_STREAMS]{};
     size_t           stream_count = 0;
 
+    // Size of a buffer as requested by ASIO driver
     long min_size;
     long max_size;
     long preferred_size;
     long granularity;
 
+    // Size of a buffer as requested by the user
     long user_size;
 
-    // Size of one ASIO buffer in bytes
+    // Size of a buffer as it will be used
     size_t buffer_size_bytes;
+    size_t buffer_size_frames;
 
     long input_channel_count;
     long output_channel_count;
@@ -226,7 +229,12 @@ bool Out_ASIO_Start(const char* driver_name)
     g_asio_state.callbacks.sampleRateDidChange  = sampleRateDidChange;
     g_asio_state.callbacks.asioMessage          = asioMessage;
 
-    if (ASIOCreateBuffers(g_asio_state.buffer_info, N_BUFFERS, g_asio_state.user_size, &g_asio_state.callbacks) !=
+    // Size in frames can be determined now, but we need to wait until after we get a format from the driver to
+    // determine size in bytes
+    g_asio_state.buffer_size_frames = (size_t)g_asio_state.user_size;
+
+    if (ASIOCreateBuffers(
+            g_asio_state.buffer_info, N_BUFFERS, (long)g_asio_state.buffer_size_frames, &g_asio_state.callbacks) !=
         ASE_OK)
     {
         fprintf(stderr, "ASIOCreateBuffers failed\n");
@@ -258,8 +266,10 @@ bool Out_ASIO_Start(const char* driver_name)
         }
     }
 
-    g_asio_state.buffer_size_bytes = (size_t)g_asio_state.preferred_size * Out_ASIO_GetFormatSampleSizeBytes();
+    // Output type acquired, now we know the actual size of the buffer
+    g_asio_state.buffer_size_bytes = g_asio_state.buffer_size_frames * Out_ASIO_GetFormatSampleSizeBytes();
 
+    // *2 because an ASIO buffer only represents one channel, but our mix buffer will hold 2 channels
     g_asio_state.mix_buffer.Free();
     g_asio_state.mix_buffer.Init(2 * g_asio_state.buffer_size_bytes);
 
@@ -367,7 +377,7 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
     (void)params;
     (void)directProcess;
 
-    size_t renderable_frames = (size_t)g_asio_state.preferred_size;
+    size_t renderable_frames = (size_t)g_asio_state.buffer_size_frames;
     for (size_t i = 0; i < g_asio_state.stream_count; ++i)
     {
         renderable_frames = Min(
@@ -377,7 +387,7 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
     memset(g_asio_state.buffer_info[0].buffers[index], 0, g_asio_state.buffer_size_bytes);
     memset(g_asio_state.buffer_info[1].buffers[index], 0, g_asio_state.buffer_size_bytes);
 
-    if (renderable_frames >= (size_t)g_asio_state.preferred_size)
+    if (renderable_frames >= (size_t)g_asio_state.buffer_size_frames)
     {
         for (size_t i = 0; i < g_asio_state.stream_count; ++i)
         {
@@ -391,13 +401,13 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
                 Deinterleave32(g_asio_state.buffer_info[0].buffers[index],
                                g_asio_state.buffer_info[1].buffers[index],
                                g_asio_state.mix_buffer.DataFirst(),
-                               (size_t)g_asio_state.preferred_size);
+                               g_asio_state.buffer_size_frames);
                 break;
             case 2:
                 Deinterleave16(g_asio_state.buffer_info[0].buffers[index],
                                g_asio_state.buffer_info[1].buffers[index],
                                g_asio_state.mix_buffer.DataFirst(),
-                               (size_t)g_asio_state.preferred_size);
+                               g_asio_state.buffer_size_frames);
                 break;
             default:
                 fprintf(stderr, "PANIC: Deinterleave not implemented for this sample size\n");
