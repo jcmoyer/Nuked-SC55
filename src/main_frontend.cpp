@@ -323,6 +323,12 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
     Out_SDL_SetFrequency((int)PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM()));
     Out_SDL_SetBufferSize((int)params.buffer_size);
 
+    if (!Out_SDL_Create(device_name))
+    {
+        fprintf(stderr, "Failed to create SDL audio output\n");
+        return false;
+    }
+
     for (size_t i = 0; i < fe.instances_in_use; ++i)
     {
         FE_Instance& inst = fe.instances[i];
@@ -341,11 +347,17 @@ bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char
             inst.CreateAndPrepareBuffer<float>();
             break;
         }
-        Out_SDL_AddStream(&fe.instances[i].view);
+        Out_SDL_AddStream(fe.instances[i].view);
         fprintf(stderr, "#%02" PRIu64 ": allocated %" PRIu64 " bytes for audio\n", i, inst.sample_buffer.GetByteLength());
     }
 
-    return Out_SDL_Start(device_name);
+    if (!Out_SDL_Start())
+    {
+        fprintf(stderr, "Failed to start SDL audio output\n");
+        return false;
+    }
+
+    return true;
 }
 
 SDL_AudioFormat FE_ToSDLFormat(AudioFormat internal)
@@ -702,6 +714,7 @@ void FE_Quit(FE_Application& container)
     else
     {
         Out_SDL_Stop();
+        Out_SDL_Destroy();
     }
 
     for (size_t i = 0; i < container.instances_in_use; ++i)
