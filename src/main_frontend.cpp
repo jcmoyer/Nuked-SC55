@@ -221,6 +221,10 @@ void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
     {
         fe.Finish<SampleT>();
         fe.Prepare<SampleT>();
+
+        auto span = fe.view.UncheckedPrepareRead<AudioFrame<SampleT>>(fe.buffer_size);
+        SDL_AudioStreamPut(fe.stream, span.data(), (int)(span.size() * sizeof(AudioFrame<SampleT>)));
+        fe.view.UncheckedFinishRead<AudioFrame<SampleT>>(fe.buffer_size);
     }
 }
 #endif
@@ -516,13 +520,6 @@ void FE_RunInstanceASIO(FE_Instance& instance)
         // we recalc every time because ASIO reset might change this
         const size_t buffer_size = (size_t)Out_ASIO_GetBufferSize();
         const size_t max_byte_count = instance.buffer_count * buffer_size * sizeof(AudioFrame<int32_t>);
-
-        while (instance.view.GetReadableElements<AudioFrame<int32_t>>() >= buffer_size)
-        {
-            auto span = instance.view.UncheckedPrepareRead<AudioFrame<int32_t>>(buffer_size);
-            SDL_AudioStreamPut(instance.stream, span.data(), (int)(span.size() * sizeof(AudioFrame<int32_t>)));
-            instance.view.UncheckedFinishRead<AudioFrame<int32_t>>(buffer_size);
-        }
 
         while ((size_t)SDL_AudioStreamAvailable(instance.stream) >= max_byte_count)
         {
