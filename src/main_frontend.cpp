@@ -381,8 +381,15 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
 {
     Out_ASIO_SetBufferSize((int)params.buffer_size);
 
-    if (!Out_ASIO_Start(name))
+    if (!Out_ASIO_Create(name))
     {
+        fprintf(stderr, "Failed to create ASIO output\n");
+        return false;
+    }
+
+    if (!Out_ASIO_Start())
+    {
+        fprintf(stderr, "Failed to create ASIO output\n");
         return false;
     }
 
@@ -707,6 +714,7 @@ void FE_Quit(FE_Application& container)
     {
 #ifdef NUKED_ENABLE_ASIO
         Out_ASIO_Stop();
+        Out_ASIO_Destroy();
 #else
         fprintf(stderr, "Out_ASIO_Stop() called without ASIO support\n");
 #endif

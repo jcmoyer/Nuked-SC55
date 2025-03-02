@@ -142,7 +142,7 @@ bool Out_ASIO_QueryOutputs(AudioOutputList& list)
     return true;
 }
 
-bool Out_ASIO_Start(const char* driver_name)
+bool Out_ASIO_Create(const char* driver_name)
 {
     // for some reason the api wants a non-const pointer
     char internal_driver_name[256]{};
@@ -273,7 +273,23 @@ bool Out_ASIO_Start(const char* driver_name)
     g_asio_state.mix_buffer.Free();
     g_asio_state.mix_buffer.Init(2 * g_asio_state.buffer_size_bytes);
 
-    ASIOStart();
+    return true;
+}
+
+void Out_ASIO_Destroy()
+{
+    ASIOStop();
+    ASIODisposeBuffers();
+    ASIOExit();
+}
+
+bool Out_ASIO_Start()
+{
+    if (ASIOStart() != ASE_OK)
+    {
+        fprintf(stderr, "ASIOStart failed\n");
+        return false;
+    }
 
     return true;
 }
@@ -325,7 +341,7 @@ size_t Out_ASIO_GetFormatSampleSizeBytes()
 
 void Out_ASIO_Stop()
 {
-    ASIOExit();
+    ASIOStop();
 }
 
 bool Out_ASIO_IsResetRequested()
@@ -333,11 +349,24 @@ bool Out_ASIO_IsResetRequested()
     return g_asio_state.defer_reset;
 }
 
-void Out_ASIO_Reset()
+bool Out_ASIO_Reset()
 {
-    ASIOStop();
-    Out_ASIO_Start(g_asio_state.driver_info.name);
     g_asio_state.defer_reset = false;
+    Out_ASIO_Destroy();
+
+    if (!Out_ASIO_Create(g_asio_state.driver_info.name))
+    {
+        fprintf(stderr, "ASIO reset: failed to re-initialize ASIO");
+        return false;
+    }
+
+    if (!Out_ASIO_Start())
+    {
+        fprintf(stderr, "ASIO reset: failed to restart ASIO playback");
+        return false;
+    }
+
+    return true;
 }
 
 void Out_ASIO_SetBufferSize(int size)
