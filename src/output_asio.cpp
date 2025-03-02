@@ -339,6 +339,11 @@ size_t Out_ASIO_GetFormatSampleSizeBytes()
     return SDL_AUDIO_BITSIZE(Out_ASIO_GetFormat()) / 8;
 }
 
+size_t Out_ASIO_GetFormatFrameSizeBytes()
+{
+    return 2 * Out_ASIO_GetFormatSampleSizeBytes();
+}
+
 void Out_ASIO_Stop()
 {
     ASIOStop();

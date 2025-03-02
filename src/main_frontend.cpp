@@ -519,7 +519,10 @@ void FE_RunInstanceASIO(FE_Instance& instance)
     {
         // we recalc every time because ASIO reset might change this
         const size_t buffer_size = (size_t)Out_ASIO_GetBufferSize();
-        const size_t max_byte_count = instance.buffer_count * buffer_size * sizeof(AudioFrame<int32_t>);
+
+        // note that this is the byte count coming out of the stream; it won't line up with the amount of data we put in
+        // so be careful not to confuse the two!!
+        const size_t max_byte_count = instance.buffer_count * buffer_size * Out_ASIO_GetFormatFrameSizeBytes();
 
         while ((size_t)SDL_AudioStreamAvailable(instance.stream) >= max_byte_count)
         {
