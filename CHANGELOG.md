@@ -14,7 +14,7 @@
 - The `-b, --buffer-size <page_size>[:page_count]` flag has been **changed** to
   actually mean buffer size. This is a divergence from upstream. The
   differences are documented
-  [here](doc/standard_frontend.md#-b---buffer-size-page_sizepage_count).
+  [here](doc/standard_frontend.md#-b---buffer-size-sizecount).
 
 # Version 0.4.2 (2025-02-23)
 
