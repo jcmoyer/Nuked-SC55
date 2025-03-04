@@ -9,8 +9,8 @@ Requirements:
 Tested compilers:
 
 - msvc 19.39.33523
-- clang 18.1.4
-- gcc 13.2.0
+- clang 19.1.7
+- gcc 14.2.0
 
 Full build
 
