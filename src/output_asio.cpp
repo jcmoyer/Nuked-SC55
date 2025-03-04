@@ -43,6 +43,13 @@ struct ASIOOutput
     size_t buffer_size_bytes;
     size_t buffer_size_frames;
 
+    // Output frequency requested by the user
+    // ASIO drivers support a range of frequencies, but not all of them are valid
+    int user_freq = 44100;
+
+    // Output frequency the driver is actually using
+    ASIOSampleRate actual_freq;
+
     long input_channel_count;
     long output_channel_count;
 
@@ -194,11 +201,20 @@ bool Out_ASIO_Create(const char* driver_name)
 
     // ASIO4ALL can't handle the sample rate the emulator uses, so we'll need
     // to use a more common one and resample
-    err = ASIOSetSampleRate(44100);
+    err = ASIOSetSampleRate((ASIOSampleRate)g_output.user_freq);
     if (err != ASE_OK)
     {
-        fprintf(stderr, "ASIOSetSampleRate(44100) failed; trying to continue anyways\n");
+        fprintf(stderr, "ASIOSetSampleRate(%d) failed; trying to continue anyways\n", g_output.user_freq);
     }
+
+    err = ASIOGetSampleRate(&g_output.actual_freq);
+    if (err != ASE_OK)
+    {
+        fprintf(stderr, "ASIOGetSampleRate failed\n");
+        return false;
+    }
+
+    fprintf(stderr, "ASIO: sample rate is %d\n", (int)g_output.actual_freq);
 
     err = ASIOGetChannels(&g_output.input_channel_count, &g_output.output_channel_count);
     if (err != ASE_OK)
@@ -318,14 +334,14 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream)
     ++g_output.stream_count;
 }
 
+void Out_ASIO_SetFrequency(int user_freq)
+{
+    g_output.user_freq = user_freq;
+}
+
 int Out_ASIO_GetFrequency()
 {
-    ASIOSampleRate rate;
-    if (ASIOGetSampleRate(&rate) != ASE_OK)
-    {
-        return 0;
-    }
-    return (int)rate;
+    return (int)g_output.actual_freq;
 }
 
 SDL_AudioFormat Out_ASIO_GetFormat()
@@ -480,6 +496,7 @@ static void bufferSwitch(long index, ASIOBool processNow)
 
 static void sampleRateDidChange(ASIOSampleRate sRate)
 {
+    g_output.actual_freq = sRate;
     fprintf(stderr, "ASIO: sample rate changed to %f\n", sRate);
 }
 

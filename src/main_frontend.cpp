@@ -132,6 +132,7 @@ struct FE_Parameters
     AudioFormat output_format = AudioFormat::S16;
     bool no_lcd = false;
     bool disable_oversampling = false;
+    int asio_sample_rate = 44100;
 };
 
 bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
@@ -386,6 +387,7 @@ SDL_AudioFormat FE_ToSDLFormat(AudioFormat internal)
 bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
 {
     Out_ASIO_SetBufferSize((int)params.buffer_size);
+    Out_ASIO_SetFrequency(params.asio_sample_rate);
 
     if (!Out_ASIO_Create(name))
     {
@@ -755,6 +757,7 @@ enum class FE_ParseError
     UnknownArgument,
     RomDirectoryNotFound,
     FormatInvalid,
+    ASIOSampleRateOutOfRange,
 };
 
 const char* FE_ParseErrorStr(FE_ParseError err)
@@ -779,6 +782,8 @@ const char* FE_ParseErrorStr(FE_ParseError err)
             return "Rom directory doesn't exist";
         case FE_ParseError::FormatInvalid:
             return "Output format invalid";
+        case FE_ParseError::ASIOSampleRateOutOfRange:
+            return "ASIO sample rate out of range";
     }
     return "Unknown error";
 }
@@ -972,6 +977,18 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
         {
             result.romset = Romset::SC155MK2;
             result.autodetect = false;
+        }
+        else if (reader.Any("--asio-sample-rate"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            if (!reader.TryParse(result.asio_sample_rate))
+            {
+                return FE_ParseError::ASIOSampleRateOutOfRange;
+            }
         }
         else
         {
