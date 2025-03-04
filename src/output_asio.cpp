@@ -17,7 +17,7 @@ const size_t N_BUFFERS = 2;
 // one per instance
 const size_t MAX_STREAMS = 16;
 
-struct GlobalAsioState
+struct ASIOOutput
 {
     AsioDrivers    drivers;
     ASIODriverInfo driver_info;
@@ -54,7 +54,7 @@ struct GlobalAsioState
 };
 
 // there isn't a way around using globals here, the ASIO API doesn't accept arbitrary userdata in its callbacks
-static GlobalAsioState g_asio_state;
+static ASIOOutput g_output;
 
 // defined in ASIO SDK
 // we do actually need to do the loading through this function or else we'll segfault on exit
@@ -128,7 +128,7 @@ bool Out_ASIO_QueryOutputs(AudioOutputList& list)
         names[i] = (char*)malloc(MAX_NAME_LEN);
     }
 
-    long names_count = g_asio_state.drivers.getDriverNames(names, MAX_NAMES);
+    long names_count = g_output.drivers.getDriverNames(names, MAX_NAMES);
     for (long i = 0; i < names_count; ++i)
     {
         list.push_back({.name = names[i], .kind = AudioOutputKind::ASIO});
@@ -158,7 +158,7 @@ bool Out_ASIO_Create(const char* driver_name)
         return false;
     }
 
-    if (ASIOInit(&g_asio_state.driver_info) != ASE_OK)
+    if (ASIOInit(&g_output.driver_info) != ASE_OK)
     {
         fprintf(stderr, "ASIOInit failed\n");
         return false;
@@ -169,13 +169,13 @@ bool Out_ASIO_Create(const char* driver_name)
             "driverVersion: %ld\n"
             "name:          %s\n"
             "errorMessage:  %s\n",
-            g_asio_state.driver_info.asioVersion,
-            g_asio_state.driver_info.driverVersion,
-            g_asio_state.driver_info.name,
-            g_asio_state.driver_info.errorMessage);
+            g_output.driver_info.asioVersion,
+            g_output.driver_info.driverVersion,
+            g_output.driver_info.name,
+            g_output.driver_info.errorMessage);
 
     if (ASIOGetBufferSize(
-            &g_asio_state.min_size, &g_asio_state.max_size, &g_asio_state.preferred_size, &g_asio_state.granularity) !=
+            &g_output.min_size, &g_output.max_size, &g_output.preferred_size, &g_output.granularity) !=
         ASE_OK)
     {
         fprintf(stderr, "ASIOGetBufferSize failed\n");
@@ -185,10 +185,10 @@ bool Out_ASIO_Create(const char* driver_name)
 
     fprintf(stderr,
             "ASIOGetBufferSize (min: %ld, max: %ld, preferred: %ld, granularity: %ld);\n",
-            g_asio_state.min_size,
-            g_asio_state.max_size,
-            g_asio_state.preferred_size,
-            g_asio_state.granularity);
+            g_output.min_size,
+            g_output.max_size,
+            g_output.preferred_size,
+            g_output.granularity);
 
     // ASIO4ALL can't handle the sample rate the emulator uses, so we'll need
     // to use a more common one and resample
@@ -197,7 +197,7 @@ bool Out_ASIO_Create(const char* driver_name)
         fprintf(stderr, "ASIOSetSampleRate(44100) failed; trying to continue anyways\n");
     }
 
-    if (ASIOGetChannels(&g_asio_state.input_channel_count, &g_asio_state.output_channel_count))
+    if (ASIOGetChannels(&g_output.input_channel_count, &g_output.output_channel_count))
     {
         fprintf(stderr, "ASIOGetChannels failed\n");
         ASIOExit();
@@ -206,10 +206,10 @@ bool Out_ASIO_Create(const char* driver_name)
 
     fprintf(stderr,
             "Available channels: %ld in, %ld out\n",
-            g_asio_state.input_channel_count,
-            g_asio_state.output_channel_count);
+            g_output.input_channel_count,
+            g_output.output_channel_count);
 
-    if ((size_t)g_asio_state.output_channel_count < N_BUFFERS)
+    if ((size_t)g_output.output_channel_count < N_BUFFERS)
     {
         fprintf(stderr, "%" PRIu64 " channels required; aborting\n", N_BUFFERS);
         ASIOExit();
@@ -218,23 +218,23 @@ bool Out_ASIO_Create(const char* driver_name)
 
     for (size_t i = 0; i < N_BUFFERS; ++i)
     {
-        g_asio_state.buffer_info[i].isInput    = ASIOFalse;
-        g_asio_state.buffer_info[i].channelNum = (long)i;
-        g_asio_state.buffer_info[i].buffers[0] = nullptr;
-        g_asio_state.buffer_info[i].buffers[1] = nullptr;
+        g_output.buffer_info[i].isInput    = ASIOFalse;
+        g_output.buffer_info[i].channelNum = (long)i;
+        g_output.buffer_info[i].buffers[0] = nullptr;
+        g_output.buffer_info[i].buffers[1] = nullptr;
     }
 
-    g_asio_state.callbacks.bufferSwitch         = bufferSwitch;
-    g_asio_state.callbacks.bufferSwitchTimeInfo = bufferSwitchTimeInfo;
-    g_asio_state.callbacks.sampleRateDidChange  = sampleRateDidChange;
-    g_asio_state.callbacks.asioMessage          = asioMessage;
+    g_output.callbacks.bufferSwitch         = bufferSwitch;
+    g_output.callbacks.bufferSwitchTimeInfo = bufferSwitchTimeInfo;
+    g_output.callbacks.sampleRateDidChange  = sampleRateDidChange;
+    g_output.callbacks.asioMessage          = asioMessage;
 
     // Size in frames can be determined now, but we need to wait until after we get a format from the driver to
     // determine size in bytes
-    g_asio_state.buffer_size_frames = (size_t)g_asio_state.user_size;
+    g_output.buffer_size_frames = (size_t)g_output.user_size;
 
     if (ASIOCreateBuffers(
-            g_asio_state.buffer_info, N_BUFFERS, (long)g_asio_state.buffer_size_frames, &g_asio_state.callbacks) !=
+            g_output.buffer_info, N_BUFFERS, (long)g_output.buffer_size_frames, &g_output.callbacks) !=
         ASE_OK)
     {
         fprintf(stderr, "ASIOCreateBuffers failed\n");
@@ -244,21 +244,21 @@ bool Out_ASIO_Create(const char* driver_name)
 
     for (size_t i = 0; i < N_BUFFERS; ++i)
     {
-        g_asio_state.channel_info[i].channel = g_asio_state.buffer_info[i].channelNum;
-        ASIOGetChannelInfo(&g_asio_state.channel_info[i]);
+        g_output.channel_info[i].channel = g_output.buffer_info[i].channelNum;
+        ASIOGetChannelInfo(&g_output.channel_info[i]);
 
         fprintf(stderr,
                 "ASIO channel %" PRIu64 ": %s: %s\n",
                 i,
-                g_asio_state.channel_info[i].name,
-                SampleTypeToString(g_asio_state.channel_info[i].type));
+                g_output.channel_info[i].name,
+                SampleTypeToString(g_output.channel_info[i].type));
     }
 
-    g_asio_state.output_type = g_asio_state.channel_info[0].type;
+    g_output.output_type = g_output.channel_info[0].type;
 
     for (size_t i = 1; i < N_BUFFERS; ++i)
     {
-        if (g_asio_state.output_type != g_asio_state.channel_info[i].type)
+        if (g_output.output_type != g_output.channel_info[i].type)
         {
             fprintf(stderr, "ASIO channel %" PRIu64 " has a different output type!\n", i);
             ASIOExit();
@@ -267,11 +267,11 @@ bool Out_ASIO_Create(const char* driver_name)
     }
 
     // Output type acquired, now we know the actual size of the buffer
-    g_asio_state.buffer_size_bytes = g_asio_state.buffer_size_frames * Out_ASIO_GetFormatSampleSizeBytes();
+    g_output.buffer_size_bytes = g_output.buffer_size_frames * Out_ASIO_GetFormatSampleSizeBytes();
 
     // *2 because an ASIO buffer only represents one channel, but our mix buffer will hold 2 channels
-    g_asio_state.mix_buffer.Free();
-    g_asio_state.mix_buffer.Init(2 * g_asio_state.buffer_size_bytes);
+    g_output.mix_buffer.Free();
+    g_output.mix_buffer.Init(2 * g_output.buffer_size_bytes);
 
     return true;
 }
@@ -296,13 +296,13 @@ bool Out_ASIO_Start()
 
 void Out_ASIO_AddStream(SDL_AudioStream* stream)
 {
-    if (g_asio_state.stream_count == MAX_STREAMS)
+    if (g_output.stream_count == MAX_STREAMS)
     {
         fprintf(stderr, "PANIC: attempted to add more than %" PRIu64 " ASIO streams\n", MAX_STREAMS);
         exit(1);
     }
-    g_asio_state.streams[g_asio_state.stream_count] = stream;
-    ++g_asio_state.stream_count;
+    g_output.streams[g_output.stream_count] = stream;
+    ++g_output.stream_count;
 }
 
 double Out_ASIO_GetFrequency()
@@ -314,7 +314,7 @@ double Out_ASIO_GetFrequency()
 
 SDL_AudioFormat Out_ASIO_GetFormat()
 {
-    switch (g_asio_state.output_type)
+    switch (g_output.output_type)
     {
     case ASIOSTInt16LSB:
         return AUDIO_S16LSB;
@@ -351,15 +351,15 @@ void Out_ASIO_Stop()
 
 bool Out_ASIO_IsResetRequested()
 {
-    return g_asio_state.defer_reset;
+    return g_output.defer_reset;
 }
 
 bool Out_ASIO_Reset()
 {
-    g_asio_state.defer_reset = false;
+    g_output.defer_reset = false;
     Out_ASIO_Destroy();
 
-    if (!Out_ASIO_Create(g_asio_state.driver_info.name))
+    if (!Out_ASIO_Create(g_output.driver_info.name))
     {
         fprintf(stderr, "ASIO reset: failed to re-initialize ASIO");
         return false;
@@ -376,12 +376,12 @@ bool Out_ASIO_Reset()
 
 void Out_ASIO_SetBufferSize(int size)
 {
-    g_asio_state.user_size = size;
+    g_output.user_size = size;
 }
 
 int Out_ASIO_GetBufferSize()
 {
-    return g_asio_state.user_size;
+    return g_output.user_size;
 }
 
 // `src` contains `count` pairs of 16-bit words LRLRLRLR (here count = 4)
@@ -411,37 +411,37 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
     (void)params;
     (void)directProcess;
 
-    size_t renderable_frames = (size_t)g_asio_state.buffer_size_frames;
-    for (size_t i = 0; i < g_asio_state.stream_count; ++i)
+    size_t renderable_frames = (size_t)g_output.buffer_size_frames;
+    for (size_t i = 0; i < g_output.stream_count; ++i)
     {
         renderable_frames = Min(
-            renderable_frames, (size_t)SDL_AudioStreamAvailable(g_asio_state.streams[i]) / sizeof(AudioFrame<int32_t>));
+            renderable_frames, (size_t)SDL_AudioStreamAvailable(g_output.streams[i]) / sizeof(AudioFrame<int32_t>));
     }
 
-    memset(g_asio_state.buffer_info[0].buffers[index], 0, g_asio_state.buffer_size_bytes);
-    memset(g_asio_state.buffer_info[1].buffers[index], 0, g_asio_state.buffer_size_bytes);
+    memset(g_output.buffer_info[0].buffers[index], 0, g_output.buffer_size_bytes);
+    memset(g_output.buffer_info[1].buffers[index], 0, g_output.buffer_size_bytes);
 
-    if (renderable_frames >= (size_t)g_asio_state.buffer_size_frames)
+    if (renderable_frames >= (size_t)g_output.buffer_size_frames)
     {
-        for (size_t i = 0; i < g_asio_state.stream_count; ++i)
+        for (size_t i = 0; i < g_output.stream_count; ++i)
         {
-            SDL_AudioStreamGet(g_asio_state.streams[i],
-                               g_asio_state.mix_buffer.DataFirst(),
-                               (int)g_asio_state.mix_buffer.GetByteLength());
+            SDL_AudioStreamGet(g_output.streams[i],
+                               g_output.mix_buffer.DataFirst(),
+                               (int)g_output.mix_buffer.GetByteLength());
 
             switch (Out_ASIO_GetFormatSampleSizeBytes())
             {
             case 4:
-                Deinterleave32(g_asio_state.buffer_info[0].buffers[index],
-                               g_asio_state.buffer_info[1].buffers[index],
-                               g_asio_state.mix_buffer.DataFirst(),
-                               g_asio_state.buffer_size_frames);
+                Deinterleave32(g_output.buffer_info[0].buffers[index],
+                               g_output.buffer_info[1].buffers[index],
+                               g_output.mix_buffer.DataFirst(),
+                               g_output.buffer_size_frames);
                 break;
             case 2:
-                Deinterleave16(g_asio_state.buffer_info[0].buffers[index],
-                               g_asio_state.buffer_info[1].buffers[index],
-                               g_asio_state.mix_buffer.DataFirst(),
-                               g_asio_state.buffer_size_frames);
+                Deinterleave16(g_output.buffer_info[0].buffers[index],
+                               g_output.buffer_info[1].buffers[index],
+                               g_output.mix_buffer.DataFirst(),
+                               g_output.buffer_size_frames);
                 break;
             default:
                 fprintf(stderr, "PANIC: Deinterleave not implemented for this sample size\n");
@@ -481,7 +481,7 @@ static long asioMessage(long selector, long value, void* message, double* opt)
     case kAsioSupportsTimeCode:
         return 0;
     case kAsioResetRequest:
-        g_asio_state.defer_reset = true;
+        g_output.defer_reset = true;
         return 1;
     default:
         return 1;
