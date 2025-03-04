@@ -1,9 +1,8 @@
 #pragma once
 
+#include "audio.h"
 #include "output_common.h"
 #include "ringbuffer.h"
-
-#include <SDL.h>
 
 bool Out_SDL_QueryOutputs(AudioOutputList& list);
 

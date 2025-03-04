@@ -33,8 +33,6 @@
  */
 #pragma once
 
-#include "audio.h"
-#include "math_util.h"
 #include <cassert>
 #include <memory>
 #include <span>

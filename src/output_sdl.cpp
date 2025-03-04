@@ -1,6 +1,5 @@
 #include "output_sdl.h"
 
-#include "audio.h"
 #include "cast.h"
 #include <SDL.h>
 #include <cinttypes>

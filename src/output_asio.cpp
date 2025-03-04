@@ -7,6 +7,8 @@
 #include "asio.h"
 #include "asiodrivers.h"
 
+#include "audio.h"
+#include "math_util.h"
 #include "ringbuffer.h"
 #include <atomic>
 #include <cinttypes>
