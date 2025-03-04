@@ -156,7 +156,10 @@ bool Out_ASIO_Create(const char* driver_name)
         return false;
     }
 
-    if (ASIOInit(&g_output.driver_info) != ASE_OK)
+    ASIOError err;
+
+    err = ASIOInit(&g_output.driver_info);
+    if (err != ASE_OK)
     {
         fprintf(stderr, "ASIOInit failed\n");
         return false;
@@ -172,9 +175,8 @@ bool Out_ASIO_Create(const char* driver_name)
             g_output.driver_info.name,
             g_output.driver_info.errorMessage);
 
-    if (ASIOGetBufferSize(
-            &g_output.min_size, &g_output.max_size, &g_output.preferred_size, &g_output.granularity) !=
-        ASE_OK)
+    err = ASIOGetBufferSize(&g_output.min_size, &g_output.max_size, &g_output.preferred_size, &g_output.granularity);
+    if (err != ASE_OK)
     {
         fprintf(stderr, "ASIOGetBufferSize failed\n");
         ASIOExit();
@@ -190,22 +192,22 @@ bool Out_ASIO_Create(const char* driver_name)
 
     // ASIO4ALL can't handle the sample rate the emulator uses, so we'll need
     // to use a more common one and resample
-    if (ASIOSetSampleRate(44100) != ASE_OK)
+    err = ASIOSetSampleRate(44100);
+    if (err != ASE_OK)
     {
         fprintf(stderr, "ASIOSetSampleRate(44100) failed; trying to continue anyways\n");
     }
 
-    if (ASIOGetChannels(&g_output.input_channel_count, &g_output.output_channel_count))
+    err = ASIOGetChannels(&g_output.input_channel_count, &g_output.output_channel_count);
+    if (err != ASE_OK)
     {
         fprintf(stderr, "ASIOGetChannels failed\n");
         ASIOExit();
         return false;
     }
 
-    fprintf(stderr,
-            "Available channels: %ld in, %ld out\n",
-            g_output.input_channel_count,
-            g_output.output_channel_count);
+    fprintf(
+        stderr, "Available channels: %ld in, %ld out\n", g_output.input_channel_count, g_output.output_channel_count);
 
     if ((size_t)g_output.output_channel_count < N_BUFFERS)
     {
@@ -231,9 +233,8 @@ bool Out_ASIO_Create(const char* driver_name)
     // determine size in bytes
     g_output.buffer_size_frames = (size_t)g_output.user_size;
 
-    if (ASIOCreateBuffers(
-            g_output.buffer_info, N_BUFFERS, (long)g_output.buffer_size_frames, &g_output.callbacks) !=
-        ASE_OK)
+    err = ASIOCreateBuffers(g_output.buffer_info, N_BUFFERS, (long)g_output.buffer_size_frames, &g_output.callbacks);
+    if (err != ASE_OK)
     {
         fprintf(stderr, "ASIOCreateBuffers failed\n");
         ASIOExit();
@@ -243,7 +244,14 @@ bool Out_ASIO_Create(const char* driver_name)
     for (size_t i = 0; i < N_BUFFERS; ++i)
     {
         g_output.channel_info[i].channel = g_output.buffer_info[i].channelNum;
-        ASIOGetChannelInfo(&g_output.channel_info[i]);
+
+        err = ASIOGetChannelInfo(&g_output.channel_info[i]);
+        if (err != ASE_OK)
+        {
+            fprintf(stderr, "ASIOGetChannelInfo failed\n");
+            ASIOExit();
+            return false;
+        }
 
         fprintf(stderr,
                 "ASIO channel %" PRIu64 ": %s: %s\n",
@@ -269,7 +277,12 @@ bool Out_ASIO_Create(const char* driver_name)
 
     // *2 because an ASIO buffer only represents one channel, but our mix buffer will hold 2 channels
     g_output.mix_buffer.Free();
-    g_output.mix_buffer.Init(2 * g_output.buffer_size_bytes);
+    if (!g_output.mix_buffer.Init(2 * g_output.buffer_size_bytes))
+    {
+        fprintf(stderr, "Failed to allocate mix buffer for ASIO output.\n");
+        ASIOExit();
+        return false;
+    }
 
     return true;
 }
@@ -448,7 +461,6 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
         }
     }
 
-    // TODO: supposed to query if this optimization is available
     ASIOOutputReady();
 
     return 0;
