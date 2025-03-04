@@ -76,9 +76,11 @@ struct FE_Instance
     uint32_t buffer_size;
     uint32_t buffer_count;
 
+#ifdef NUKED_ENABLE_ASIO
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
     // the stream one frame at a time is *slow* so we buffer audio in `sample_buffer` and add it all at once.
-    SDL_AudioStream* stream;
+    SDL_AudioStream* stream = nullptr;
+#endif
 
     template <typename SampleT>
     void Prepare()
@@ -703,9 +705,17 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     return true;
 }
 
-void FE_DestroyInstance(FE_Instance& fe)
+void FE_DestroyInstance(FE_Instance& instance)
 {
-    fe.running = false;
+#ifdef NUKED_ENABLE_ASIO
+    if (instance.stream)
+    {
+        SDL_FreeAudioStream(instance.stream);
+        instance.stream = nullptr;
+    }
+#else
+    (void)fe;
+#endif
 }
 
 void FE_Quit(FE_Application& container)
