@@ -11,6 +11,7 @@ differences are:
    - List audio and midi devices and pick them by index or name
    - Launch without a window
 4. More audio output formats
+5. (Windows, requires building from source) ASIO output for lower latency
 
 # Command line options
 
