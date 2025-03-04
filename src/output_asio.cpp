@@ -118,25 +118,23 @@ static const char* SampleTypeToString(ASIOSampleType type)
 
 bool Out_ASIO_QueryOutputs(AudioOutputList& list)
 {
-    const size_t MAX_NAMES    = 32;
+    // max number of ASIO drivers supported by this program
+    const size_t MAX_NAMES = 32;
+
+    // ASIO limitation
     const size_t MAX_NAME_LEN = 32;
 
-    // TODO: wat. do we seriously need to allocate all this?
+    char  names_buffer[MAX_NAMES * MAX_NAME_LEN];
     char* names[MAX_NAMES];
     for (size_t i = 0; i < MAX_NAMES; ++i)
     {
-        names[i] = (char*)malloc(MAX_NAME_LEN);
+        names[i] = &names_buffer[i * MAX_NAME_LEN];
     }
 
     long names_count = g_output.drivers.getDriverNames(names, MAX_NAMES);
     for (long i = 0; i < names_count; ++i)
     {
         list.push_back({.name = names[i], .kind = AudioOutputKind::ASIO});
-    }
-
-    for (size_t i = 0; i < MAX_NAMES; ++i)
-    {
-        free(names[i]);
     }
 
     return true;
