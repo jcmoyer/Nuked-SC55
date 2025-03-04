@@ -140,6 +140,11 @@ configure_file(src/asio_config.h.in asio_config.h @ONLY)
 target_include_directories(nuked-sc55 PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 if(NUKED_ENABLE_ASIO)
+    if (NOT IS_DIRECTORY "${NUKED_ASIO_SDK_DIR}")
+        message(FATAL_ERROR "Since NUKED_ENABLE_ASIO is ON, NUKED_ASIO_SDK_DIR"
+            " must point to a directory containing the ASIO SDK.")
+    endif()
+
     add_library(asio_sdk)
     target_sources(asio_sdk
         PRIVATE
