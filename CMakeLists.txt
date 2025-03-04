@@ -144,9 +144,6 @@ if(NUKED_ENABLE_ASIO)
     target_sources(asio_sdk
         PRIVATE
         "${NUKED_ASIO_SDK_DIR}/common/asio.cpp"
-        "${NUKED_ASIO_SDK_DIR}/common/combase.cpp"
-        "${NUKED_ASIO_SDK_DIR}/common/debugmessage.cpp"
-        "${NUKED_ASIO_SDK_DIR}/common/register.cpp"
         "${NUKED_ASIO_SDK_DIR}/host/asiodrivers.cpp"
         "${NUKED_ASIO_SDK_DIR}/host/pc/asiolist.cpp"
     )
