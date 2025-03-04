@@ -480,20 +480,19 @@ static void sampleRateDidChange(ASIOSampleRate sRate)
 
 static long asioMessage(long selector, long value, void* message, double* opt)
 {
-    (void)value;
     (void)message;
     (void)opt;
 
     switch (selector)
     {
+    case kAsioSelectorSupported:
+        return value == kAsioSelectorSupported || value == kAsioEngineVersion || value == kAsioResetRequest;
     case kAsioEngineVersion:
         return 2;
-    case kAsioSupportsTimeCode:
-        return 0;
     case kAsioResetRequest:
         g_output.defer_reset = true;
         return 1;
     default:
-        return 1;
+        return 0;
     }
 }
