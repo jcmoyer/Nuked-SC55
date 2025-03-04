@@ -13,17 +13,17 @@ differences are:
 4. More audio output formats
 5. (Windows, requires building from source) ASIO output for lower latency
 
-# Command line options
+## Command line options
 
-## `-p, --port <device_name_or_number>`
+### `-p, --port <device_name_or_number>`
 
 Sets the MIDI input port.
 
-## `-a, --audio-device <device_name_or_number>`
+### `-a, --audio-device <device_name_or_number>`
 
 Sets the audio device to play sound from.
 
-## `-b, --buffer-size <size>[:count]`
+### `-b, --buffer-size <size>[:count]`
 
 Controls the amount of audio to produce or output at a time. Lower values
 reduce latency; higher values reduce playback glitches. Optimal settings are
@@ -42,14 +42,14 @@ particularly busy sections. The queued chunks give the emulator some headroom
 so that even if it slows down temporarily, the output has enough audio to work
 with until the emulator catches back up.
 
-### Example
+#### Example
 
 Consider `-b 512:16`: The SC-55mk2 outputs at 66207hz. The emulator would
 produce chunks of 512/66207 = 7.7ms of audio at a time. It would be allowed to
 queue up to 16 of those chunks, meaning that you could have up to 512\*16/66207
 = 123ms of latency.
 
-### Divergence from upstream
+#### Divergence from upstream
 
 The behavior of this option was changed because the way upstream uses it is
 buggy and unintuitive.
@@ -74,46 +74,46 @@ produces silence otherwise. The buffer size you provide to this option is in
 *frames* instead of samples, and the numbers you provide are used *without
 modification* by both the emulator and output.
 
-### ASIO
+#### ASIO
 
 ASIO drivers have a preferred buffer size that may be adjusted separately. The
 value you provide here does not necessarily need to match that size, but it's
 probably a good idea to make them equal.
 
-## `-f, --format s16|s32|f32`
+### `-f, --format s16|s32|f32`
 
 Sets the output format. Some formats may not be available on all hardware.
 
-### ASIO
+#### ASIO
 
 ASIO drivers will request a specific output format. In this case, `-f` will
 only control the internal audio format, and it will be converted to the format
 the ASIO driver requests when handed off for output.
 
-## `--disable-oversampling`
+### `--disable-oversampling`
 
 Disables oversampling, halving output frequency. Normally the emulator produces
 two frames at a time. When you set this option, the second one will be dropped.
 
-## `-r, --reset gs|gm`
+### `-r, --reset gs|gm`
 
 Sends a reset message to the emulator on startup. This is necessary to correct
 pitch with some roms.
 
-## `-n, --instances <count>`
+### `-n, --instances <count>`
 
 Create `count` instances of the emulator. MIDI events will be routed to
 emulator N where N is the MIDI event channel mod `count`. Use this to increase
 effective polyphony. A `count` of 2 is enough to play most MIDIs without
 dropping notes.
 
-## `--no-lcd`
+### `--no-lcd`
 
 Don't create an LCD window. This is useful if you're using the emulator with
 DOOM or a DAW and don't want to spend resources rendering it. When this option
 is set you will not be able to control the emulator with your keyboard.
 
-## `-d, --rom-directory <dir>`
+### `-d, --rom-directory <dir>`
 
 Sets the directory to load roms from. If no specific romset flag is passed, the
 emulator will pick one based on the filenames in `<dir>`. If this is not set,
@@ -124,30 +124,30 @@ the emulator will look for roms in these locations:
 
 `<exe_dir>` is the directory containing this executable.
 
-## `--mk2`
+### `--mk2`
 
 Use SC-55mk2 ROM set. This overrides autodetect.
 
-## `--st`
+### `--st`
 
 Use SC-55st ROM set. This overrides autodetect.
 
-## `--mk1`
+### `--mk1`
 
 Use SC-55mk1 ROM set. This overrides autodetect.
 
-## `--cm300`
+### `--cm300`
 
 Use CM-300/SCC-1 ROM set. This overrides autodetect.
 
-## `--jv880` 
+### `--jv880` 
 
 Use JV-880 ROM set. This overrides autodetect.
 
-## `--scb55`
+### `--scb55`
 
 Use SCB-55 ROM set. This overrides autodetect.
 
-## `--rlp3237`
+### `--rlp3237`
 
 Use RLP-3237 ROM set. This overrides autodetect.
