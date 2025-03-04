@@ -408,7 +408,7 @@ bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const cha
                                          (int)PCM_GetOutputFrequency(inst.emu.GetPCM()),
                                          Out_ASIO_GetFormat(),
                                          2,
-                                         (int)Out_ASIO_GetFrequency());
+                                         Out_ASIO_GetFrequency());
         Out_ASIO_AddStream(inst.stream);
 
         switch (inst.format)

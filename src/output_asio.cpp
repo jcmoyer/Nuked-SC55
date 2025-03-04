@@ -316,11 +316,14 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream)
     ++g_output.stream_count;
 }
 
-double Out_ASIO_GetFrequency()
+int Out_ASIO_GetFrequency()
 {
     ASIOSampleRate rate;
-    ASIOGetSampleRate(&rate);
-    return rate;
+    if (ASIOGetSampleRate(&rate) != ASE_OK)
+    {
+        return 0;
+    }
+    return (int)rate;
 }
 
 SDL_AudioFormat Out_ASIO_GetFormat()
