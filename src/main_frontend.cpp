@@ -716,7 +716,7 @@ void FE_DestroyInstance(FE_Instance& instance)
         instance.stream = nullptr;
     }
 #else
-    (void)fe;
+    (void)instance;
 #endif
 }
 
