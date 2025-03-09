@@ -35,16 +35,9 @@ struct ASIOOutput
     long preferred_size;
     long granularity;
 
-    // Size of a buffer as requested by the user
-    long user_size;
-
     // Size of a buffer as it will be used
     size_t buffer_size_bytes;
     size_t buffer_size_frames;
-
-    // Output frequency requested by the user
-    // ASIO drivers support a range of frequencies, but not all of them are valid
-    int user_freq = 44100;
 
     // Output frequency the driver is actually using
     ASIOSampleRate actual_freq;
@@ -59,6 +52,9 @@ struct ASIOOutput
     // Contains interleaved frames received from individual `streams`.
     // This is necessarily 2 * `buffer_size_bytes` long.
     GenericBuffer mix_buffer;
+
+    // Parameters requested by the user
+    AudioOutputParameters create_params;
 };
 
 // there isn't a way around using globals here, the ASIO API doesn't accept arbitrary userdata in its callbacks
@@ -148,7 +144,7 @@ bool Out_ASIO_QueryOutputs(AudioOutputList& list)
     return true;
 }
 
-bool Out_ASIO_Create(const char* driver_name)
+bool Out_ASIO_Create(const char* driver_name, const AudioOutputParameters& params)
 {
     // for some reason the api wants a non-const pointer
     char internal_driver_name[256]{};
@@ -192,18 +188,20 @@ bool Out_ASIO_Create(const char* driver_name)
     }
 
     fprintf(stderr,
-            "ASIOGetBufferSize (min: %ld, max: %ld, preferred: %ld, granularity: %ld);\n",
+            "ASIO buffer info: min=%ld, max=%ld, preferred=%ld, granularity=%ld\n",
             g_output.min_size,
             g_output.max_size,
             g_output.preferred_size,
             g_output.granularity);
 
+    fprintf(stderr, "User requested buffer size is %d\n", params.buffer_size);
+
     // ASIO4ALL can't handle the sample rate the emulator uses, so we'll need
     // to use a more common one and resample
-    err = ASIOSetSampleRate((ASIOSampleRate)g_output.user_freq);
+    err = ASIOSetSampleRate((ASIOSampleRate)params.frequency);
     if (err != ASE_OK)
     {
-        fprintf(stderr, "ASIOSetSampleRate(%d) failed; trying to continue anyways\n", g_output.user_freq);
+        fprintf(stderr, "ASIOSetSampleRate(%d) failed; trying to continue anyways\n", params.frequency);
     }
 
     err = ASIOGetSampleRate(&g_output.actual_freq);
@@ -248,7 +246,7 @@ bool Out_ASIO_Create(const char* driver_name)
 
     // Size in frames can be determined now, but we need to wait until after we get a format from the driver to
     // determine size in bytes
-    g_output.buffer_size_frames = (size_t)g_output.user_size;
+    g_output.buffer_size_frames = params.buffer_size;
 
     err = ASIOCreateBuffers(g_output.buffer_info, N_BUFFERS, (long)g_output.buffer_size_frames, &g_output.callbacks);
     if (err != ASE_OK)
@@ -301,6 +299,8 @@ bool Out_ASIO_Create(const char* driver_name)
         return false;
     }
 
+    g_output.create_params = params;
+
     return true;
 }
 
@@ -331,11 +331,6 @@ void Out_ASIO_AddStream(SDL_AudioStream* stream)
     }
     g_output.streams[g_output.stream_count] = stream;
     ++g_output.stream_count;
-}
-
-void Out_ASIO_SetFrequency(int user_freq)
-{
-    g_output.user_freq = user_freq;
 }
 
 int Out_ASIO_GetFrequency()
@@ -390,7 +385,7 @@ bool Out_ASIO_Reset()
     g_output.defer_reset = false;
     Out_ASIO_Destroy();
 
-    if (!Out_ASIO_Create(g_output.driver_info.name))
+    if (!Out_ASIO_Create(g_output.driver_info.name, g_output.create_params))
     {
         fprintf(stderr, "ASIO reset: failed to re-initialize ASIO");
         return false;
@@ -405,14 +400,9 @@ bool Out_ASIO_Reset()
     return true;
 }
 
-void Out_ASIO_SetBufferSize(int size)
+size_t Out_ASIO_GetBufferSize()
 {
-    g_output.user_size = size;
-}
-
-int Out_ASIO_GetBufferSize()
-{
-    return g_output.user_size;
+    return g_output.create_params.buffer_size;
 }
 
 // `src` contains `count` pairs of 16-bit words LRLRLRLR (here count = 4)

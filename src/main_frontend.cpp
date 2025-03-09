@@ -131,7 +131,7 @@ struct FE_Parameters
     AudioFormat output_format = AudioFormat::S16;
     bool no_lcd = false;
     bool disable_oversampling = false;
-    int asio_sample_rate = 44100;
+    uint32_t asio_sample_rate = 44100;
 };
 
 bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
@@ -323,13 +323,9 @@ void FE_PrintAudioDevices()
     }
 }
 
-bool FE_OpenSDLAudio(FE_Application& fe, const FE_Parameters& params, const char* device_name)
+bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, const char* device_name)
 {
-    Out_SDL_SetFormat(params.output_format);
-    Out_SDL_SetFrequency((int)PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM()));
-    Out_SDL_SetBufferSize((int)params.buffer_size);
-
-    if (!Out_SDL_Create(device_name))
+    if (!Out_SDL_Create(device_name, params))
     {
         fprintf(stderr, "Failed to create SDL audio output\n");
         return false;
@@ -383,12 +379,9 @@ SDL_AudioFormat FE_ToSDLFormat(AudioFormat internal)
 }
 
 #ifdef NUKED_ENABLE_ASIO
-bool FE_OpenASIOAudio(FE_Application& fe, const FE_Parameters& params, const char* name)
+bool FE_OpenASIOAudio(FE_Application& fe, const AudioOutputParameters& params, const char* name)
 {
-    Out_ASIO_SetBufferSize((int)params.buffer_size);
-    Out_ASIO_SetFrequency(params.asio_sample_rate);
-
-    if (!Out_ASIO_Create(name))
+    if (!Out_ASIO_Create(name, params))
     {
         fprintf(stderr, "Failed to create ASIO output\n");
         return false;
@@ -468,32 +461,39 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
 
     fe.audio_output = output;
 
+    AudioOutputParameters out_params;
+    out_params.frequency   = PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM());
+    out_params.buffer_size = params.buffer_size;
+    out_params.format      = params.output_format;
+
     switch (output_result)
     {
     case FE_PickOutputResult::WantMatchedName:
         if (output.kind == AudioOutputKind::SDL)
         {
-            return FE_OpenSDLAudio(fe, params, output.name.c_str());
+            return FE_OpenSDLAudio(fe, out_params, output.name.c_str());
         }
         else if (output.kind == AudioOutputKind::ASIO)
         {
 #ifdef NUKED_ENABLE_ASIO
-            return FE_OpenASIOAudio(fe, params, output.name.c_str());
+            // ASIO will probably not support the emulator's native sample rate
+            out_params.frequency = params.asio_sample_rate;
+            return FE_OpenASIOAudio(fe, out_params, output.name.c_str());
 #else
             fprintf(stderr, "Attempted to open ASIO output without ASIO support\n");
 #endif
         }
         return false;
     case FE_PickOutputResult::WantDefaultDevice:
-        return FE_OpenSDLAudio(fe, params, nullptr);
+        return FE_OpenSDLAudio(fe, out_params, nullptr);
     case FE_PickOutputResult::NoOutputDevices:
         // in some cases this may still work
         fprintf(stderr, "No output devices found; attempting to open default device\n");
-        return FE_OpenSDLAudio(fe, params, nullptr);
+        return FE_OpenSDLAudio(fe, out_params, nullptr);
     case FE_PickOutputResult::NoMatchingName:
         // in some cases SDL cannot list all audio devices so we should still try
         fprintf(stderr, "No output device named '%s'; attempting to open it anyways...\n", params.audio_device.c_str());
-        return FE_OpenSDLAudio(fe, params, output.name.c_str());
+        return FE_OpenSDLAudio(fe, out_params, output.name.c_str());
     }
 
     return true;

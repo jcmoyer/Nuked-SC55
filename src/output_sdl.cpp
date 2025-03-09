@@ -8,13 +8,14 @@ const size_t MAX_STREAMS = 16;
 
 struct SDLOutput
 {
-    Uint16            buffer_size = 0;
-    int               frequency   = 0;
-    SDL_AudioDeviceID device      = 0;
-    SDL_AudioFormat   format      = 0;
-    SDL_AudioCallback callback    = 0;
+    SDL_AudioSpec requested_spec{};
+    SDL_AudioSpec actual_spec{};
 
-    RingbufferView* views[MAX_STREAMS];
+    SDL_AudioDeviceID device = 0;
+
+    size_t buffer_size;
+
+    RingbufferView* views[MAX_STREAMS]{};
     size_t          stream_count = 0;
 
     bool is_started = false;
@@ -92,7 +93,7 @@ bool Out_SDL_QueryOutputs(AudioOutputList& list)
     return true;
 }
 
-bool Out_SDL_Create(const char* device_name)
+bool Out_SDL_Create(const char* device_name, const AudioOutputParameters& params)
 {
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0)
     {
@@ -100,15 +101,29 @@ bool Out_SDL_Create(const char* device_name)
         return false;
     }
 
-    SDL_AudioSpec spec        = {};
-    SDL_AudioSpec spec_actual = {};
+    SDL_AudioSpec spec{};
+    SDL_AudioSpec spec_actual{};
 
-    spec.format   = g_output.format;
-    spec.callback = g_output.callback;
-    spec.freq     = g_output.frequency;
+    spec.freq     = RangeCast<int>(params.frequency);
     spec.channels = 2;
     spec.userdata = nullptr;
-    spec.samples  = g_output.buffer_size;
+    spec.samples  = RangeCast<Uint16>(params.buffer_size);
+
+    switch (params.format)
+    {
+    case AudioFormat::S16:
+        spec.format   = AUDIO_S16SYS;
+        spec.callback = AudioCallback<int16_t>;
+        break;
+    case AudioFormat::S32:
+        spec.format   = AUDIO_S32SYS;
+        spec.callback = AudioCallback<int32_t>;
+        break;
+    case AudioFormat::F32:
+        spec.format   = AUDIO_F32SYS;
+        spec.callback = AudioCallback<float>;
+        break;
+    }
 
     g_output.device = SDL_OpenAudioDevice(device_name, 0, &spec, &spec_actual, 0);
 
@@ -133,6 +148,10 @@ bool Out_SDL_Create(const char* device_name)
             spec_actual.channels,
             spec_actual.freq,
             spec_actual.samples);
+
+    g_output.buffer_size    = params.buffer_size;
+    g_output.requested_spec = spec;
+    g_output.actual_spec    = spec;
 
     return true;
 }
@@ -167,31 +186,3 @@ void Out_SDL_AddStream(RingbufferView& view)
     ++g_output.stream_count;
 }
 
-void Out_SDL_SetFrequency(int frequency)
-{
-    g_output.frequency = frequency;
-}
-
-void Out_SDL_SetBufferSize(int size_frames)
-{
-    g_output.buffer_size = RangeCast<Uint16>(size_frames);
-}
-
-void Out_SDL_SetFormat(AudioFormat format)
-{
-    switch (format)
-    {
-    case AudioFormat::S16:
-        g_output.format   = AUDIO_S16SYS;
-        g_output.callback = AudioCallback<int16_t>;
-        break;
-    case AudioFormat::S32:
-        g_output.format   = AUDIO_S32SYS;
-        g_output.callback = AudioCallback<int32_t>;
-        break;
-    case AudioFormat::F32:
-        g_output.format   = AUDIO_F32SYS;
-        g_output.callback = AudioCallback<float>;
-        break;
-    }
-}

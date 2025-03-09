@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
+
+#include "audio.h"
 
 enum class AudioOutputKind
 {
@@ -17,3 +20,10 @@ struct AudioOutput
 
 using AudioOutputList = std::vector<AudioOutput>;
 
+// Outputs should try to respect these if possible
+struct AudioOutputParameters
+{
+    uint32_t    frequency;
+    uint32_t    buffer_size;
+    AudioFormat format;
+};

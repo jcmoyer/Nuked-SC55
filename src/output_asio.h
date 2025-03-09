@@ -6,7 +6,7 @@
 
 bool Out_ASIO_QueryOutputs(AudioOutputList& list);
 
-bool Out_ASIO_Create(const char* driver_name);
+bool Out_ASIO_Create(const char* driver_name, const AudioOutputParameters& params);
 void Out_ASIO_Destroy();
 
 bool Out_ASIO_Start();
@@ -18,7 +18,6 @@ bool Out_ASIO_Reset();
 // Adds a stream to be mixed into the ASIO output. It should not be freed until ASIO shuts down.
 void Out_ASIO_AddStream(SDL_AudioStream* stream);
 
-void            Out_ASIO_SetFrequency(int user_freq);
 int             Out_ASIO_GetFrequency();
 SDL_AudioFormat Out_ASIO_GetFormat();
 
@@ -28,5 +27,4 @@ size_t Out_ASIO_GetFormatSampleSizeBytes();
 // Returns the size of a single frame in bytes.
 size_t Out_ASIO_GetFormatFrameSizeBytes();
 
-void Out_ASIO_SetBufferSize(int size);
-int  Out_ASIO_GetBufferSize();
+size_t Out_ASIO_GetBufferSize();
