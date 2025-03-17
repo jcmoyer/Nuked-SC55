@@ -41,6 +41,7 @@
 #include "pcm.h"
 #include <SDL.h>
 #include <optional>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -200,7 +201,7 @@ void FE_AudioCallback(void* userdata, Uint8* stream, int len)
     size_t renderable_count = num_frames;
     for (size_t i = 0; i < frontend.instances_in_use; ++i)
     {
-        renderable_count = Min(
+        renderable_count = std::min(
             renderable_count,
             frontend.instances[i].StaticSelectBuffer<SampleT>().GetReadableCount()
         );

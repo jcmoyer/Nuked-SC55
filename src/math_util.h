@@ -34,31 +34,18 @@
 #pragma once
 
 #include <cstdint>
-
-template <typename T>
-inline T Min(T a, T b)
-{
-    return a < b ? a : b;
-}
-
-template <typename T>
-inline T Clamp(T value, T min, T max)
-{
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
-}
+#include <algorithm>
 
 inline int16_t SaturatingAdd(int16_t a, int16_t b)
 {
     int32_t result = (int32_t)a + (int32_t)b;
-    return (int16_t)Clamp<int32_t>(result, INT16_MIN, INT16_MAX);
+    return (int16_t)std::clamp<int32_t>(result, INT16_MIN, INT16_MAX);
 }
 
 inline int32_t SaturatingAdd(int32_t a, int32_t b)
 {
     int64_t result = (int64_t)a + (int64_t)b;
-    return (int32_t)Clamp<int64_t>(result, INT32_MIN, INT32_MAX);
+    return (int32_t)std::clamp<int64_t>(result, INT32_MIN, INT32_MAX);
 }
 
 // Auto vectorizes in clang at -O2, gcc at -O3

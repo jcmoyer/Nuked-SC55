@@ -602,7 +602,7 @@ public:
             size_t cc = m_queues[i].ChunkCount();
             if (!(m_queue_complete[i] && cc == 0))
             {
-                count = Min(count, cc);
+                count = std::min(count, cc);
             }
         }
         return count;

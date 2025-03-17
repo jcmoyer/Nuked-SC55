@@ -37,6 +37,7 @@
 #include "math_util.h"
 #include <memory>
 #include <span>
+#include <algorithm>
 
 // This type has reference semantics.
 class GenericBuffer
@@ -200,7 +201,7 @@ template <typename SampleT>
 size_t ReadMix(RingbufferView<AudioFrame<SampleT>>& rb, AudioFrame<SampleT>* dest, size_t frame_count)
 {
     const size_t have_count = rb.GetReadableCount();
-    const size_t read_count = Min(have_count, frame_count);
+    const size_t read_count = std::min(have_count, frame_count);
     for (size_t i = 0; i < read_count; ++i)
     {
         AudioFrame<SampleT> src;
