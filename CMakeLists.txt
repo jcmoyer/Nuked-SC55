@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.19)
-project (nuked-sc55 VERSION 0.5.0 LANGUAGES CXX)
+project (nuked-sc55 VERSION 0.5.0 LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -63,6 +63,10 @@ target_sources(nuked-sc55-backend
     src/backend/path_util.cpp
     src/backend/pcm.cpp
     src/backend/submcu.cpp
+
+    src/backend/sha/sha-private.h
+    src/backend/sha/sha.h
+    src/backend/sha/sha224-256.c
 
     PUBLIC
     FILE_SET public_headers
