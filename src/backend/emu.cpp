@@ -32,15 +32,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 #include "emu.h"
-#include "mcu.h"
-#include "submcu.h"
-#include "mcu_timer.h"
+#include "cast.h"
 #include "lcd.h"
+#include "mcu.h"
+#include "mcu_timer.h"
 #include "pcm.h"
-#include <string>
+#include "submcu.h"
 #include <fstream>
 #include <span>
+#include <string>
 #include <vector>
+
+extern "C"
+{
+#include "sha/sha.h"
+}
 
 Emulator::~Emulator()
 {
@@ -236,6 +242,281 @@ void unscramble(uint8_t *src, uint8_t *dst, int len)
         }
         dst[i] = data;
     }
+}
+
+bool EMU_ReadAllBytes(const std::filesystem::path& filename, std::vector<uint8_t>& buffer)
+{
+    std::ifstream input(filename, std::ios::binary);
+
+    if (!input)
+    {
+        return false;
+    }
+
+    input.seekg(0, std::ios::end);
+    std::streamoff byte_count = input.tellg();
+    input.seekg(0, std::ios::beg);
+
+    buffer.resize(RangeCast<size_t>(byte_count));
+
+    input.read((char*)buffer.data(), RangeCast<std::streamsize>(byte_count));
+
+    return input.good();
+}
+
+// This is wrapped in a structure so we can return it from a function.
+struct SHA256Digest
+{
+    uint8_t bytes[SHA256HashSize];
+
+    SHA256Digest() = default;
+
+    SHA256Digest(const uint8_t (&from_bytes)[SHA256HashSize])
+    {
+        memcpy(bytes, from_bytes, SHA256HashSize);
+    }
+
+    const uint8_t* begin() const
+    {
+        return &bytes[0];
+    }
+
+    const uint8_t* end() const
+    {
+        return &bytes[0] + SHA256HashSize;
+    }
+};
+
+constexpr bool operator==(const SHA256Digest& a, const SHA256Digest& b)
+{
+    return std::equal(a.begin(), a.end(), b.begin(), b.end());
+}
+
+constexpr uint8_t HexValue(char x)
+{
+    if (x >= '0' && x <= '9')
+    {
+        return x - '0';
+    }
+    else if (x >= 'a' && x <= 'f')
+    {
+        return 10 + (x - 'a');
+    }
+    else
+    {
+        throw "character out of range";
+    }
+}
+
+// Compile time string-to-SHA256Digest
+template <size_t N>
+constexpr SHA256Digest ToDigest(const char (&s)[N])
+{
+    static_assert(N == 65); // 64 + null terminator
+
+    SHA256Digest hash;
+    for (size_t i = 0; i < N / 2; ++i)
+    {
+        hash.bytes[i] = (HexValue(s[2 * i + 0]) << 4) | HexValue(s[2 * i + 1]);
+    }
+
+    return hash;
+}
+
+struct EMU_KnownHash
+{
+    SHA256Digest       hash{};
+    Romset             romset;
+    EMU_RomDestination destination = EMU_RomDestination::NONE;
+};
+
+// clang-format off
+static constexpr EMU_KnownHash EMU_HASHES[] = {
+    {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::MK2, EMU_RomDestination::ROM1},
+    {ToDigest("a4c9fd821059054c7e7681d61f49ce6f42ed2fe407a7ec1ba0dfdc9722582ce0"), Romset::MK2, EMU_RomDestination::ROM2},
+    {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::MK2, EMU_RomDestination::SMROM},
+    {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::MK2, EMU_RomDestination::WAVEROM1},
+    {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::MK2, EMU_RomDestination::WAVEROM2},
+
+    // TODO: missing hashes for this romset
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomDestination::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomDestination::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomDestination::SMROM},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomDestination::WAVEROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, EMU_RomDestination::WAVEROM2},
+
+    // TODO: not sure whether this is 1.00/1.21/2.0
+    {ToDigest("7e1bacd1d7c62ed66e465ba05597dcd60dfc13fc23de0287fdbce6cf906c6544"), Romset::MK1, EMU_RomDestination::ROM1},
+    {ToDigest("effc6132d68f7e300aaef915ccdd08aba93606c22d23e580daf9ea6617913af1"), Romset::MK1, EMU_RomDestination::ROM2},
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, EMU_RomDestination::WAVEROM1},
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, EMU_RomDestination::WAVEROM2},
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, EMU_RomDestination::WAVEROM3},
+
+    // TODO: missing hashes for this romset; multiple versions
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomDestination::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomDestination::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomDestination::WAVEROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomDestination::WAVEROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, EMU_RomDestination::WAVEROM3},
+
+    // TODO: missing jv880 optional roms; optional roms not yet supported
+    {ToDigest("aabfcf883b29060198566440205f2fae1ce689043ea0fc7074842aaa4fd4823e"), Romset::JV880, EMU_RomDestination::ROM1},
+    {ToDigest("ed437f1bc75cc558f174707bcfeb45d5e03483efd9bfd0a382ca57c0edb2a40c"), Romset::JV880, EMU_RomDestination::ROM2},
+    {ToDigest("aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4"), Romset::JV880, EMU_RomDestination::WAVEROM1},
+    {ToDigest("a7b50bb47734ee9117fa16df1f257990a9a1a0b5ed420337ae4310eb80df75c8"), Romset::JV880, EMU_RomDestination::WAVEROM2},
+
+    // TODO: missing hashes for this romset
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomDestination::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomDestination::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomDestination::WAVEROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, EMU_RomDestination::WAVEROM2},
+
+    // TODO: missing hashes for this romset
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomDestination::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomDestination::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, EMU_RomDestination::WAVEROM1},
+
+    // TODO: missing hashes for this romset; multiple versions(?)
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomDestination::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomDestination::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomDestination::WAVEROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomDestination::WAVEROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, EMU_RomDestination::WAVEROM3},
+
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155MK2, EMU_RomDestination::ROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155MK2, EMU_RomDestination::ROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155MK2, EMU_RomDestination::WAVEROM1},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155MK2, EMU_RomDestination::WAVEROM2},
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155MK2, EMU_RomDestination::SMROM},
+};
+// clang-format on
+
+bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& all_maps)
+{
+    std::error_code ec;
+
+    std::filesystem::directory_iterator dir_iter(base_path, ec);
+
+    if (ec)
+    {
+        fprintf(stderr, "EMU_GetRomsets failed: %s\n", ec.message().c_str());
+        return false;
+    }
+
+    std::vector<uint8_t> buffer;
+
+    while (dir_iter != std::filesystem::directory_iterator{})
+    {
+        const bool is_file = dir_iter->is_regular_file(ec);
+        if (ec)
+        {
+            fprintf(stderr,
+                    "EMU_GetRomsets failed to check type of `%s`: %s\n",
+                    dir_iter->path().generic_string().c_str(),
+                    ec.message().c_str());
+            return false;
+        }
+
+        if (!is_file)
+        {
+            dir_iter.increment(ec);
+            if (ec)
+            {
+                fprintf(stderr, "EMU_GetRomsets failed to get next file: %s\n", ec.message().c_str());
+                return false;
+            }
+            continue;
+        }
+
+        const uintmax_t file_size = dir_iter->file_size(ec);
+        if (ec)
+        {
+            fprintf(stderr,
+                    "EMU_GetRomsets failed to get file size of `%s`: %s\n",
+                    dir_iter->path().generic_string().c_str(),
+                    ec.message().c_str());
+            return false;
+        }
+
+        // Skip files larger than 4MB
+        if (file_size > (uintmax_t)(4 * 1024 * 1024))
+        {
+            dir_iter.increment(ec);
+            if (ec)
+            {
+                fprintf(stderr, "EMU_GetRomsets failed to get next file: %s\n", ec.message().c_str());
+                return false;
+            }
+            continue;
+        }
+
+        EMU_ReadAllBytes(dir_iter->path(), buffer);
+
+        SHA256Context ctx;
+        uint8_t       digest_bytes[SHA256HashSize]{};
+        SHA256Reset(&ctx);
+        SHA256Input(&ctx, buffer.data(), buffer.size());
+        SHA256Result(&ctx, digest_bytes);
+
+        for (const auto& known : EMU_HASHES)
+        {
+            if (known.hash == SHA256Digest(digest_bytes))
+            {
+                all_maps.maps[(size_t)known.romset].rom_paths[(size_t)known.destination] = dir_iter->path();
+            }
+        }
+
+        dir_iter.increment(ec);
+        if (ec)
+        {
+            fprintf(stderr, "EMU_GetRomsets failed to get next file: %s\n", ec.message().c_str());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset, std::vector<EMU_RomDestination>& missing)
+{
+    missing.clear();
+
+    const auto& map = all_maps.maps[(size_t)romset];
+
+    for (const auto& known : EMU_HASHES)
+    {
+        if (known.romset == romset && map.rom_paths[(size_t)known.destination].empty())
+        {
+            missing.push_back(known.destination);
+        }
+    }
+
+    return missing.empty();
+}
+
+const char* EMU_RomDestinationToString(EMU_RomDestination destination)
+{
+    switch (destination)
+    {
+    case EMU_RomDestination::ROM1:
+        return "ROM1";
+    case EMU_RomDestination::ROM2:
+        return "ROM2";
+    case EMU_RomDestination::ROM3:
+        return "ROM3";
+    case EMU_RomDestination::SMROM:
+        return "SMROM";
+    case EMU_RomDestination::WAVEROM1:
+        return "WAVEROM1";
+    case EMU_RomDestination::WAVEROM2:
+        return "WAVEROM2";
+    case EMU_RomDestination::WAVEROM3:
+        return "WAVEROM3";
+    case EMU_RomDestination::COUNT:
+        // also NONE
+        break;
+    }
+    return "invalid destination";
 }
 
 Romset EMU_DetectRomset(const std::filesystem::path& base_path)

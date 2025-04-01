@@ -42,6 +42,7 @@
 #include <memory>
 #include <span>
 #include <string_view>
+#include <vector>
 
 struct EMU_Options
 {
@@ -109,7 +110,47 @@ private:
     EMU_Options                  m_options;
 };
 
+// Where a file should be mapped to once loaded
+enum class EMU_RomDestination
+{
+    ROM1,
+    ROM2,
+    ROM3,
+    WAVEROM1,
+    WAVEROM2,
+    WAVEROM3,
+    SMROM,
+
+    // do not reorder these
+    COUNT,
+    NONE = COUNT,
+};
+
+// Maps rom destinations to filenames on disk
+struct EMU_RomFilenameMap
+{
+    // Array indexed by EMU_RomDestination
+    std::filesystem::path rom_paths[(size_t)EMU_RomDestination::COUNT]{};
+};
+
+// Maps romsets to filename maps
+struct EMU_AllRomsetMaps
+{
+    // Array indexed by Romset
+    EMU_RomFilenameMap maps[ROMSET_COUNT]{};
+};
+
 Romset EMU_DetectRomset(const std::filesystem::path& base_path);
 const char* EMU_RomsetName(Romset romset);
 bool EMU_ParseRomsetName(std::string_view name, Romset& romset);
 std::span<const char*> EMU_GetParsableRomsetNames();
+
+// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `all_maps`.
+bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& all_maps);
+
+// Returns true if `all_maps` contains all the files required to load `romset`. Missing roms will be reported in
+// `missing`.
+bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset, std::vector<EMU_RomDestination>& missing);
+
+// Returns `destination` as a string.
+const char* EMU_RomDestinationToString(EMU_RomDestination destination);
