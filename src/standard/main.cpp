@@ -1122,6 +1122,22 @@ int main(int argc, char *argv[])
 
     if (params.autodetect)
     {
+        EMU_AllRomsetMaps all_maps;
+        if (!EMU_GetRomsets(*params.rom_directory, all_maps))
+        {
+            fprintf(stderr, "Failed to detect romsets\n");
+            return false;
+        }
+
+        for (size_t i = 0; i < ROMSET_COUNT; ++i)
+        {
+            std::vector<EMU_RomDestination> missing;
+            if (EMU_IsCompleteRomset(all_maps, (Romset)i, missing))
+            {
+                fprintf(stderr, "Found %s\n", EMU_RomsetName((Romset)i));
+            }
+        }
+
         params.romset = EMU_DetectRomset(*params.rom_directory);
         fprintf(stderr, "ROM set autodetect: %s\n", EMU_RomsetName(params.romset));
     }
