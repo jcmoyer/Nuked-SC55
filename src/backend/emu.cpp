@@ -502,8 +502,6 @@ const char* EMU_RomDestinationToString(EMU_RomDestination destination)
         return "ROM1";
     case EMU_RomDestination::ROM2:
         return "ROM2";
-    case EMU_RomDestination::ROM3:
-        return "ROM3";
     case EMU_RomDestination::SMROM:
         return "SMROM";
     case EMU_RomDestination::WAVEROM1:

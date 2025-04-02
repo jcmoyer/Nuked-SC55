@@ -115,7 +115,6 @@ enum class EMU_RomDestination
 {
     ROM1,
     ROM2,
-    ROM3,
     WAVEROM1,
     WAVEROM2,
     WAVEROM3,
