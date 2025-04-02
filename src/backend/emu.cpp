@@ -562,47 +562,11 @@ std::streamsize EMU_ReadStreamUpTo(std::ifstream& s, void* into, std::streamsize
 
 bool Emulator::LoadRoms(Romset romset, const std::filesystem::path& base_path)
 {
+    MCU_SetRomset(GetMCU(), romset);
+
     std::vector<uint8_t> tempbuf(0x800000);
 
     std::ifstream s_rf[ROM_SET_N_FILES];
-
-    m_mcu->romset = romset;
-    m_mcu->is_mk1 = false;
-    m_mcu->is_cm300 = false;
-    m_mcu->is_st = false;
-    m_mcu->is_jv880 = false;
-    m_mcu->is_scb55 = false;
-    m_mcu->is_sc155 = false;
-    switch (romset)
-    {
-        case Romset::MK2:
-        case Romset::SC155MK2:
-            if (romset == Romset::SC155MK2)
-                m_mcu->is_sc155 = true;
-            break;
-        case Romset::ST:
-            m_mcu->is_st = true;
-            break;
-        case Romset::MK1:
-        case Romset::SC155:
-            m_mcu->is_mk1 = true;
-            m_mcu->is_st = false;
-            if (romset == Romset::SC155)
-                m_mcu->is_sc155 = true;
-            break;
-        case Romset::CM300:
-            m_mcu->is_mk1 = true;
-            m_mcu->is_cm300 = true;
-            break;
-        case Romset::JV880:
-            m_mcu->is_jv880 = true;
-            m_mcu->rom2_mask /= 2; // rom is half the size
-            break;
-        case Romset::SCB55:
-        case Romset::RLP3237:
-            m_mcu->is_scb55 = true;
-            break;
-    }
 
     std::filesystem::path rpaths[ROM_SET_N_FILES];
 

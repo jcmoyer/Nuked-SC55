@@ -968,3 +968,43 @@ void MCU_EncoderTrigger(mcu_t& mcu, int dir)
     MCU_GA_SetGAInt(mcu, dir == 0 ? 3 : 4, 1);
 }
 
+void MCU_SetRomset(mcu_t& mcu, Romset romset)
+{
+    mcu.romset   = romset;
+    mcu.is_mk1   = false;
+    mcu.is_cm300 = false;
+    mcu.is_st    = false;
+    mcu.is_jv880 = false;
+    mcu.is_scb55 = false;
+    mcu.is_sc155 = false;
+
+    switch (romset)
+    {
+    case Romset::MK2:
+    case Romset::SC155MK2:
+        if (romset == Romset::SC155MK2)
+            mcu.is_sc155 = true;
+        break;
+    case Romset::ST:
+        mcu.is_st = true;
+        break;
+    case Romset::MK1:
+    case Romset::SC155:
+        mcu.is_mk1 = true;
+        mcu.is_st  = false;
+        if (romset == Romset::SC155)
+            mcu.is_sc155 = true;
+        break;
+    case Romset::CM300:
+        mcu.is_mk1   = true;
+        mcu.is_cm300 = true;
+        break;
+    case Romset::JV880:
+        mcu.is_jv880   = true;
+        break;
+    case Romset::SCB55:
+    case Romset::RLP3237:
+        mcu.is_scb55 = true;
+        break;
+    }
+}

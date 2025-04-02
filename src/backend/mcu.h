@@ -540,3 +540,4 @@ void MCU_EncoderTrigger(mcu_t& mcu, int dir);
 void MCU_PostSample(mcu_t& mcu, const AudioFrame<int32_t>& frame);
 void MCU_PostUART(mcu_t& mcu, uint8_t data);
 
+void MCU_SetRomset(mcu_t& mcu, Romset romset);
