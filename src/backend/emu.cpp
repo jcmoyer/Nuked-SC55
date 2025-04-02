@@ -217,7 +217,7 @@ const char* roms[(size_t)ROMSET_COUNT][ROM_SET_N_FILES] =
     },
 };
 
-void unscramble(uint8_t *src, uint8_t *dst, int len)
+void unscramble(const uint8_t *src, uint8_t *dst, int len)
 {
     for (int i = 0; i < len; i++)
     {
@@ -463,6 +463,7 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& a
             if (known.hash == SHA256Digest(digest_bytes))
             {
                 all_maps.maps[(size_t)known.romset].rom_paths[(size_t)known.destination] = dir_iter->path();
+                all_maps.maps[(size_t)known.romset].rom_data[(size_t)known.destination]  = std::move(buffer);
             }
         }
 
@@ -475,6 +476,12 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& a
     }
 
     return true;
+}
+
+bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset)
+{
+    std::vector<EMU_RomDestination> missing;
+    return EMU_IsCompleteRomset(all_maps, romset, missing);
 }
 
 bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset, std::vector<EMU_RomDestination>& missing)
@@ -492,6 +499,19 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset, std:
     }
 
     return missing.empty();
+}
+
+bool EMU_IsWaverom(EMU_RomDestination destination)
+{
+    switch (destination)
+    {
+    case EMU_RomDestination::WAVEROM1:
+    case EMU_RomDestination::WAVEROM2:
+    case EMU_RomDestination::WAVEROM3:
+        return true;
+    default:
+        return false;
+    }
 }
 
 const char* EMU_RomDestinationToString(EMU_RomDestination destination)
@@ -712,6 +732,83 @@ bool Emulator::LoadRoms(Romset romset, const std::filesystem::path& base_path)
     if (m_mcu->is_jv880)
     {
         LoadNVRAM();
+    }
+
+    MCU_PatchROM(*m_mcu);
+
+    return true;
+}
+
+std::span<uint8_t> Emulator::MapBuffer(EMU_RomDestination romdest)
+{
+    switch (romdest)
+    {
+    case EMU_RomDestination::ROM1:
+        return GetMCU().rom1;
+    case EMU_RomDestination::ROM2:
+        return GetMCU().rom2;
+    case EMU_RomDestination::WAVEROM1:
+        return GetPCM().waverom1;
+    case EMU_RomDestination::WAVEROM2:
+        return GetPCM().waverom2;
+    case EMU_RomDestination::WAVEROM3:
+        return GetPCM().waverom3;
+    case EMU_RomDestination::SMROM:
+        return m_sm->rom;
+    case EMU_RomDestination::COUNT:
+        // also none
+        break;
+    }
+    fprintf(stderr, "FATAL: MapBuffer called with invalid romdest %d\n", (int)romdest);
+    std::abort();
+}
+
+bool Emulator::LoadRomsAuto(Romset romset, const EMU_AllRomsetMaps& romset_maps)
+{
+    MCU_SetRomset(GetMCU(), romset);
+
+    const EMU_RomFilenameMap& map = romset_maps.maps[(size_t)romset];
+
+    for (int i = 0; i < (int)EMU_RomDestination::COUNT; ++i)
+    {
+        const EMU_RomDestination romdest = (EMU_RomDestination)i;
+
+        if (map.rom_paths[i].empty())
+        {
+            continue;
+        }
+
+        fprintf(stderr,
+                "Load %s %s %s\n",
+                EMU_RomsetName(romset),
+                EMU_RomDestinationToString(romdest),
+                map.rom_paths[i].generic_string().c_str());
+
+        auto buffer = MapBuffer(romdest);
+
+        if (buffer.size() < map.rom_data[i].size())
+        {
+            fprintf(stderr,
+                    "FATAL: rom for %s %s is too large: %s\n",
+                    EMU_RomsetName(romset),
+                    EMU_RomDestinationToString(romdest),
+                    map.rom_paths[i].generic_string().c_str());
+            return false;
+        }
+
+        if (EMU_IsWaverom(romdest))
+        {
+            unscramble(map.rom_data[i].data(), buffer.data(), (int)map.rom_data[i].size());
+        }
+        else
+        {
+            if (romdest == EMU_RomDestination::ROM2)
+            {
+                GetMCU().rom2_mask = (int)map.rom_data[i].size() - 1;
+            }
+
+            std::copy(map.rom_data[i].begin(), map.rom_data[i].end(), buffer.begin());
+        }
     }
 
     MCU_PatchROM(*m_mcu);
