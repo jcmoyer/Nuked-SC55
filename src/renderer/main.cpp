@@ -189,7 +189,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
 
             result.nvram_filename = reader.Arg();
         }
-        else if (reader.Any("-d", "--romset"))
+        else if (reader.Any("--romset"))
         {
             if (!reader.Next())
             {
