@@ -465,6 +465,8 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& a
             {
                 all_maps.maps[(size_t)known.romset].rom_paths[(size_t)known.destination] = dir_iter->path();
                 all_maps.maps[(size_t)known.romset].rom_data[(size_t)known.destination]  = std::move(buffer);
+
+                buffer = {};
             }
         }
 
