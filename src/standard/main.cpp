@@ -117,6 +117,8 @@ struct FE_Application {
     FE_Instance instances[FE_MAX_INSTANCES];
     size_t instances_in_use = 0;
 
+    EMU_AllRomsetMaps romset_maps;
+
     AudioOutput audio_output{};
 
     bool running = false;
@@ -130,9 +132,10 @@ struct FE_Parameters
     std::string audio_device;
     uint32_t buffer_size = 512;
     uint32_t buffer_count = 16;
-    bool autodetect = true;
     std::optional<EMU_SystemReset> reset;
     size_t instances = 1;
+    std::string_view romset_name;
+    bool legacy_romset_detection = false;
     Romset romset = Romset::MK2;
     std::optional<std::filesystem::path> rom_directory;
     AudioFormat output_format = AudioFormat::S16;
@@ -691,11 +694,36 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    if (!fe->emu.LoadRoms(params.romset, *params.rom_directory))
+    if (params.legacy_romset_detection)
     {
-        fprintf(stderr, "ERROR: Failed to load roms.\n");
-        return false;
+        if (!fe->emu.LoadRoms(params.romset, *params.rom_directory))
+        {
+            fprintf(stderr, "ERROR: Failed to load roms.\n");
+            return false;
+        }
     }
+    else
+    {
+        std::vector<EMU_RomDestination> missing;
+        if (EMU_IsCompleteRomset(container.romset_maps, params.romset, missing))
+        {
+            if (!fe->emu.LoadRomsAuto(params.romset, container.romset_maps))
+            {
+                fprintf(stderr, "ERROR: Failed to load roms.\n");
+                return false;
+            }
+        }
+        else
+        {
+            fprintf(stderr, "ERROR: Requested romset is incomplete. Missing:\n");
+            for (EMU_RomDestination m : missing)
+            {
+                fprintf(stderr, "  - %s\n", EMU_RomDestinationToString(m));
+            }
+            return false;
+        }
+    }
+
     fe->emu.Reset();
     fe->emu.GetPCM().disable_oversampling = params.disable_oversampling;
 
@@ -956,50 +984,18 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
 
             result.nvram_filename = reader.Arg();
         }
-        else if (reader.Any("--mk2"))
+        else if (reader.Any("--romset"))
         {
-            result.romset = Romset::MK2;
-            result.autodetect = false;
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.romset_name = reader.Arg();
         }
-        else if (reader.Any("--st"))
+        else if (reader.Any("--legacy-romset-detection"))
         {
-            result.romset = Romset::ST;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--mk1"))
-        {
-            result.romset = Romset::MK1;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--cm300"))
-        {
-            result.romset = Romset::CM300;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--jv880"))
-        {
-            result.romset = Romset::JV880;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--scb55"))
-        {
-            result.romset = Romset::SCB55;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--rlp3237"))
-        {
-            result.romset = Romset::RLP3237;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--sc155"))
-        {
-            result.romset = Romset::SC155;
-            result.autodetect = false;
-        }
-        else if (reader.Any("--sc155mk2"))
-        {
-            result.romset = Romset::SC155MK2;
-            result.autodetect = false;
+            result.legacy_romset_detection = true;
         }
 #if NUKED_ENABLE_ASIO
         else if (reader.Any("--asio-sample-rate"))
@@ -1027,6 +1023,17 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
     return FE_ParseError::Success;
 }
 
+void FE_PrintRomsets()
+{
+    fprintf(stderr, "Accepted romset names:\n");
+    fprintf(stderr, "  ");
+    for (const char* name : EMU_GetParsableRomsetNames())
+    {
+        fprintf(stderr, "%s ", name);
+    }
+    fprintf(stderr, "\n");
+}
+
 void FE_Usage()
 {
     constexpr const char* USAGE_STR = R"(Usage: %s [options]
@@ -1050,15 +1057,12 @@ Emulator options:
 
 ROM management options:
   -d, --rom-directory <dir>                     Sets the directory to load roms from.
-  --mk2                                         Use SC-55mk2 ROM set.
-  --st                                          Use SC-55st ROM set.
-  --mk1                                         Use SC-55mk1 ROM set.
-  --cm300                                       Use CM-300/SCC-1 ROM set.
-  --jv880                                       Use JV-880 ROM set.
-  --scb55                                       Use SCB-55 ROM set.
-  --rlp3237                                     Use RLP-3237 ROM set.
+  --romset <name>                               Sets the romset to load.
+  --legacy-romset-detection                     Load roms using specific filenames like upstream.
 
 )";
+
+    FE_PrintRomsets();
 
 #if NUKED_ENABLE_ASIO
     constexpr const char* EXTRA_ASIO_STR = R"(ASIO options:
@@ -1120,27 +1124,61 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "ROM directory is: %s\n", params.rom_directory->generic_string().c_str());
 
-    if (params.autodetect)
+    if (!params.legacy_romset_detection)
     {
-        EMU_AllRomsetMaps all_maps;
-        if (!EMU_GetRomsets(*params.rom_directory, all_maps))
+        if (!EMU_GetRomsets(*params.rom_directory, frontend.romset_maps))
         {
-            fprintf(stderr, "Failed to detect romsets\n");
+            fprintf(stderr, "FATAL: Failed to detect romsets\n");
             return false;
         }
+    }
+
+    if (params.romset_name.size())
+    {
+        Romset rs;
+        if (!EMU_ParseRomsetName(params.romset_name, rs))
+        {
+            // interpreting romset_name as a char pointer here is safe because it points into argv
+            fprintf(stderr, "Could not parse romset name: `%s`\n", params.romset_name.data());
+            FE_PrintRomsets();
+            return false;
+        }
+        params.romset = rs;
+    }
+    else if (params.legacy_romset_detection)
+    {
+        params.romset = EMU_DetectRomset(*params.rom_directory);
+    }
+    else
+    {
+        std::optional<Romset> use_romset;
 
         for (size_t i = 0; i < ROMSET_COUNT; ++i)
         {
-            std::vector<EMU_RomDestination> missing;
-            if (EMU_IsCompleteRomset(all_maps, (Romset)i, missing))
+            if (EMU_IsCompleteRomset(frontend.romset_maps, (Romset)i))
             {
                 fprintf(stderr, "Found %s\n", EMU_RomsetName((Romset)i));
+
+                // like upstream, we will bias towards MK2 romset if multiple are present
+                if (!use_romset || (Romset)i == Romset::MK2)
+                {
+                    use_romset = (Romset)i;
+                }
             }
         }
 
-        params.romset = EMU_DetectRomset(*params.rom_directory);
-        fprintf(stderr, "ROM set autodetect: %s\n", EMU_RomsetName(params.romset));
+        if (use_romset)
+        {
+            params.romset = *use_romset;
+        }
+        else
+        {
+            fprintf(stderr, "FATAL: Couldn't find any romsets in rom directory\n");
+            return 1;
+        }
     }
+
+    fprintf(stderr, "Using romset: %s\n", EMU_RomsetName(params.romset));
 
     EMU_SystemReset reset = EMU_SystemReset::NONE;
     if (params.reset)

@@ -140,33 +140,111 @@ the emulator will look for roms in these locations:
 
 `<exe_dir>` is the directory containing this executable.
 
-### `--mk2`
+### `--romset <name>`
 
-Use SC-55mk2 ROM set. This overrides autodetect.
+If provided, this will set the romset to load. Otherwise, the romset will be
+autodetected based on the contents of the rom directory.
 
-### `--st`
+By default, files in the rom directory will be hashed to determine which ones
+should be loaded automatically. This differs from upstream which requires each
+romset to have specific filenames. To enable the old behavior, pass
+`--legacy-romset-detection`.
 
-Use SC-55st ROM set. This overrides autodetect.
+### `--legacy-romset-detection`
 
-### `--mk1`
+Behave like upstream when choosing files to load. With this option, you must
+rename roms in the rom directory as follows:
 
-Use SC-55mk1 ROM set. This overrides autodetect.
+```
+SC-55mk2/SC-155mk2 (v1.01):
+R15199858 (H8/532 mcu) -> rom1.bin
+R00233567 (H8/532 extra code) -> rom2.bin
+R15199880 (M37450M2 mcu) -> rom_sm.bin
+R15209359 (WAVE 16M) -> waverom1.bin
+R15279813 (WAVE 8M) -> waverom2.bin
 
-### `--cm300`
+SC-55st (v1.01):
+R15199858 (H8/532 mcu) -> rom1.bin
+R00561413 (H8/532 extra code) -> rom2_st.bin
+R15199880 (M37450M2 mcu) -> rom_sm.bin
+R15209359 (WAVE 16M) -> waverom1.bin
+R15279813 (WAVE 8M) -> waverom2.bin
 
-Use CM-300/SCC-1 ROM set. This overrides autodetect.
+SC-55 (v1.00):
+R15199748 (H8/532 mcu) -> sc55_rom1.bin
+R1544925800 (H8/532 extra code) -> sc55_rom2.bin
+R15209276 (WAVE A) -> sc55_waverom1.bin
+R15209277 (WAVE B) -> sc55_waverom2.bin
+R15209281 (WAVE C) -> sc55_waverom3.bin
 
-### `--jv880` 
+SC-55 (v1.21):
+R15199778 (H8/532 mcu) -> sc55_rom1.bin
+R15209363 (H8/532 extra code) -> sc55_rom2.bin
+R15209276 (WAVE A) -> sc55_waverom1.bin
+R15209277 (WAVE B) -> sc55_waverom2.bin
+R15209281 (WAVE C) -> sc55_waverom3.bin
 
-Use JV-880 ROM set. This overrides autodetect.
+SC-55 (v2.0):
+R15199799 (H8/532 mcu) -> sc55_rom1.bin
+R15209387 (H8/532 extra code) -> sc55_rom2.bin
+R15209276 (WAVE A) -> sc55_waverom1.bin
+R15209277 (WAVE B) -> sc55_waverom2.bin
+R15209281 (WAVE C) -> sc55_waverom3.bin
 
-### `--scb55`
+CM-300/SCC-1 (v1.10):
+R15199774 (H8/532 mcu) -> cm300_rom1.bin
+R15279809 (H8/532 extra code) -> cm300_rom2.bin
+R15279806 (WAVE A) -> cm300_waverom1.bin
+R15279807 (WAVE B) -> cm300_waverom2.bin
+R15279808 (WAVE C) -> cm300_waverom3.bin
 
-Use SCB-55 ROM set. This overrides autodetect.
+CM-300/SCC-1 (v1.20):
+R15199774 (H8/532 mcu) -> cm300_rom1.bin
+R15279812 (H8/532 extra code) -> cm300_rom2.bin
+R15279806 (WAVE A) -> cm300_waverom1.bin
+R15279807 (WAVE B) -> cm300_waverom2.bin
+R15279808 (WAVE C) -> cm300_waverom3.bin
 
-### `--rlp3237`
+SCC-1A:
+R00128523 (H8/532 mcu) -> cm300_rom1.bin
+R00128567 (H8/532 extra code) -> cm300_rom2.bin
+R15279806 (WAVE A) -> cm300_waverom1.bin
+R15279807 (WAVE B) -> cm300_waverom2.bin
+R15279808 (WAVE C) -> cm300_waverom3.bin
 
-Use RLP-3237 ROM set. This overrides autodetect.
+JV-880 (v1.0.0):
+R15199810 (H8/532 mcu) -> jv880_rom1.bin
+R15209386 (H8/532 extra code) -> jv880_rom2.bin
+R15209312 (WAVE A) -> jv880_waverom1.bin
+R15209313 (WAVE B) -> jv880_waverom2.bin
+PCM Cards -> jv880_waverom_pcmcard.bin (optional)
+Expansion PCBs -> jv880_waverom_expansion.bin (optional)
+
+SCB-55/RLP-3194:
+R15199827 (H8/532 mcu) -> scb55_rom1.bin
+R15279828 (H8/532 extra code) -> scb55_rom2.bin
+R15209359 (WAVE 16M) -> scb55_waverom1.bin
+R15279813 (WAVE 8M) -> scb55_waverom2.bin
+
+RLP-3237:
+R15199827 (H8/532 mcu) -> rlp3237_rom1.bin
+R15209486 (H8/532 extra code) -> rlp3237_rom2.bin
+R15279824 (WAVE 16M) -> rlp3237_waverom1.bin
+
+SC-155 (rev 1):
+R15199799 (H8/532 mcu) -> sc155_rom1.bin
+R15209361 (H8/532 extra code) -> sc155_rom2.bin
+R15209276 (WAVE A) -> sc155_waverom1.bin
+R15209277 (WAVE B) -> sc155_waverom2.bin
+R15209281 (WAVE C) -> sc155_waverom3.bin
+
+SC-155 (rev 2):
+R15199799 (H8/532 mcu) -> sc155_rom1.bin
+R15209400 (H8/532 extra code) -> sc155_rom2.bin
+R15209276 (WAVE A) -> sc155_waverom1.bin
+R15209277 (WAVE B) -> sc155_waverom2.bin
+R15209281 (WAVE C) -> sc155_waverom3.bin
+```
 
 ## ASIO specific parameters
 
