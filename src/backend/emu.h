@@ -157,8 +157,9 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetInfo& a
 
 // Returns true if `all_info` contains all the files required to load `romset`. Missing roms will be reported in
 // `missing`.
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset);
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std::vector<EMU_RomDestination>& missing);
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo&         all_info,
+                          Romset                           romset,
+                          std::vector<EMU_RomDestination>* missing = nullptr);
 
 // Returns true if `destination` represents a waverom destination.
 bool EMU_IsWaverom(EMU_RomDestination destination);

@@ -481,15 +481,14 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetInfo& a
     return true;
 }
 
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset)
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std::vector<EMU_RomDestination>* missing)
 {
-    std::vector<EMU_RomDestination> missing;
-    return EMU_IsCompleteRomset(all_info, romset, missing);
-}
+    bool is_complete = true;
 
-bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std::vector<EMU_RomDestination>& missing)
-{
-    missing.clear();
+    if (missing)
+    {
+        missing->clear();
+    }
 
     const auto& info = all_info.romsets[(size_t)romset];
 
@@ -497,11 +496,15 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std:
     {
         if (known.romset == romset && info.rom_paths[(size_t)known.destination].empty())
         {
-            missing.push_back(known.destination);
+            is_complete = false;
+            if (missing)
+            {
+                missing->push_back(known.destination);
+            }
         }
     }
 
-    return missing.empty();
+    return is_complete;
 }
 
 bool EMU_IsWaverom(EMU_RomDestination destination)

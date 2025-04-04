@@ -705,7 +705,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     else
     {
         std::vector<EMU_RomDestination> missing;
-        if (EMU_IsCompleteRomset(container.romset_info, params.romset, missing))
+        if (EMU_IsCompleteRomset(container.romset_info, params.romset, &missing))
         {
             if (!fe->emu.LoadRomsAuto(params.romset, container.romset_info))
             {
