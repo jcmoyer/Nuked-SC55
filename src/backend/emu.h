@@ -152,6 +152,9 @@ struct EMU_RomsetInfo
 
     // Release all rom_data for all roms in this romset.
     void PurgeRomData();
+
+    // Returns true if at least one of `rom_path` or `rom_data` is populated for `romdest`.
+    bool HasRom(EMU_RomDestination romdest) const;
 };
 
 // Contains EMU_RomsetInfo for all supported romsets.
@@ -172,6 +175,9 @@ Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path);
 
 // Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`.
 // Unlike the above function, this will return *all* romsets in `base_path`.
+//
+// If any of the rom destinations in `all_info` are already populated with a path or data, this function will not
+// overwrite them.
 bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
 
 const char* EMU_RomsetName(Romset romset);

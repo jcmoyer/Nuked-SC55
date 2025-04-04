@@ -551,7 +551,8 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
 
         for (const auto& known : EMU_HASHES)
         {
-            if (known.hash == SHA256Digest(digest_bytes))
+            if (known.hash == SHA256Digest(digest_bytes) &&
+                !all_info.romsets[(size_t)known.romset].HasRom(known.destination))
             {
                 all_info.romsets[(size_t)known.romset].rom_paths[(size_t)known.destination] = dir_iter->path();
                 all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.destination]  = std::move(buffer);
@@ -584,8 +585,7 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std:
 
     for (const auto& known : EMU_HASHES)
     {
-        if (known.romset == romset && info.rom_paths[(size_t)known.destination].empty() &&
-            info.rom_data[(size_t)known.destination].empty())
+        if (known.romset == romset && !info.HasRom(known.destination))
         {
             is_complete = false;
             if (missing)
@@ -1038,6 +1038,11 @@ void EMU_RomsetInfo::PurgeRomData()
     {
         vec = {};
     }
+}
+
+bool EMU_RomsetInfo::HasRom(EMU_RomDestination romdest) const
+{
+    return !(rom_paths[(size_t)romdest].empty() && rom_data[(size_t)romdest].empty());
 }
 
 void EMU_AllRomsetInfo::PurgeRomData()
