@@ -1149,33 +1149,10 @@ int main(int argc, char *argv[])
     {
         params.romset = EMU_DetectRomsetByFilename(*params.rom_directory);
     }
-    else
+    else if (!EMU_PickCompleteRomset(frontend.romset_info, params.romset))
     {
-        std::optional<Romset> use_romset;
-
-        for (size_t i = 0; i < ROMSET_COUNT; ++i)
-        {
-            if (EMU_IsCompleteRomset(frontend.romset_info, (Romset)i))
-            {
-                fprintf(stderr, "Found %s\n", EMU_RomsetName((Romset)i));
-
-                // like upstream, we will bias towards MK2 romset if multiple are present
-                if (!use_romset || (Romset)i == Romset::MK2)
-                {
-                    use_romset = (Romset)i;
-                }
-            }
-        }
-
-        if (use_romset)
-        {
-            params.romset = *use_romset;
-        }
-        else
-        {
-            fprintf(stderr, "FATAL: Couldn't find any romsets in rom directory\n");
-            return 1;
-        }
+        fprintf(stderr, "FATAL: Couldn't find any romsets in rom directory\n");
+        return 1;
     }
 
     fprintf(stderr, "Using romset: %s\n", EMU_RomsetName(params.romset));

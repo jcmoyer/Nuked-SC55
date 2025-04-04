@@ -598,6 +598,19 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std:
     return is_complete;
 }
 
+bool EMU_PickCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset& out_romset)
+{
+    for (size_t i = 0; i < ROMSET_COUNT; ++i)
+    {
+        if (EMU_IsCompleteRomset(all_info, (Romset)i))
+        {
+            out_romset = (Romset)i;
+            return true;
+        }
+    }
+    return false;
+}
+
 bool EMU_IsWaverom(EMU_RomDestination destination)
 {
     switch (destination)
