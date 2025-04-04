@@ -392,7 +392,7 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
 };
 // clang-format on
 
-bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& all_maps)
+bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info)
 {
     std::error_code ec;
 
@@ -463,8 +463,8 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& a
         {
             if (known.hash == SHA256Digest(digest_bytes))
             {
-                all_maps.maps[(size_t)known.romset].rom_paths[(size_t)known.destination] = dir_iter->path();
-                all_maps.maps[(size_t)known.romset].rom_data[(size_t)known.destination]  = std::move(buffer);
+                all_info.romsets[(size_t)known.romset].rom_paths[(size_t)known.destination] = dir_iter->path();
+                all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.destination]  = std::move(buffer);
 
                 buffer = {};
             }
@@ -481,21 +481,21 @@ bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& a
     return true;
 }
 
-bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset)
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset)
 {
     std::vector<EMU_RomDestination> missing;
-    return EMU_IsCompleteRomset(all_maps, romset, missing);
+    return EMU_IsCompleteRomset(all_info, romset, missing);
 }
 
-bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset, std::vector<EMU_RomDestination>& missing)
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std::vector<EMU_RomDestination>& missing)
 {
     missing.clear();
 
-    const auto& map = all_maps.maps[(size_t)romset];
+    const auto& info = all_info.romsets[(size_t)romset];
 
     for (const auto& known : EMU_HASHES)
     {
-        if (known.romset == romset && map.rom_paths[(size_t)known.destination].empty())
+        if (known.romset == romset && info.rom_paths[(size_t)known.destination].empty())
         {
             missing.push_back(known.destination);
         }
@@ -766,17 +766,17 @@ std::span<uint8_t> Emulator::MapBuffer(EMU_RomDestination romdest)
     std::abort();
 }
 
-bool Emulator::LoadRomsAuto(Romset romset, const EMU_AllRomsetMaps& romset_maps)
+bool Emulator::LoadRomsAuto(Romset romset, const EMU_AllRomsetInfo& all_info)
 {
     MCU_SetRomset(GetMCU(), romset);
 
-    const EMU_RomFilenameMap& map = romset_maps.maps[(size_t)romset];
+    const EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
 
     for (int i = 0; i < (int)EMU_RomDestination::COUNT; ++i)
     {
         const EMU_RomDestination romdest = (EMU_RomDestination)i;
 
-        if (map.rom_paths[i].empty())
+        if (info.rom_paths[i].empty())
         {
             continue;
         }
@@ -785,32 +785,32 @@ bool Emulator::LoadRomsAuto(Romset romset, const EMU_AllRomsetMaps& romset_maps)
                 "Load %s %s %s\n",
                 EMU_RomsetName(romset),
                 EMU_RomDestinationToString(romdest),
-                map.rom_paths[i].generic_string().c_str());
+                info.rom_paths[i].generic_string().c_str());
 
         auto buffer = MapBuffer(romdest);
 
-        if (buffer.size() < map.rom_data[i].size())
+        if (buffer.size() < info.rom_data[i].size())
         {
             fprintf(stderr,
                     "FATAL: rom for %s %s is too large: %s\n",
                     EMU_RomsetName(romset),
                     EMU_RomDestinationToString(romdest),
-                    map.rom_paths[i].generic_string().c_str());
+                    info.rom_paths[i].generic_string().c_str());
             return false;
         }
 
         if (EMU_IsWaverom(romdest))
         {
-            unscramble(map.rom_data[i].data(), buffer.data(), (int)map.rom_data[i].size());
+            unscramble(info.rom_data[i].data(), buffer.data(), (int)info.rom_data[i].size());
         }
         else
         {
             if (romdest == EMU_RomDestination::ROM2)
             {
-                GetMCU().rom2_mask = (int)map.rom_data[i].size() - 1;
+                GetMCU().rom2_mask = (int)info.rom_data[i].size() - 1;
             }
 
-            std::copy(map.rom_data[i].begin(), map.rom_data[i].end(), buffer.begin());
+            std::copy(info.rom_data[i].begin(), info.rom_data[i].end(), buffer.begin());
         }
     }
 

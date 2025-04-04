@@ -117,7 +117,7 @@ struct FE_Application {
     FE_Instance instances[FE_MAX_INSTANCES];
     size_t instances_in_use = 0;
 
-    EMU_AllRomsetMaps romset_maps;
+    EMU_AllRomsetInfo romset_info;
 
     AudioOutput audio_output{};
 
@@ -705,9 +705,9 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     else
     {
         std::vector<EMU_RomDestination> missing;
-        if (EMU_IsCompleteRomset(container.romset_maps, params.romset, missing))
+        if (EMU_IsCompleteRomset(container.romset_info, params.romset, missing))
         {
-            if (!fe->emu.LoadRomsAuto(params.romset, container.romset_maps))
+            if (!fe->emu.LoadRomsAuto(params.romset, container.romset_info))
             {
                 fprintf(stderr, "ERROR: Failed to load roms.\n");
                 return false;
@@ -1126,7 +1126,7 @@ int main(int argc, char *argv[])
 
     if (!params.legacy_romset_detection)
     {
-        if (!EMU_GetRomsets(*params.rom_directory, frontend.romset_maps))
+        if (!EMU_GetRomsets(*params.rom_directory, frontend.romset_info))
         {
             fprintf(stderr, "FATAL: Failed to detect romsets\n");
             return false;
@@ -1155,7 +1155,7 @@ int main(int argc, char *argv[])
 
         for (size_t i = 0; i < ROMSET_COUNT; ++i)
         {
-            if (EMU_IsCompleteRomset(frontend.romset_maps, (Romset)i))
+            if (EMU_IsCompleteRomset(frontend.romset_info, (Romset)i))
             {
                 fprintf(stderr, "Found %s\n", EMU_RomsetName((Romset)i));
 

@@ -75,7 +75,7 @@ enum class EMU_RomDestination
     NONE = COUNT,
 };
 
-struct EMU_AllRomsetMaps;
+struct EMU_AllRomsetInfo;
 
 struct Emulator {
 public:
@@ -103,8 +103,8 @@ public:
 
     bool LoadRoms(Romset romset, const std::filesystem::path& base_path);
 
-    // pre: EMU_IsCompleteRomset(romset_maps, romset)
-    bool LoadRomsAuto(Romset romset, const EMU_AllRomsetMaps& romset_maps);
+    // pre: EMU_IsCompleteRomset(all_info, romset)
+    bool LoadRomsAuto(Romset romset, const EMU_AllRomsetInfo& all_info);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);
@@ -132,19 +132,19 @@ private:
     EMU_Options                  m_options;
 };
 
-// Maps rom destinations to filenames and their contents on disk
-struct EMU_RomFilenameMap
+// For a single romset, this structure maps each rom in the set to a filename on disk and that file's contents.
+struct EMU_RomsetInfo
 {
     // Array indexed by EMU_RomDestination
     std::filesystem::path rom_paths[(size_t)EMU_RomDestination::COUNT]{};
     std::vector<uint8_t>  rom_data[(size_t)EMU_RomDestination::COUNT]{};
 };
 
-// Maps romsets to filename maps
-struct EMU_AllRomsetMaps
+// Contains EMU_RomsetInfo for all supported romsets.
+struct EMU_AllRomsetInfo
 {
     // Array indexed by Romset
-    EMU_RomFilenameMap maps[ROMSET_COUNT]{};
+    EMU_RomsetInfo romsets[ROMSET_COUNT]{};
 };
 
 Romset EMU_DetectRomset(const std::filesystem::path& base_path);
@@ -152,13 +152,13 @@ const char* EMU_RomsetName(Romset romset);
 bool EMU_ParseRomsetName(std::string_view name, Romset& romset);
 std::span<const char*> EMU_GetParsableRomsetNames();
 
-// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `all_maps`.
-bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetMaps& all_maps);
+// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`.
+bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
 
-// Returns true if `all_maps` contains all the files required to load `romset`. Missing roms will be reported in
+// Returns true if `all_info` contains all the files required to load `romset`. Missing roms will be reported in
 // `missing`.
-bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset);
-bool EMU_IsCompleteRomset(const EMU_AllRomsetMaps& all_maps, Romset romset, std::vector<EMU_RomDestination>& missing);
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset);
+bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std::vector<EMU_RomDestination>& missing);
 
 // Returns true if `destination` represents a waverom destination.
 bool EMU_IsWaverom(EMU_RomDestination destination);
