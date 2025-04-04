@@ -942,3 +942,19 @@ void Emulator::LoadNVRAM()
         file.read((char*)m_mcu->nvram, NVRAM_SIZE);
     }
 }
+
+void EMU_RomsetInfo::PurgeRomData()
+{
+    for (auto& vec : rom_data)
+    {
+        vec = {};
+    }
+}
+
+void EMU_AllRomsetInfo::PurgeRomData()
+{
+    for (auto& romset : romsets)
+    {
+        romset.PurgeRomData();
+    }
+}

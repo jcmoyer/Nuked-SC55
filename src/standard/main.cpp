@@ -1207,6 +1207,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    frontend.romset_info.PurgeRomData();
+
     if (!FE_OpenAudio(frontend, params))
     {
         fprintf(stderr, "FATAL ERROR: Failed to open the audio stream.\n");

@@ -149,6 +149,9 @@ struct EMU_RomsetInfo
     // Array indexed by EMU_RomDestination
     std::filesystem::path rom_paths[(size_t)EMU_RomDestination::COUNT]{};
     std::vector<uint8_t>  rom_data[(size_t)EMU_RomDestination::COUNT]{};
+
+    // Release all rom_data for all roms in this romset.
+    void PurgeRomData();
 };
 
 // Contains EMU_RomsetInfo for all supported romsets.
@@ -156,6 +159,9 @@ struct EMU_AllRomsetInfo
 {
     // Array indexed by Romset
     EMU_RomsetInfo romsets[ROMSET_COUNT]{};
+
+    // Release all rom_data for all romsets.
+    void PurgeRomData();
 };
 
 // Picks a romset based on filenames contained in `base_path`. This function requires every rom in the romset to have a
