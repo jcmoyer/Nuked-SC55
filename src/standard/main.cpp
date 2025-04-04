@@ -696,7 +696,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
 
     if (params.legacy_romset_detection)
     {
-        if (!fe->emu.LoadRoms(params.romset, *params.rom_directory))
+        if (!fe->emu.LoadRomsByFilename(params.romset, *params.rom_directory))
         {
             fprintf(stderr, "ERROR: Failed to load roms.\n");
             return false;
@@ -707,7 +707,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         std::vector<EMU_RomDestination> missing;
         if (EMU_IsCompleteRomset(container.romset_info, params.romset, &missing))
         {
-            if (!fe->emu.LoadRomsAuto(params.romset, container.romset_info))
+            if (!fe->emu.LoadRomsByInfo(params.romset, container.romset_info))
             {
                 fprintf(stderr, "ERROR: Failed to load roms.\n");
                 return false;
@@ -1126,7 +1126,7 @@ int main(int argc, char *argv[])
 
     if (!params.legacy_romset_detection)
     {
-        if (!EMU_GetRomsets(*params.rom_directory, frontend.romset_info))
+        if (!EMU_DetectRomsetsByHash(*params.rom_directory, frontend.romset_info))
         {
             fprintf(stderr, "FATAL: Failed to detect romsets\n");
             return false;
@@ -1147,7 +1147,7 @@ int main(int argc, char *argv[])
     }
     else if (params.legacy_romset_detection)
     {
-        params.romset = EMU_DetectRomset(*params.rom_directory);
+        params.romset = EMU_DetectRomsetByFilename(*params.rom_directory);
     }
     else
     {

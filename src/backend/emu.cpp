@@ -38,6 +38,7 @@
 #include "mcu_timer.h"
 #include "pcm.h"
 #include "submcu.h"
+#include <bit>
 #include <fstream>
 #include <span>
 #include <string>
@@ -392,7 +393,7 @@ static constexpr EMU_KnownHash EMU_HASHES[] = {
 };
 // clang-format on
 
-bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info)
+bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info)
 {
     std::error_code ec;
 
@@ -494,7 +495,8 @@ bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset romset, std:
 
     for (const auto& known : EMU_HASHES)
     {
-        if (known.romset == romset && info.rom_paths[(size_t)known.destination].empty())
+        if (known.romset == romset && info.rom_paths[(size_t)known.destination].empty() &&
+            info.rom_data[(size_t)known.destination].empty())
         {
             is_complete = false;
             if (missing)
@@ -543,7 +545,7 @@ const char* EMU_RomDestinationToString(EMU_RomDestination destination)
     return "invalid destination";
 }
 
-Romset EMU_DetectRomset(const std::filesystem::path& base_path)
+Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path)
 {
     for (size_t i = 0; i < (size_t)ROMSET_COUNT; i++)
     {
@@ -586,7 +588,7 @@ std::streamsize EMU_ReadStreamUpTo(std::ifstream& s, void* into, std::streamsize
     return s.gcount();
 }
 
-bool Emulator::LoadRoms(Romset romset, const std::filesystem::path& base_path)
+bool Emulator::LoadRomsByFilename(Romset romset, const std::filesystem::path& base_path)
 {
     MCU_SetRomset(GetMCU(), romset);
 
@@ -769,9 +771,46 @@ std::span<uint8_t> Emulator::MapBuffer(EMU_RomDestination romdest)
     std::abort();
 }
 
-bool Emulator::LoadRomsAuto(Romset romset, const EMU_AllRomsetInfo& all_info)
+bool Emulator::LoadRom(EMU_RomDestination romdest, std::span<const uint8_t> source)
+{
+    auto buffer = MapBuffer(romdest);
+
+    if (buffer.size() < source.size())
+    {
+        fprintf(stderr,
+                "FATAL: rom for %s is too large; max size is %d bytes\n",
+                EMU_RomDestinationToString(romdest),
+                (int)buffer.size());
+        return false;
+    }
+
+    if (EMU_IsWaverom(romdest))
+    {
+        unscramble(source.data(), buffer.data(), (int)source.size());
+    }
+    else
+    {
+        if (romdest == EMU_RomDestination::ROM2)
+        {
+            if (!std::has_single_bit(source.size()))
+            {
+                fprintf(stderr, "FATAL: %s requires a power-of-2 size\n", EMU_RomDestinationToString(romdest));
+                return false;
+            }
+            GetMCU().rom2_mask = (int)source.size() - 1;
+        }
+
+        std::copy(source.begin(), source.end(), buffer.begin());
+    }
+
+    return true;
+}
+
+bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info)
 {
     MCU_SetRomset(GetMCU(), romset);
+
+    std::vector<uint8_t> on_demand_buffer;
 
     const EMU_RomsetInfo& info = all_info.romsets[(size_t)romset];
 
@@ -779,41 +818,39 @@ bool Emulator::LoadRomsAuto(Romset romset, const EMU_AllRomsetInfo& all_info)
     {
         const EMU_RomDestination romdest = (EMU_RomDestination)i;
 
-        if (info.rom_paths[i].empty())
+        if (info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
             continue;
         }
-
-        fprintf(stderr,
-                "Load %s %s %s\n",
-                EMU_RomsetName(romset),
-                EMU_RomDestinationToString(romdest),
-                info.rom_paths[i].generic_string().c_str());
-
-        auto buffer = MapBuffer(romdest);
-
-        if (buffer.size() < info.rom_data[i].size())
+        else if (!info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
             fprintf(stderr,
-                    "FATAL: rom for %s %s is too large: %s\n",
+                    "Load %s %s from file %s\n",
                     EMU_RomsetName(romset),
                     EMU_RomDestinationToString(romdest),
                     info.rom_paths[i].generic_string().c_str());
-            return false;
-        }
 
-        if (EMU_IsWaverom(romdest))
-        {
-            unscramble(info.rom_data[i].data(), buffer.data(), (int)info.rom_data[i].size());
-        }
-        else
-        {
-            if (romdest == EMU_RomDestination::ROM2)
+            if (!EMU_ReadAllBytes(info.rom_paths[i], on_demand_buffer))
             {
-                GetMCU().rom2_mask = (int)info.rom_data[i].size() - 1;
+                fprintf(stderr, "Failed to read file %s\n", info.rom_paths[i].generic_string().c_str());
+                return false;
             }
 
-            std::copy(info.rom_data[i].begin(), info.rom_data[i].end(), buffer.begin());
+            if (!LoadRom(romdest, on_demand_buffer))
+            {
+                fprintf(stderr, "Failed to load rom %s\n", EMU_RomDestinationToString(romdest));
+                return false;
+            }
+        }
+        else if (!info.rom_data[i].empty())
+        {
+            fprintf(stderr, "Load %s %s from memory\n", EMU_RomsetName(romset), EMU_RomDestinationToString(romdest));
+
+            if (!LoadRom(romdest, info.rom_data[i]))
+            {
+                fprintf(stderr, "Failed to load rom %s\n", EMU_RomDestinationToString(romdest));
+                return false;
+            }
         }
     }
 

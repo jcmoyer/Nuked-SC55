@@ -101,10 +101,19 @@ public:
 
     void SetSampleCallback(mcu_sample_callback callback, void* userdata);
 
-    bool LoadRoms(Romset romset, const std::filesystem::path& base_path);
+    // Loads roms according to hardcoded filenames. This function follows the same conventions as
+    // `EMU_DetectRomsetByFilename` and will load roms the same way as upstream.
+    bool LoadRomsByFilename(Romset romset, const std::filesystem::path& base_path);
 
-    // pre: EMU_IsCompleteRomset(all_info, romset)
-    bool LoadRomsAuto(Romset romset, const EMU_AllRomsetInfo& all_info);
+    // Loads roms based on the metadata in `all_info`. This structure can be manually populated to override filenames or
+    // it can be retreived from `EMU_DetectRomsetsByHash`. If the requested romset info contains `rom_data` (e.g. from a
+    // call to `EMU_DetectRomsetsByHash`) that data will be copied into emulator memory. If the `rom_data` is empty,
+    // this function will load it from `rom_path`. At least one of these must be present to load data into a romdest. If
+    // both are empty, nothing will be loaded into that slot.
+    //
+    // It is recommended to check if the romset has all the necessary roms by first calling
+    // `EMU_IsCompleteRomset(all_info, romset)`.
+    bool LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);
@@ -122,6 +131,8 @@ private:
     void LoadNVRAM();
 
     std::span<uint8_t> MapBuffer(EMU_RomDestination romdest);
+
+    bool LoadRom(EMU_RomDestination romdest, std::span<const uint8_t> source);
 
 private:
     std::unique_ptr<mcu_t>       m_mcu;
@@ -147,13 +158,19 @@ struct EMU_AllRomsetInfo
     EMU_RomsetInfo romsets[ROMSET_COUNT]{};
 };
 
-Romset EMU_DetectRomset(const std::filesystem::path& base_path);
+// Picks a romset based on filenames contained in `base_path`. This function requires every rom in the romset to have a
+// specific filename in order for the romset to be considered. Consult the `roms` constant in `emu.cpp` for the exact
+// filename requirements. This function will either return the first complete romset it finds or Romset::MK2 if none are
+// found.
+Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path);
+
+// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`.
+// Unlike the above function, this will return *all* romsets in `base_path`.
+bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
+
 const char* EMU_RomsetName(Romset romset);
 bool EMU_ParseRomsetName(std::string_view name, Romset& romset);
 std::span<const char*> EMU_GetParsableRomsetNames();
-
-// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`.
-bool EMU_GetRomsets(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
 
 // Returns true if `all_info` contains all the files required to load `romset`. Missing roms will be reported in
 // `missing`.
