@@ -38,6 +38,7 @@
 #include "mcu_timer.h"
 #include "pcm.h"
 #include "submcu.h"
+#include <array>
 #include <bit>
 #include <fstream>
 #include <span>
@@ -48,6 +49,8 @@ extern "C"
 {
 #include "sha/sha.h"
 }
+
+using SHA256Digest = std::array<uint8_t, SHA256HashSize>;
 
 Emulator::~Emulator()
 {
@@ -265,34 +268,6 @@ bool EMU_ReadAllBytes(const std::filesystem::path& filename, std::vector<uint8_t
     return input.good();
 }
 
-// This is wrapped in a structure so we can return it from a function.
-struct SHA256Digest
-{
-    uint8_t bytes[SHA256HashSize];
-
-    SHA256Digest() = default;
-
-    SHA256Digest(const uint8_t (&from_bytes)[SHA256HashSize])
-    {
-        memcpy(bytes, from_bytes, SHA256HashSize);
-    }
-
-    const uint8_t* begin() const
-    {
-        return &bytes[0];
-    }
-
-    const uint8_t* end() const
-    {
-        return &bytes[0] + SHA256HashSize;
-    }
-};
-
-constexpr bool operator==(const SHA256Digest& a, const SHA256Digest& b)
-{
-    return std::equal(a.begin(), a.end(), b.begin(), b.end());
-}
-
 constexpr uint8_t HexValue(char x)
 {
     if (x >= '0' && x <= '9')
@@ -318,7 +293,7 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
     SHA256Digest hash;
     for (size_t i = 0; i < N / 2; ++i)
     {
-        hash.bytes[i] = (HexValue(s[2 * i + 0]) << 4) | HexValue(s[2 * i + 1]);
+        hash[i] = (HexValue(s[2 * i + 0]) << 4) | HexValue(s[2 * i + 1]);
     }
 
     return hash;
@@ -574,15 +549,15 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
         EMU_ReadAllBytes(dir_iter->path(), buffer);
 
         SHA256Context ctx;
-        uint8_t       digest_bytes[SHA256HashSize]{};
+        SHA256Digest  digest_bytes;
+
         SHA256Reset(&ctx);
         SHA256Input(&ctx, buffer.data(), buffer.size());
-        SHA256Result(&ctx, digest_bytes);
+        SHA256Result(&ctx, digest_bytes.data());
 
         for (const auto& known : EMU_HASHES)
         {
-            if (known.hash == SHA256Digest(digest_bytes) &&
-                !all_info.romsets[(size_t)known.romset].HasRom(known.location))
+            if (known.hash == digest_bytes && !all_info.romsets[(size_t)known.romset].HasRom(known.location))
             {
                 all_info.romsets[(size_t)known.romset].rom_paths[(size_t)known.location] = dir_iter->path();
                 all_info.romsets[(size_t)known.romset].rom_data[(size_t)known.location]  = std::move(buffer);
