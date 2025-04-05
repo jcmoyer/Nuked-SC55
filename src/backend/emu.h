@@ -65,10 +65,10 @@ enum class EMU_RomMapLocation
 {
     ROM1,
     ROM2,
+    SMROM,
     WAVEROM1,
     WAVEROM2,
     WAVEROM3,
-    SMROM,
     WAVEROM_CARD,
     WAVEROM_EXP,
 
