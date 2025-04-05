@@ -495,7 +495,7 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
 
     if (ec)
     {
-        fprintf(stderr, "EMU_GetRomsets failed: %s\n", ec.message().c_str());
+        fprintf(stderr, "Failed to walk rom directory: %s\n", ec.message().c_str());
         return false;
     }
 
@@ -507,7 +507,7 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
         if (ec)
         {
             fprintf(stderr,
-                    "EMU_GetRomsets failed to check type of `%s`: %s\n",
+                    "Failed to check file type of `%s`: %s\n",
                     dir_iter->path().generic_string().c_str(),
                     ec.message().c_str());
             return false;
@@ -518,7 +518,7 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
             dir_iter.increment(ec);
             if (ec)
             {
-                fprintf(stderr, "EMU_GetRomsets failed to get next file: %s\n", ec.message().c_str());
+                fprintf(stderr, "Failed to get next file: %s\n", ec.message().c_str());
                 return false;
             }
             continue;
@@ -528,7 +528,7 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
         if (ec)
         {
             fprintf(stderr,
-                    "EMU_GetRomsets failed to get file size of `%s`: %s\n",
+                    "Failed to get file size of `%s`: %s\n",
                     dir_iter->path().generic_string().c_str(),
                     ec.message().c_str());
             return false;
@@ -540,7 +540,7 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
             dir_iter.increment(ec);
             if (ec)
             {
-                fprintf(stderr, "EMU_GetRomsets failed to get next file: %s\n", ec.message().c_str());
+                fprintf(stderr, "Failed to get next file: %s\n", ec.message().c_str());
                 return false;
             }
             continue;
@@ -569,7 +569,7 @@ bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRoms
         dir_iter.increment(ec);
         if (ec)
         {
-            fprintf(stderr, "EMU_GetRomsets failed to get next file: %s\n", ec.message().c_str());
+            fprintf(stderr, "Failed to get next file: %s\n", ec.message().c_str());
             return false;
         }
     }
