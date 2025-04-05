@@ -6,6 +6,21 @@
   an LCD backend pointer that can be used to customize the behavior of the LCD
   on a per-application basis. The old SDL backend has been moved to the
   standard frontend.
+- `Emulator::LoadRoms` has been renamed to `Emulator::LoadRomsByFilename`. A
+  new API `Emulator::LoadRomsByInfo` implements hash based rom loading. See
+  `emu.h` for more information.
+
+## Enhancements
+
+- Changed the default rom loader to locate roms by hash instead of by hardcoded
+  filename. This means that roms do not need specific filenames; they only need
+  to be present in the rom directory. The old behavior can be enabled by
+  passing `--legacy-romset-detection` to either frontend.
+- Added new command line parameters to override specific roms. These are meant
+  for advanced users who have roms with unknown hashes. The parameters are:
+  `--override-rom1 <path>`, `--override-rom2 <path>`, `--override-smrom
+  <path>`, `--override-waverom1 <path>`, `--override-waverom2 <path>`,
+  `--override-waverom3 <path>`. Each parameter takes the rom filename to load.
 
 ## General enhancements
 
