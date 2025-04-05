@@ -124,6 +124,11 @@ struct FE_Application {
     bool running = false;
 };
 
+struct FE_AdvancedParameters
+{
+    std::filesystem::path rom_destinations[(size_t)EMU_RomDestination::COUNT];
+};
+
 struct FE_Parameters
 {
     bool help = false;
@@ -143,6 +148,7 @@ struct FE_Parameters
     bool disable_oversampling = false;
     std::optional<uint32_t> asio_sample_rate;
     std::filesystem::path nvram_filename;
+    FE_AdvancedParameters adv;
 };
 
 bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
@@ -997,6 +1003,60 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
         {
             result.legacy_romset_detection = true;
         }
+        else if (reader.Any("--override-rom1"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::ROM1] = reader.Arg();
+        }
+        else if (reader.Any("--override-rom2"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::ROM2] = reader.Arg();
+        }
+        else if (reader.Any("--override-smrom"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::SMROM] = reader.Arg();
+        }
+        else if (reader.Any("--override-waverom1"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM1] = reader.Arg();
+        }
+        else if (reader.Any("--override-waverom2"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM2] = reader.Arg();
+        }
+        else if (reader.Any("--override-waverom3"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM3] = reader.Arg();
+        }
 #if NUKED_ENABLE_ASIO
         else if (reader.Any("--asio-sample-rate"))
         {
@@ -1123,6 +1183,15 @@ int main(int argc, char *argv[])
     }
 
     fprintf(stderr, "ROM directory is: %s\n", params.rom_directory->generic_string().c_str());
+
+    // for simplicity, apply overrides to all romsets
+    for (size_t i = 0; i < ROMSET_COUNT; ++i)
+    {
+        for (size_t j = 0; j < (size_t)EMU_RomDestination::COUNT; ++j)
+        {
+            frontend.romset_info.romsets[i].rom_paths[j] = params.adv.rom_destinations[j];
+        }
+    }
 
     if (!params.legacy_romset_detection)
     {
