@@ -36,7 +36,7 @@ enum class R_EndBehavior
 
 struct R_AdvancedParameters
 {
-    std::filesystem::path rom_destinations[(size_t)EMU_RomDestination::COUNT];
+    std::filesystem::path rom_overrides[(size_t)EMU_RomMapLocation::COUNT];
 };
 
 struct R_Parameters
@@ -268,7 +268,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::ROM1] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::ROM1] = reader.Arg();
         }
         else if (reader.Any("--override-rom2"))
         {
@@ -277,7 +277,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::ROM2] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::ROM2] = reader.Arg();
         }
         else if (reader.Any("--override-smrom"))
         {
@@ -286,7 +286,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::SMROM] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::SMROM] = reader.Arg();
         }
         else if (reader.Any("--override-waverom1"))
         {
@@ -295,7 +295,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM1] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::WAVEROM1] = reader.Arg();
         }
         else if (reader.Any("--override-waverom2"))
         {
@@ -304,7 +304,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM2] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::WAVEROM2] = reader.Arg();
         }
         else if (reader.Any("--override-waverom3"))
         {
@@ -313,7 +313,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM3] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::WAVEROM3] = reader.Arg();
         }
         else if (reader.Any("--override-waverom-card"))
         {
@@ -322,7 +322,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM_CARD] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::WAVEROM_CARD] = reader.Arg();
         }
         else if (reader.Any("--override-waverom-exp"))
         {
@@ -331,7 +331,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
                 return R_ParseError::UnexpectedEnd;
             }
 
-            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM_EXP] = reader.Arg();
+            result.adv.rom_overrides[(size_t)EMU_RomMapLocation::WAVEROM_EXP] = reader.Arg();
         }
         else
         {
@@ -1036,9 +1036,9 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     // for simplicity, apply overrides to all romsets
     for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
-        for (size_t j = 0; j < (size_t)EMU_RomDestination::COUNT; ++j)
+        for (size_t j = 0; j < (size_t)EMU_RomMapLocation::COUNT; ++j)
         {
-            romset_info.romsets[i].rom_paths[j] = params.adv.rom_destinations[j];
+            romset_info.romsets[i].rom_paths[j] = params.adv.rom_overrides[j];
         }
     }
 

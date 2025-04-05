@@ -60,8 +60,8 @@ enum class EMU_SystemReset {
     GM_RESET,
 };
 
-// Where a file should be mapped to once loaded
-enum class EMU_RomDestination
+// Symbolic name for where a rom will be mapped once loaded
+enum class EMU_RomMapLocation
 {
     ROM1,
     ROM2,
@@ -110,8 +110,8 @@ public:
     // Loads roms based on the metadata in `all_info`. This structure can be manually populated to override filenames or
     // it can be retreived from `EMU_DetectRomsetsByHash`. If the requested romset info contains `rom_data` (e.g. from a
     // call to `EMU_DetectRomsetsByHash`) that data will be copied into emulator memory. If the `rom_data` is empty,
-    // this function will load it from `rom_path`. At least one of these must be present to load data into a romdest. If
-    // both are empty, nothing will be loaded into that slot.
+    // this function will load it from `rom_path`. At least one of these must be present to load a rom. If both are
+    // empty, nothing will be loaded for that map location.
     //
     // It is recommended to check if the romset has all the necessary roms by first calling
     // `EMU_IsCompleteRomset(all_info, romset)`.
@@ -132,9 +132,9 @@ private:
     void SaveNVRAM();
     void LoadNVRAM();
 
-    std::span<uint8_t> MapBuffer(EMU_RomDestination romdest);
+    std::span<uint8_t> MapBuffer(EMU_RomMapLocation location);
 
-    bool LoadRom(EMU_RomDestination romdest, std::span<const uint8_t> source);
+    bool LoadRom(EMU_RomMapLocation location, std::span<const uint8_t> source);
 
 private:
     std::unique_ptr<mcu_t>       m_mcu;
@@ -148,15 +148,15 @@ private:
 // For a single romset, this structure maps each rom in the set to a filename on disk and that file's contents.
 struct EMU_RomsetInfo
 {
-    // Array indexed by EMU_RomDestination
-    std::filesystem::path rom_paths[(size_t)EMU_RomDestination::COUNT]{};
-    std::vector<uint8_t>  rom_data[(size_t)EMU_RomDestination::COUNT]{};
+    // Array indexed by EMU_RomMapLocation
+    std::filesystem::path rom_paths[(size_t)EMU_RomMapLocation::COUNT]{};
+    std::vector<uint8_t>  rom_data[(size_t)EMU_RomMapLocation::COUNT]{};
 
     // Release all rom_data for all roms in this romset.
     void PurgeRomData();
 
-    // Returns true if at least one of `rom_path` or `rom_data` is populated for `romdest`.
-    bool HasRom(EMU_RomDestination romdest) const;
+    // Returns true if at least one of `rom_path` or `rom_data` is populated for `location`.
+    bool HasRom(EMU_RomMapLocation location) const;
 };
 
 // Contains EMU_RomsetInfo for all supported romsets.
@@ -178,7 +178,7 @@ Romset EMU_DetectRomsetByFilename(const std::filesystem::path& base_path);
 // Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`.
 // Unlike the above function, this will return *all* romsets in `base_path`.
 //
-// If any of the rom destinations in `all_info` are already populated with a path or data, this function will not
+// If any of the rom locations in `all_info` are already populated with a path or data, this function will not
 // overwrite them.
 bool EMU_DetectRomsetsByHash(const std::filesystem::path& base_path, EMU_AllRomsetInfo& all_info);
 
@@ -190,14 +190,14 @@ std::span<const char*> EMU_GetParsableRomsetNames();
 // `missing`.
 bool EMU_IsCompleteRomset(const EMU_AllRomsetInfo&         all_info,
                           Romset                           romset,
-                          std::vector<EMU_RomDestination>* missing = nullptr);
+                          std::vector<EMU_RomMapLocation>* missing = nullptr);
 
 // Picks the first complete romset in `all_info` and writes it to `out_romset`. If multiple romsets are present, the one
 // returned is unspecified. Returns if successful, or false if there are no complete romsets.
 bool EMU_PickCompleteRomset(const EMU_AllRomsetInfo& all_info, Romset& out_romset);
 
-// Returns true if `destination` represents a waverom destination.
-bool EMU_IsWaverom(EMU_RomDestination destination);
+// Returns true if `location` represents a waverom location.
+bool EMU_IsWaverom(EMU_RomMapLocation location);
 
-// Returns `destination` as a string.
-const char* EMU_RomDestinationToString(EMU_RomDestination destination);
+// Returns `location` as a string.
+const char* EMU_RomMapLocationToString(EMU_RomMapLocation location);
