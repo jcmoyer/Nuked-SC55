@@ -346,7 +346,7 @@ void R_PrintRomsets()
     {
         fprintf(stderr, "%s ", name);
     }
-    fprintf(stderr, "\n");
+    fprintf(stderr, "\n\n");
 }
 
 void R_Panic(const char* msg, const std::source_location where = std::source_location::current())
