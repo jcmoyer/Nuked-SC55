@@ -20,7 +20,9 @@
   for advanced users who have roms with unknown hashes. The parameters are:
   `--override-rom1 <path>`, `--override-rom2 <path>`, `--override-smrom
   <path>`, `--override-waverom1 <path>`, `--override-waverom2 <path>`,
-  `--override-waverom3 <path>`. Each parameter takes the rom filename to load.
+  `--override-waverom3 <path>`, `--override-waverom-card <path>`,
+  `--override-waverom-exp <path>`. Each parameter takes the rom filename to
+  load.
 
 ## General enhancements
 

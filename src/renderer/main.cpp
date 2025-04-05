@@ -315,6 +315,24 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
 
             result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM3] = reader.Arg();
         }
+        else if (reader.Any("--override-waverom-card"))
+        {
+            if (!reader.Next())
+            {
+                return R_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM_CARD] = reader.Arg();
+        }
+        else if (reader.Any("--override-waverom-exp"))
+        {
+            if (!reader.Next())
+            {
+                return R_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM_EXP] = reader.Arg();
+        }
         else
         {
             if (result.input_filename.size())

@@ -1057,6 +1057,24 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
 
             result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM3] = reader.Arg();
         }
+        else if (reader.Any("--override-waverom-card"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM_CARD] = reader.Arg();
+        }
+        else if (reader.Any("--override-waverom-exp"))
+        {
+            if (!reader.Next())
+            {
+                return FE_ParseError::UnexpectedEnd;
+            }
+
+            result.adv.rom_destinations[(size_t)EMU_RomDestination::WAVEROM_EXP] = reader.Arg();
+        }
 #if NUKED_ENABLE_ASIO
         else if (reader.Any("--asio-sample-rate"))
         {

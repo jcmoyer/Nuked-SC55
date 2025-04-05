@@ -69,6 +69,8 @@ enum class EMU_RomDestination
     WAVEROM2,
     WAVEROM3,
     SMROM,
+    WAVEROM_CARD,
+    WAVEROM_EXP,
 
     // do not reorder these
     COUNT,

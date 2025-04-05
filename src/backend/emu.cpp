@@ -618,6 +618,8 @@ bool EMU_IsWaverom(EMU_RomDestination destination)
     case EMU_RomDestination::WAVEROM1:
     case EMU_RomDestination::WAVEROM2:
     case EMU_RomDestination::WAVEROM3:
+    case EMU_RomDestination::WAVEROM_CARD:
+    case EMU_RomDestination::WAVEROM_EXP:
         return true;
     default:
         return false;
@@ -640,6 +642,10 @@ const char* EMU_RomDestinationToString(EMU_RomDestination destination)
         return "WAVEROM2";
     case EMU_RomDestination::WAVEROM3:
         return "WAVEROM3";
+    case EMU_RomDestination::WAVEROM_CARD:
+        return "WAVEROM_CARD";
+    case EMU_RomDestination::WAVEROM_EXP:
+        return "WAVEROM_EXP";
     case EMU_RomDestination::COUNT:
         // also NONE
         break;
@@ -863,6 +869,10 @@ std::span<uint8_t> Emulator::MapBuffer(EMU_RomDestination romdest)
         return GetPCM().waverom2;
     case EMU_RomDestination::WAVEROM3:
         return GetPCM().waverom3;
+    case EMU_RomDestination::WAVEROM_CARD:
+        return GetPCM().waverom_card;
+    case EMU_RomDestination::WAVEROM_EXP:
+        return GetPCM().waverom_exp;
     case EMU_RomDestination::SMROM:
         return m_sm->rom;
     case EMU_RomDestination::COUNT:
