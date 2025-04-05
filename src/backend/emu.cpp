@@ -956,7 +956,19 @@ bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info)
         }
         else if (!info.rom_data[i].empty())
         {
-            fprintf(stderr, "Load %s %s from memory\n", EMU_RomsetName(romset), EMU_RomDestinationToString(romdest));
+            if (info.rom_paths[i].empty())
+            {
+                fprintf(
+                    stderr, "Load %s %s from memory\n", EMU_RomsetName(romset), EMU_RomDestinationToString(romdest));
+            }
+            else
+            {
+                fprintf(stderr,
+                        "Load %s %s from memory (source: %s)\n",
+                        EMU_RomsetName(romset),
+                        EMU_RomDestinationToString(romdest),
+                        info.rom_paths[i].generic_string().c_str());
+            }
 
             if (!LoadRom(romdest, info.rom_data[i]))
             {
