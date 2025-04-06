@@ -231,16 +231,25 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
     const auto& FRT_STEP_TABLE = mk1 ? FRT_STEP_TABLE_MK1 : FRT_STEP_TABLE_GENERIC;
     const auto& TIMER_STEP_TABLE = mk1 ? TIMER_STEP_TABLE_MK1 : TIMER_STEP_TABLE_GENERIC;
 
+    // Precompute FRT steps  
+    uint64_t frt_steps[3];
+    for (int i = 0; i < 3; i++)
+        frt_steps[i] = FRT_STEP_TABLE[timer.frt[i].tcr & 3];
+
+    // Precompute Timer steps 
+    uint64_t timer_step = TIMER_STEP_TABLE[timer.tcr & 7];
+
     while (timer.cycles*2 < cycles) // FIXME
     {
+        uint64_t min_skip = UINT64_MAX;
+
         for (int i = 0; i < 3; i++)
         {
-            frt_t *ftimer = &timer.frt[i];
 
-            const bool frt_step = !(timer.cycles & FRT_STEP_TABLE[ftimer->tcr & 3]);
-
-            if (frt_step)
+            if (!(timer.cycles & frt_steps[i]))
             {
+                frt_t *ftimer = &timer.frt[i];
+
                 uint32_t value = ftimer->frc;
                 uint32_t matcha = value == ftimer->ocra;
                 uint32_t matchb = value == ftimer->ocrb;
@@ -266,11 +275,14 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
                 if ((ftimer->tcr & 0x40) != 0 && (ftimer->tcsr & 0x40) != 0)
                     MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + i * 4, 1);
             }
+
+            // Find minimum cycles until next FRT event
+            uint64_t step_mask = frt_steps[i];
+            uint64_t skip = step_mask ? (timer.cycles | step_mask) + 1 - timer.cycles : 1;
+            min_skip = Min(min_skip, skip);
         }
 
-        const bool timer_step = !(timer.cycles & TIMER_STEP_TABLE[timer.tcr & 7]);
-
-        if (timer_step)
+        if (!(timer.cycles & timer_step))
         {
             uint32_t value = timer.tcnt;
             uint32_t matcha = value == timer.tcora;
@@ -300,6 +312,11 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
                 MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIB, 1);
         }
 
-        timer.cycles++;
+        // Find minimum cycles until next Timer event
+        uint64_t timer_skip = timer_step ? (timer.cycles | timer_step) + 1 - timer.cycles : 1;
+        min_skip = Min(min_skip, timer_skip);
+
+         // Apply skip
+         timer.cycles += min_skip;
     }
 }
