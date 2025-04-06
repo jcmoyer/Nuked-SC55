@@ -983,6 +983,11 @@ bool Emulator::LoadRomsByInfo(Romset romset, const EMU_AllRomsetInfo& all_info)
         }
     }
 
+    if (m_mcu->is_jv880)
+    {
+        LoadNVRAM();
+    }
+
     MCU_PatchROM(*m_mcu);
 
     return true;
