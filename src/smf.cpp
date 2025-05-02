@@ -158,6 +158,22 @@ static bool SMF_ReadVarint(SMF_Reader& reader, uint32_t& value)
     return true;
 }
 
+void SMF_SetDeltasFromTimestamps(SMF_Track& track)
+{
+    if (track.events.size() == 0)
+    {
+        return;
+    }
+
+    track.events[0].delta_time = (uint32_t)(track.events[0].timestamp);
+    for (size_t i = 1; i < track.events.size(); ++i)
+    {
+        track.events[i].delta_time = (uint32_t)(
+            track.events[i].timestamp - track.events[i - 1].timestamp
+        );
+    }
+}
+
 SMF_Track SMF_MergeTracks(const SMF_Data& data)
 {
     SMF_Track merged_track;
@@ -175,11 +191,7 @@ SMF_Track SMF_MergeTracks(const SMF_Data& data)
         }
         return left.timestamp < right.timestamp;
     });
-    for (size_t i = 1; i < merged_track.events.size(); ++i)
-    {
-        merged_track.events[i].delta_time =
-            merged_track.events[i].timestamp - merged_track.events[i - 1].timestamp;
-    }
+    SMF_SetDeltasFromTimestamps(merged_track);
     return merged_track;
 }
 
