@@ -40,7 +40,7 @@ struct LoadRomsetResult
 // `desired_romset`: romset the user wants to load; if empty string the first romset in the directory will be returned
 // `legacy_loader`: use the same logic as nukeykt/Nuked-SC55
 // `result`: receives the loaded romset and information about which roms were loaded
-LoadRomsetError LoadRomset(AllRomsetInfo&           romset_info,
+LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
                            const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
                            bool                         legacy_loader,
@@ -54,9 +54,9 @@ void PrintRomsets(FILE* output);
 // `error`: error to write diagnostics for
 // `results`: results object to take diagnostics information from
 // `info`: romset info passed to `LoadRomset`
-void PrintLoadRomsetDiagnostics(FILE*                    output,
-                                LoadRomsetError          error,
-                                const LoadRomsetResult&  result,
-                                const AllRomsetInfo& info);
+void PrintLoadRomsetDiagnostics(FILE*                   output,
+                                LoadRomsetError         error,
+                                const LoadRomsetResult& result,
+                                const AllRomsetInfo&    info);
 
 } // namespace common

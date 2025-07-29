@@ -263,9 +263,9 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
 
 struct KnownHash
 {
-    SHA256Digest    hash;
-    Romset          romset;
-    RomLocation location;
+    SHA256Digest hash;
+    Romset       romset;
+    RomLocation  location;
 };
 
 // clang-format off

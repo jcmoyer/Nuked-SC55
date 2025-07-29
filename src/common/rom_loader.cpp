@@ -29,7 +29,7 @@ const char* ToCString(LoadRomsetError error)
     }
 }
 
-LoadRomsetError LoadRomset(AllRomsetInfo&           romset_info,
+LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
                            const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
                            bool                         legacy_loader,
@@ -122,10 +122,10 @@ void PrintRomsets(FILE* output)
     fprintf(output, "\n\n");
 }
 
-void PrintLoadRomsetDiagnostics(FILE*                    output,
-                                LoadRomsetError          error,
-                                const LoadRomsetResult&  result,
-                                const AllRomsetInfo& info)
+void PrintLoadRomsetDiagnostics(FILE*                   output,
+                                LoadRomsetError         error,
+                                const LoadRomsetResult& result,
+                                const AllRomsetInfo&    info)
 {
     switch (error)
     {
@@ -172,10 +172,7 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         {
             if (result.completion[i] != RomCompletionStatus::Unused)
             {
-                fprintf(output,
-                        "  * %7s: %-12s",
-                        ToCString(result.completion[i]),
-                        ToCString((RomLocation)i));
+                fprintf(output, "  * %7s: %-12s", ToCString(result.completion[i]), ToCString((RomLocation)i));
 
                 if (result.completion[i] == RomCompletionStatus::Present)
                 {
