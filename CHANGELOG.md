@@ -9,6 +9,9 @@
   includes CC 116 (track loop start) and CC 117 (track loop end). Pass
   `--dump-emidi-loop-points` to the renderer to enable this feature. (#47)
 - Completed the SCC-1A romset hashes thanks to @Karmeck. (#49)
+- Added hashes for mk2 roms with a CTF patch applied from
+  [shingo45endo/sc55mk2-ctf-patcher](https://github.com/shingo45endo/sc55mk2-ctf-patcher).
+  (#51)
 - Improved error reporting when a romset is detected, but it is only partially
   complete. (#51)
 
