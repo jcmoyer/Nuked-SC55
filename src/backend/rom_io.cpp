@@ -596,6 +596,19 @@ bool IsCompleteRomset(const AllRomsetInfo& all_info, Romset romset, RomCompletio
     return is_complete;
 }
 
+size_t CountPresent(const RomCompletionStatusSet& status)
+{
+    size_t count = 0;
+    for (auto s : status)
+    {
+        if (s == RomCompletionStatus::Present)
+        {
+            ++count;
+        }
+    }
+    return count;
+}
+
 bool PickCompleteRomset(const AllRomsetInfo& all_info, Romset& out_romset)
 {
     for (size_t i = 0; i < ROMSET_COUNT; ++i)

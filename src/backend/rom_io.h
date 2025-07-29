@@ -83,6 +83,8 @@ bool DetectRomsetsByHash(const std::filesystem::path& base_path,
 // `missing`.
 bool IsCompleteRomset(const AllRomsetInfo& all_info, Romset romset, RomCompletionStatusSet* status = nullptr);
 
+size_t CountPresent(const RomCompletionStatusSet& status);
+
 // Picks the first complete romset in `all_info` and writes it to `out_romset`. If multiple romsets are present, the one
 // returned is unspecified. Returns true if successful, or false if there are no complete romsets.
 bool PickCompleteRomset(const AllRomsetInfo& all_info, Romset& out_romset);

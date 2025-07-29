@@ -137,7 +137,34 @@ void PrintLoadRomsetDiagnostics(FILE*                    output,
         PrintRomsets(output);
         break;
     case LoadRomsetError::NoCompleteRomsets:
-        fprintf(output, "error: %s\n", ToCString(error));
+        fprintf(output, "No complete romsets found.\n");
+        for (size_t rs = 0; rs < ROMSET_COUNT; ++rs)
+        {
+            RomCompletionStatusSet completion;
+
+            (void)IsCompleteRomset(info, (Romset)rs, &completion);
+
+            if (CountPresent(completion))
+            {
+                fprintf(output, "Romset %s partially complete:\n", RomsetName((Romset)rs));
+                for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
+                {
+                    if (completion[i] != RomCompletionStatus::Unused)
+                    {
+                        fprintf(output, "  * %7s: %-12s", ToCString(completion[i]), ToCString((RomLocation)i));
+
+                        if (completion[i] == RomCompletionStatus::Present)
+                        {
+                            fprintf(output, "%s\n", info.romsets[rs].rom_paths[i].generic_string().c_str());
+                        }
+                        else
+                        {
+                            fprintf(output, "\n");
+                        }
+                    }
+                }
+            }
+        }
         break;
     case LoadRomsetError::IncompleteRomset:
         fprintf(output, "Romset %s is incomplete:\n", RomsetName(result.romset));

@@ -9,6 +9,8 @@
   includes CC 116 (track loop start) and CC 117 (track loop end). Pass
   `--dump-emidi-loop-points` to the renderer to enable this feature. (#47)
 - Completed the SCC-1A romset hashes thanks to @Karmeck. (#49)
+- Improved error reporting when a romset is detected, but it is only partially
+  complete. (#51)
 
 ## Bugfixes
 
