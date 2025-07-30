@@ -1,6 +1,5 @@
 #include "audio.h"
 #include "cast.h"
-#include "command_line.h"
 #include "config.h"
 #include "emu.h"
 #include "math_util.h"
@@ -18,6 +17,7 @@
 #include <string>
 #include <thread>
 
+#include "common/command_line.h"
 #include "common/gain.h"
 #include "common/path_util.h"
 #include "common/rom_loader.h"
@@ -114,7 +114,7 @@ const char* R_ParseErrorStr(R_ParseError err)
 
 R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
 {
-    CommandLineReader reader(argc, argv);
+    common::CommandLineReader reader(argc, argv);
 
     while (reader.Next())
     {

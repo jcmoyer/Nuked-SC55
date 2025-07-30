@@ -3,6 +3,9 @@
 #include <charconv>
 #include <string_view>
 
+namespace common
+{
+
 template <typename T>
 bool TryParse(std::string_view s, T& n)
 {
@@ -50,7 +53,7 @@ public:
     template <typename T>
     bool TryParse(T& output)
     {
-        return ::TryParse(Arg(), output);
+        return common::TryParse(Arg(), output);
     }
 
 private:
@@ -59,3 +62,5 @@ private:
     int    m_index;
     std::string_view m_arg;
 };
+
+} // namespace common

@@ -77,7 +77,6 @@ target_sources(nuked-sc55-backend
     "${CMAKE_CURRENT_BINARY_DIR}/backend/config.h"
     src/backend/audio.h
     src/backend/cast.h
-    src/backend/command_line.h
     src/backend/emu.h
     src/backend/lcd.h
     src/backend/lcd_back.h

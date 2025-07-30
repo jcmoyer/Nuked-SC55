@@ -7,7 +7,7 @@
 
 #include "audio.h"
 #include "audio_sdl.h"
-#include "command_line.h"
+#include "common/command_line.h"
 #include "math_util.h"
 #include "ringbuffer.h"
 #include <atomic>
@@ -168,7 +168,7 @@ bool Out_ASIO_PickOutputChannel(std::string_view name, long& channel_id)
 
     // maybe the user provided an integer ID instead
     long name_as_long = 0;
-    if (TryParse(name, name_as_long) && name_as_long < g_output.output_channel_count)
+    if (common::TryParse(name, name_as_long) && name_as_long < g_output.output_channel_count)
     {
         channel_id = name_as_long;
         return true;

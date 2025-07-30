@@ -34,7 +34,6 @@
 #include "audio.h"
 #include "audio_sdl.h"
 #include "cast.h"
-#include "command_line.h"
 #include "config.h"
 #include "emu.h"
 #include "lcd_sdl.h"
@@ -51,6 +50,7 @@
 #include "output_asio.h"
 #include "output_sdl.h"
 
+#include "common/command_line.h"
 #include "common/gain.h"
 #include "common/path_util.h"
 #include "common/rom_loader.h"
@@ -374,7 +374,7 @@ FE_PickOutputResult FE_PickOutputDevice(std::string_view preferred_name, AudioOu
     }
 
     // maybe we have an index instead of a name
-    if (size_t out_device_id; TryParse(preferred_name, out_device_id))
+    if (size_t out_device_id; common::TryParse(preferred_name, out_device_id))
     {
         if (out_device_id < num_audio_devs)
         {
@@ -967,7 +967,7 @@ const char* FE_ParseErrorStr(FE_ParseError err)
 
 FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
 {
-    CommandLineReader reader(argc, argv);
+    common::CommandLineReader reader(argc, argv);
 
     while (reader.Next())
     {
@@ -1036,12 +1036,12 @@ FE_ParseError FE_ParseCommandLine(int argc, char* argv[], FE_Parameters& result)
                 auto buffer_size_sv  = arg.substr(0, colon);
                 auto buffer_count_sv = arg.substr(colon + 1);
 
-                if (!TryParse(buffer_size_sv, result.buffer_size))
+                if (!common::TryParse(buffer_size_sv, result.buffer_size))
                 {
                     return FE_ParseError::BufferSizeInvalid;
                 }
 
-                if (!TryParse(buffer_count_sv, result.buffer_count))
+                if (!common::TryParse(buffer_count_sv, result.buffer_count))
                 {
                     return FE_ParseError::BufferCountInvalid;
                 }

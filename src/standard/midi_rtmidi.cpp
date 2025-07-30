@@ -1,5 +1,5 @@
 #include "midi.h"
-#include "command_line.h"
+#include "common/command_line.h"
 #include <RtMidi.h>
 #include <cstdint>
 #include <cstdio>
@@ -120,7 +120,7 @@ bool MIDI_PickInputDevice(RtMidiIn& midi, std::string_view preferred_name, MIDI_
     }
 
     // user provided a number
-    if (unsigned int device_id; TryParse(preferred_name, device_id))
+    if (unsigned int device_id; common::TryParse(preferred_name, device_id))
     {
         if (device_id < num_devices)
         {
