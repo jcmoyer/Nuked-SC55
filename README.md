@@ -35,3 +35,20 @@ LICENSE file). Non-commercial license was chosen to prevent making and selling
 SC-55 emulation boxes using (or around) this code, as well as preventing from
 using it in the commercial music production.
 
+## Special thanks
+
+This project would not be possible without building on prior work by nukeykt
+and other contributors:
+
+- nukeykt: initial implementation
+- John McMaster: SC-55 PCM chip decap
+- org/ogamespec: deroute tool
+- SDL team
+- Wohlstand: linux/macos port
+- mattw
+- HardWareMan
+- giulioz: JV-880 support
+- Cloudschatze
+- NikitaLita
+- Karmeck
+- FalcoSoft
