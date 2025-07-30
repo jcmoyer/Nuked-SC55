@@ -41,7 +41,6 @@
 #include "mcu.h"
 #include "midi.h"
 #include "output_common.h"
-#include "path_util.h"
 #include "pcm.h"
 #include "ringbuffer.h"
 #include <SDL.h>
@@ -53,6 +52,7 @@
 #include "output_sdl.h"
 
 #include "common/gain.h"
+#include "common/path_util.h"
 #include "common/rom_loader.h"
 
 #ifdef _WIN32
@@ -1307,7 +1307,7 @@ ROM management options:
 )";
 #endif
 
-    std::string name = P_GetProcessPath().stem().generic_string();
+    std::string name = common::GetProcessPath().stem().generic_string();
     fprintf(stderr, USAGE_STR, name.c_str());
     common::PrintRomsets(stderr);
 #if NUKED_ENABLE_ASIO
@@ -1347,7 +1347,7 @@ int main(int argc, char *argv[])
 
     FE_Application frontend;
 
-    std::filesystem::path base_path = P_GetProcessPath().parent_path();
+    std::filesystem::path base_path = common::GetProcessPath().parent_path();
 
     if (std::filesystem::exists(base_path / "../share/nuked-sc55"))
         base_path = base_path / "../share/nuked-sc55";

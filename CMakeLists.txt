@@ -60,7 +60,6 @@ target_sources(nuked-sc55-backend
     src/backend/mcu_interrupt.cpp
     src/backend/mcu_opcodes.cpp
     src/backend/mcu_timer.cpp
-    src/backend/path_util.cpp
     src/backend/pcm.cpp
     src/backend/rom.cpp
     src/backend/rom_io.cpp
@@ -88,7 +87,6 @@ target_sources(nuked-sc55-backend
     src/backend/mcu_interrupt.h
     src/backend/mcu_opcodes.h
     src/backend/mcu_timer.h
-    src/backend/path_util.h
     src/backend/pcm.h
     src/backend/ringbuffer.h
     src/backend/rom.h
@@ -107,6 +105,7 @@ target_sources(nuked-sc55-common
     PRIVATE
     src/common/gain.cpp
     src/common/rom_loader.cpp
+    src/common/path_util.cpp
 )
 target_compile_features(nuked-sc55-common PRIVATE cxx_std_23)
 target_enable_warnings(nuked-sc55-common)

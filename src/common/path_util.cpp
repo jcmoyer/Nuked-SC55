@@ -10,7 +10,10 @@
 #include <unistd.h>
 #endif
 
-std::filesystem::path P_GetProcessPath()
+namespace common
+{
+
+std::filesystem::path GetProcessPath()
 {
 #if defined(_WIN32)
     wchar_t path[MAX_PATH];
@@ -41,4 +44,6 @@ std::filesystem::path P_GetProcessPath()
     }
 #endif
     return std::filesystem::path(path, path + (size_t)actual_size);
+}
+
 }

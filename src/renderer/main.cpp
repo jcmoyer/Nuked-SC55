@@ -4,7 +4,6 @@
 #include "config.h"
 #include "emu.h"
 #include "math_util.h"
-#include "path_util.h"
 #include "smf.h"
 #include "wav.h"
 #include <algorithm>
@@ -20,6 +19,7 @@
 #include <thread>
 
 #include "common/gain.h"
+#include "common/path_util.h"
 #include "common/rom_loader.h"
 
 #ifdef _WIN32
@@ -1517,7 +1517,7 @@ MIDI options:
 
 )";
 
-    std::string name = P_GetProcessPath().stem().generic_string();
+    std::string name = common::GetProcessPath().stem().generic_string();
     fprintf(stderr, USAGE_STR, name.c_str());
 
     common::PrintRomsets(stderr);
