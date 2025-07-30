@@ -51,4 +51,4 @@ and other contributors:
 - Cloudschatze
 - NikitaLita
 - Karmeck
-- FalcoSoft
+- Falcosoft
