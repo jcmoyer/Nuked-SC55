@@ -284,3 +284,29 @@ Routes audio from the emulator's left channel to ASIO channel
 Routes audio from the emulator's right channel to ASIO channel
 `<channel_name_or_number>`.
 
+## Advanced parameters
+
+### `--override-* <path>`
+
+Overrides the path for a specific rom. This bypasses the default methods of
+locating roms.
+
+Each romset consists of multiple roms that are individually loaded into
+different locations within the emulator. These rom locations are named:
+
+- `rom1`
+- `rom2`
+- `smrom`
+- `waverom1`
+- `waverom2`
+- `waverom3`
+- `waverom-card`
+- `waverom-exp`
+
+A romset does not necessarily use all of these rom locations. For example, the
+mk2 will only use `rom1`, `rom2`, `smrom`, `waverom1`, and `waverom2`.
+
+To override a specific rom path you can replace the `*` in `--override-*
+<path>` with the name of the rom location you would like to load instead, e.g.
+`--override-rom2 ctf-patched-rom2.bin`. This is useful in case you have a
+patched rom that the emulator does not recognize.
