@@ -98,11 +98,12 @@ Run `nuked-sc55-render --help` to see a list of accepted romset names.
 If provided, the renderer will print a reference frequency and all EMIDI loop
 points to **stderr** when finished.
 
-Currently, this setting only enables handling of MIDI CC 116 (track loop begin)
-and 117 (track loop end).
+This flag enables handling of the following events:
 
-EMIDI also supports global loop begin and end via CC 118 and 119 respectively,
-but these are not yet supported.
+- CC 116 (track loop start)
+- CC 117 (track loop end)
+- CC 118 (global loop start)
+- CC 119 (global loop end)
 
 The messages are formatted as follows:
 
@@ -113,6 +114,9 @@ track 1 loop end at sample=4110616 timestamp=01:02.08
 ...
 track 12 loop start at sample=46192 timestamp=00:00.69
 track 12 loop end at sample=4110622 timestamp=01:02.08
+...
+global loop start at sample=0 timestamp=00:00.00
+global loop end at sample=1324138 timestamp=00:19.99
 ```
 
 There can be as many messages as MIDI *tracks* (as opposed to MIDI channels) in

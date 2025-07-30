@@ -826,8 +826,10 @@ private:
 
 enum R_LoopPointType
 {
-    Start,
-    End,
+    TrackStart,
+    TrackEnd,
+    GlobalStart,
+    GlobalEnd,
 };
 
 struct R_LoopPoint
@@ -1038,14 +1040,24 @@ void R_NsToTimeString(uint64_t ns, std::string& result)
     result += std::to_string(fsec);
 }
 
-bool R_IsEMIDILoopStart(const SMF_Data& data, const SMF_Event& ev)
+bool R_IsEMIDITrackLoopStart(const SMF_Data& data, const SMF_Event& ev)
 {
     return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 116;
 }
 
-bool R_IsEMIDILoopEnd(const SMF_Data& data, const SMF_Event& ev)
+bool R_IsEMIDITrackLoopEnd(const SMF_Data& data, const SMF_Event& ev)
 {
     return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 117;
+}
+
+bool R_IsEMIDIGlobalLoopStart(const SMF_Data& data, const SMF_Event& ev)
+{
+    return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 118;
+}
+
+bool R_IsEMIDIGlobalLoopEnd(const SMF_Data& data, const SMF_Event& ev)
+{
+    return ev.IsControlChange() && ev.GetData(data.bytes)[0] == 119;
 }
 
 template <typename SilenceModel>
@@ -1081,6 +1093,51 @@ constexpr mcu_sample_callback R_PickCallback(const R_TrackRenderState& state)
     R_Panic("no valid callback for state");
 }
 
+void R_HandleLoopPoint(R_TrackRenderState& state, const SMF_Data& data, const SMF_Event& event)
+{
+    // Save loop points - they will be processed on the main thread later
+    if (R_IsEMIDITrackLoopStart(data, event))
+    {
+        state.loop_recorder->Record({
+            .type         = R_LoopPointType::TrackStart,
+            .frame        = state.mixer->GetFramesWritten(state.queue_id),
+            .timestamp_ns = state.ns_simulated,
+            .midi_track   = event.track_id,
+            .midi_channel = event.GetChannel(),
+        });
+    }
+    else if (R_IsEMIDITrackLoopEnd(data, event))
+    {
+        state.loop_recorder->Record({
+            .type         = R_LoopPointType::TrackEnd,
+            .frame        = state.mixer->GetFramesWritten(state.queue_id),
+            .timestamp_ns = state.ns_simulated,
+            .midi_track   = event.track_id,
+            .midi_channel = event.GetChannel(),
+        });
+    }
+    else if (R_IsEMIDIGlobalLoopStart(data, event))
+    {
+        state.loop_recorder->Record({
+            .type         = R_LoopPointType::GlobalStart,
+            .frame        = state.mixer->GetFramesWritten(state.queue_id),
+            .timestamp_ns = state.ns_simulated,
+            .midi_track   = event.track_id,
+            .midi_channel = event.GetChannel(),
+        });
+    }
+    else if (R_IsEMIDIGlobalLoopEnd(data, event))
+    {
+        state.loop_recorder->Record({
+            .type         = R_LoopPointType::GlobalEnd,
+            .frame        = state.mixer->GetFramesWritten(state.queue_id),
+            .timestamp_ns = state.ns_simulated,
+            .midi_track   = event.track_id,
+            .midi_channel = event.GetChannel(),
+        });
+    }
+}
+
 void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
 {
     uint64_t division = data.header.division;
@@ -1113,27 +1170,7 @@ void R_RenderOne(const SMF_Data& data, R_TrackRenderState& state)
             R_PostEvent(state.emu, data, event);
         }
 
-        // Save loop points - they will be processed on the main thread later
-        if (R_IsEMIDILoopStart(data, event))
-        {
-            state.loop_recorder->Record({
-                .type         = R_LoopPointType::Start,
-                .frame        = state.mixer->GetFramesWritten(state.queue_id),
-                .timestamp_ns = state.ns_simulated,
-                .midi_track   = event.track_id,
-                .midi_channel = event.GetChannel(),
-            });
-        }
-        else if (R_IsEMIDILoopEnd(data, event))
-        {
-            state.loop_recorder->Record({
-                .type         = R_LoopPointType::End,
-                .frame        = state.mixer->GetFramesWritten(state.queue_id),
-                .timestamp_ns = state.ns_simulated,
-                .midi_track   = event.track_id,
-                .midi_channel = event.GetChannel(),
-            });
-        }
+        R_HandleLoopPoint(state, data, event);
 
         ++state.events_processed;
     }
@@ -1401,19 +1438,25 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
             R_NsToTimeString(point.timestamp_ns, time_str);
             switch (point.type)
             {
-            case R_LoopPointType::Start:
+            case R_LoopPointType::TrackStart:
                 fprintf(stderr,
                         "track %d loop start at sample=%zu timestamp=%s\n",
                         point.midi_track,
                         point.frame,
                         time_str.c_str());
                 break;
-            case R_LoopPointType::End:
+            case R_LoopPointType::TrackEnd:
                 fprintf(stderr,
                         "track %d loop end at sample=%zu timestamp=%s\n",
                         point.midi_track,
                         point.frame,
                         time_str.c_str());
+                break;
+            case R_LoopPointType::GlobalStart:
+                fprintf(stderr, "global loop start at sample=%zu timestamp=%s\n", point.frame, time_str.c_str());
+                break;
+            case R_LoopPointType::GlobalEnd:
+                fprintf(stderr, "global loop end at sample=%zu timestamp=%s\n", point.frame, time_str.c_str());
                 break;
             }
         }
