@@ -250,7 +250,7 @@ bool Emulator::LoadRom(RomLocation location, std::span<const uint8_t> source)
             fprintf(stderr, "FATAL: %s requires a power-of-2 size\n", ToCString(location));
             return false;
         }
-        GetMCU().rom2_mask = (int)source.size() - 1;
+        GetMCU().rom2_mask = (uint32_t)source.size() - 1;
     }
 
     std::copy(source.begin(), source.end(), buffer.begin());
