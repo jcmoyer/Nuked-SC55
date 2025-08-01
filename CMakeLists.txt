@@ -99,6 +99,7 @@ source_enable_conversion_warnings(
     src/backend/config.cpp
     src/backend/emu.cpp
     src/backend/lcd.cpp
+    src/backend/mcu.cpp
 )
 
 #==============================================================================

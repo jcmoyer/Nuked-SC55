@@ -241,7 +241,7 @@ struct mcu_t {
     bool is_scb55 = false; // 0 - sub mcu (e.g SC-55mk2), 1 - no sub mcu (e.g SCB-55)
     bool is_sc155 = false; // 0 - SC-55(MK2), 1 - SC-155(MK2)
 
-    int rom2_mask = ROM2_SIZE - 1;
+    uint32_t rom2_mask = ROM2_SIZE - 1;
 
     int ga_int[8]{};
     int ga_int_enable = 0;

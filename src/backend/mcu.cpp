@@ -153,12 +153,12 @@ READ_RCU:
     exit(1);
 }
 
-void MCU_AnalogSample(mcu_t& mcu, int channel)
+void MCU_AnalogSample(mcu_t& mcu, uint8_t channel)
 {
-    int value = MCU_AnalogReadPin(mcu, channel);
-    int dest = (channel << 1) & 6;
-    mcu.dev_register[DEV_ADDRAH + dest] = value >> 2;
-    mcu.dev_register[DEV_ADDRAL + dest] = (value << 6) & 0xc0;
+    uint16_t value = MCU_AnalogReadPin(mcu, channel);
+    uint16_t dest = (channel << 1) & 6;
+    mcu.dev_register[DEV_ADDRAH + dest] = (uint8_t)(value >> 2);
+    mcu.dev_register[DEV_ADDRAL + dest] = (uint8_t)((value << 6) & 0xc0);
 }
 
 void MCU_DeviceWrite(mcu_t& mcu, uint32_t address, uint8_t data)
@@ -333,13 +333,13 @@ uint8_t MCU_DeviceRead(mcu_t& mcu, uint32_t address)
     }
     case DEV_P9DR:
     {
-        int cfg = 0;
+        uint8_t cfg = 0;
         if (!mcu.is_mk1)
             cfg = mcu.is_sc155 ? 0 : 2; // bit 1: 0 - SC-155mk2 (???), 1 - SC-55mk2
 
-        int dir = mcu.dev_register[DEV_P9DDR];
+        uint8_t dir = mcu.dev_register[DEV_P9DDR];
 
-        int val = cfg & (dir ^ 0xff);
+        uint8_t val = cfg & (dir ^ 0xff);
         val |= mcu.dev_register[DEV_P9DR] & dir;
         return val;
     }
@@ -374,8 +374,8 @@ void MCU_DeviceReset(mcu_t& mcu)
 
 void MCU_UpdateAnalog(mcu_t& mcu, uint64_t cycles)
 {
-    int ctrl = mcu.dev_register[DEV_ADCSR];
-    int isscan = (ctrl & 16) != 0;
+    const uint8_t ctrl = mcu.dev_register[DEV_ADCSR];
+    const bool isscan = (ctrl & 16) != 0;
 
     if (ctrl & 0x20)
     {
@@ -385,8 +385,8 @@ void MCU_UpdateAnalog(mcu_t& mcu, uint64_t cycles)
         {
             if (isscan)
             {
-                int base = ctrl & 4;
-                for (int i = 0; i <= (ctrl & 3); i++)
+                uint8_t base = ctrl & 4;
+                for (uint8_t i = 0; i <= (ctrl & 3); i++)
                     MCU_AnalogSample(mcu, base + i);
                 mcu.analog_end_time = cycles + 200;
             }
@@ -423,11 +423,11 @@ uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
             if (!mcu.is_mk1)
             {
                 uint16_t base = mcu.is_jv880 ? 0xf000 : 0xe000;
-                if (address >= base && address < (base | 0x400))
+                if (address >= base && address < (base | 0x400u))
                 {
                     ret = PCM_Read(*mcu.pcm, address & 0x3f);
                 }
-                else if (!mcu.is_scb55 && address >= 0xec00 && address < 0xf000)
+                else if (!mcu.is_scb55 && address >= 0xec00u && address < 0xf000u)
                 {
                     ret = SM_SysRead(*mcu.sm, address & 0xff);
                 }
@@ -435,16 +435,16 @@ uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
                 {
                     ret = MCU_DeviceRead(mcu, address & 0x7f);
                 }
-                else if (address >= 0xfb80 && address < 0xff80
+                else if (address >= 0xfb80u && address < 0xff80u
                     && (mcu.dev_register[DEV_RAME] & 0x80) != 0)
                     ret = mcu.ram[(address - 0xfb80) & 0x3ff];
-                else if (address >= 0x8000 && address < 0xe000)
+                else if (address >= 0x8000u && address < 0xe000u)
                 {
                     ret = mcu.sram[address & 0x7fff];
                 }
-                else if (address == (base | 0x402))
+                else if (address == (base | 0x402u))
                 {
-                    ret = mcu.ga_int_trigger;
+                    ret = (uint8_t)mcu.ga_int_trigger;
                     mcu.ga_int_trigger = 0;
                     MCU_Interrupt_SetRequest(mcu, mcu.is_jv880 ? INTERRUPT_SOURCE_IRQ0 : INTERRUPT_SOURCE_IRQ1, 0);
                 }
@@ -495,12 +495,12 @@ uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
                     if ((mcu.io_sd & 4) == 0)
                         data &= ((button_pressed >> 16) & 255) ^ 255;
                     if ((mcu.io_sd & 8) == 0)
-                        data &= ((button_pressed >> 24) & 255) ^ 255;
+                        data &= (uint8_t)(((button_pressed >> 24) & 255) ^ 255);
                     return data;
                 }
                 else if (address == 0xf106)
                 {
-                    ret = mcu.ga_int_trigger;
+                    ret = (uint8_t)mcu.ga_int_trigger;
                     mcu.ga_int_trigger = 0;
                     MCU_Interrupt_SetRequest(mcu, INTERRUPT_SOURCE_IRQ1, 0);
                 }
@@ -589,22 +589,22 @@ uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
 
 uint16_t MCU_Read16(mcu_t& mcu, uint32_t address)
 {
-    address &= ~1;
+    address &= ~1u;
     uint8_t b0, b1;
     b0 = MCU_Read(mcu, address);
     b1 = MCU_Read(mcu, address+1);
-    return (b0 << 8) + b1;
+    return (uint16_t)((b0 << 8) + b1);
 }
 
 uint32_t MCU_Read32(mcu_t& mcu, uint32_t address)
 {
-    address &= ~3;
+    address &= ~3u;
     uint8_t b0, b1, b2, b3;
     b0 = MCU_Read(mcu, address);
     b1 = MCU_Read(mcu, address+1);
     b2 = MCU_Read(mcu, address+2);
     b3 = MCU_Read(mcu, address+3);
-    return (b0 << 24) + (b1 << 16) + (b2 << 8) + b3;
+    return (uint32_t)((b0 << 24) + (b1 << 16) + (b2 << 8) + b3);
 }
 
 void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
@@ -617,17 +617,17 @@ void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
         {
             if (!mcu.is_mk1)
             {
-                uint16_t base = mcu.is_jv880 ? 0xf000 : 0xe000;
-                if (address >= (base | 0x400) && address < (base | 0x800))
+                uint16_t base = mcu.is_jv880 ? 0xf000u : 0xe000u;
+                if (address >= (base | 0x400u) && address < (base | 0x800u))
                 {
-                    if (address == (base | 0x404) || address == (base | 0x405))
+                    if (address == (base | 0x404u) || address == (base | 0x405u))
                         LCD_Write(*mcu.lcd, address & 1, value);
-                    else if (address == (base | 0x401))
+                    else if (address == (base | 0x401u))
                     {
                         mcu.io_sd = value;
                         LCD_Enable(*mcu.lcd, (value & 1) == 0);
                     }
-                    else if (address == (base | 0x402))
+                    else if (address == (base | 0x402u))
                         mcu.ga_int_enable = (value << 1);
                     else
                         fprintf(stderr, "Unknown write %x %x\n", address, value);
@@ -642,7 +642,7 @@ void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
                     // e407: 0, e406 continuation?
                     //
                 }
-                else if (address >= (base | 0x000) && address < (base | 0x400))
+                else if (address >= (base | 0x000u) && address < (base | 0x400u))
                 {
                     PCM_Write(*mcu.pcm, address & 0x3f, value);
                 }
@@ -739,15 +739,15 @@ void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
     }
     else
     {
-        fprintf(stderr, "Unknown write %x %x\n", (page << 16) | address, value);
+        fprintf(stderr, "Unknown write %x %x\n", (uint32_t)(page << 16) | address, value);
     }
 }
 
 void MCU_Write16(mcu_t& mcu, uint32_t address, uint16_t value)
 {
-    address &= ~1;
-    MCU_Write(mcu, address, value >> 8);
-    MCU_Write(mcu, address + 1, value & 0xff);
+    address &= ~1u;
+    MCU_Write(mcu, address, (uint8_t)(value >> 8));
+    MCU_Write(mcu, address + 1, (uint8_t)(value & 0xff));
 }
 
 void MCU_ReadInstruction(mcu_t& mcu)
@@ -928,7 +928,7 @@ uint8_t MCU_ReadP1(mcu_t& mcu)
     if ((mcu.p0_data & 4) == 0)
         data &= ((button_pressed >> 16) & 255) ^ 255;
     if ((mcu.p0_data & 8) == 0)
-        data &= ((button_pressed >> 24) & 255) ^ 255;
+        data &= (uint8_t)(((button_pressed >> 24) & 255) ^ 255);
 
     return data;
 }
