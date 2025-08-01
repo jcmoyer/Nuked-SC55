@@ -48,7 +48,7 @@ void MCU_Interrupt_Start(mcu_t& mcu, int32_t mask)
     mcu.sleep = 0;
 }
 
-void MCU_Interrupt_SetRequest(mcu_t& mcu, uint32_t interrupt, bool value)
+void MCU_Interrupt_SetRequest(mcu_t& mcu, MCU_Interrupt_Source interrupt, bool value)
 {
     mcu.interrupt_pending[interrupt] = value;
 }

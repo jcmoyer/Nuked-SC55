@@ -72,19 +72,19 @@ void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
         {
             ftimer->tcsr &= ~0x10;
             ftimer->status_rd &= ~0x10;
-            MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + t * 4, 0);
+            MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_FOVI + t * 4), 0);
         }
         if ((data & 0x20) == 0 && (ftimer->status_rd & 0x20) != 0)
         {
             ftimer->tcsr &= ~0x20;
             ftimer->status_rd &= ~0x20;
-            MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + t * 4, 0);
+            MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIA + t * 4), 0);
         }
         if ((data & 0x40) == 0 && (ftimer->status_rd & 0x40) != 0)
         {
             ftimer->tcsr &= ~0x40;
             ftimer->status_rd &= ~0x40;
-            MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + t * 4, 0);
+            MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIB + t * 4), 0);
         }
         break;
     case REG_FRCH:
@@ -260,11 +260,11 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
                 if (matchb)
                     ftimer->tcsr |= 0x40;
                 if ((ftimer->tcr & 0x10) != 0 && (ftimer->tcsr & 0x10) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_FOVI + i * 4, 1);
+                    MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_FOVI + i * 4), 1);
                 if ((ftimer->tcr & 0x20) != 0 && (ftimer->tcsr & 0x20) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIA + i * 4, 1);
+                    MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIA + i * 4), 1);
                 if ((ftimer->tcr & 0x40) != 0 && (ftimer->tcsr & 0x40) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_FRT0_OCIB + i * 4, 1);
+                    MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIB + i * 4), 1);
             }
         }
 
