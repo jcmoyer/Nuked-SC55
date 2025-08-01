@@ -101,6 +101,7 @@ source_enable_conversion_warnings(
     src/backend/lcd.cpp
     src/backend/mcu.cpp
     src/backend/mcu_interrupt.cpp
+    src/backend/mcu_opcodes.cpp
 )
 
 #==============================================================================

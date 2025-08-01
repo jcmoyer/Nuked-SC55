@@ -433,7 +433,7 @@ inline uint32_t MCU_ControlRegisterRead(mcu_t& mcu, uint32_t reg, uint32_t siz)
     return ret;
 }
 
-inline void MCU_SetStatus(mcu_t& mcu, uint32_t condition, uint32_t mask)
+inline void MCU_SetStatus(mcu_t& mcu, bool condition, uint32_t mask)
 {
     if (condition)
         mcu.sr |= (uint16_t)mask;
