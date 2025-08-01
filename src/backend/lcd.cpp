@@ -37,7 +37,7 @@
 #include "lcd_font.h"
 #include <cstring>
 
-void LCD_Enable(lcd_t& lcd, uint32_t enable)
+void LCD_Enable(lcd_t& lcd, bool enable)
 {
     lcd.enable = enable;
 }
@@ -305,7 +305,7 @@ void LCD_FontRenderLR(lcd_t& lcd, uint8_t* LCD_CG, uint8_t ch)
         f = &lcd_font[ch - 16][0];
     else
         f = &LCD_CG[(ch & 7) * 8];
-    int col;
+    uint32_t col;
     if (f[0] & 1)
     {
         col = lcd.color1;
