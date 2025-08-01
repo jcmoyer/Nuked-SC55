@@ -981,26 +981,26 @@ void MCU_SetRomset(mcu_t& mcu, Romset romset)
     switch (romset)
     {
     case Romset::MK2:
+        break;
     case Romset::SC155MK2:
-        if (romset == Romset::SC155MK2)
-            mcu.is_sc155 = true;
+        mcu.is_sc155 = true;
         break;
     case Romset::ST:
         mcu.is_st = true;
         break;
     case Romset::MK1:
-    case Romset::SC155:
         mcu.is_mk1 = true;
-        mcu.is_st  = false;
-        if (romset == Romset::SC155)
-            mcu.is_sc155 = true;
+        break;
+    case Romset::SC155:
+        mcu.is_mk1   = true;
+        mcu.is_sc155 = true;
         break;
     case Romset::CM300:
         mcu.is_mk1   = true;
         mcu.is_cm300 = true;
         break;
     case Romset::JV880:
-        mcu.is_jv880   = true;
+        mcu.is_jv880 = true;
         break;
     case Romset::SCB55:
     case Romset::RLP3237:
