@@ -102,6 +102,7 @@ source_enable_conversion_warnings(
     src/backend/mcu.cpp
     src/backend/mcu_interrupt.cpp
     src/backend/mcu_opcodes.cpp
+    src/backend/mcu_timer.cpp
 )
 
 #==============================================================================

@@ -94,16 +94,16 @@ void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
         timer.tempreg = data;
         break;
     case REG_FRCL:
-        ftimer->frc = (timer.tempreg << 8) | data;
+        ftimer->frc = (uint16_t)((timer.tempreg << 8) | data);
         break;
     case REG_OCRAL:
-        ftimer->ocra = (timer.tempreg << 8) | data;
+        ftimer->ocra = (uint16_t)((timer.tempreg << 8) | data);
         break;
     case REG_OCRBL:
-        ftimer->ocrb = (timer.tempreg << 8) | data;
+        ftimer->ocrb = (uint16_t)((timer.tempreg << 8) | data);
         break;
     case REG_ICRL:
-        ftimer->icr = (timer.tempreg << 8) | data;
+        ftimer->icr = (uint16_t)((timer.tempreg << 8) | data);
         break;
     }
 }
@@ -127,17 +127,17 @@ uint8_t TIMER_Read(mcu_timer_t& timer, uint32_t address)
         return ret;
     }
     case REG_FRCH:
-        timer.tempreg = ftimer->frc & 0xff;
-        return ftimer->frc >> 8;
+        timer.tempreg = (uint8_t)ftimer->frc;
+        return (uint8_t)(ftimer->frc >> 8);
     case REG_OCRAH:
-        timer.tempreg = ftimer->ocra & 0xff;
-        return ftimer->ocra >> 8;
+        timer.tempreg = (uint8_t)ftimer->ocra;
+        return (uint8_t)(ftimer->ocra >> 8);
     case REG_OCRBH:
-        timer.tempreg = ftimer->ocrb & 0xff;
-        return ftimer->ocrb >> 8;
+        timer.tempreg = (uint8_t)ftimer->ocrb;
+        return (uint8_t)(ftimer->ocrb >> 8);
     case REG_ICRH:
-        timer.tempreg = ftimer->icr & 0xff;
-        return ftimer->icr >> 8;
+        timer.tempreg = (uint8_t)ftimer->icr;
+        return (uint8_t)(ftimer->icr >> 8);
     case REG_FRCL:
     case REG_OCRAL:
     case REG_OCRBL:
@@ -249,8 +249,7 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
                 else
                     value++;
                 uint32_t of = (value >> 16) & 1;
-                value &= 0xffff;
-                ftimer->frc = value;
+                ftimer->frc = (uint16_t)value;
 
                 // flags
                 if (of)
@@ -282,8 +281,7 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
             else
                 value++;
             uint32_t of = (value >> 8) & 1;
-            value &= 0xff;
-            timer.tcnt = value;
+            timer.tcnt = (uint8_t)value;
 
             // flags
             if (of)
