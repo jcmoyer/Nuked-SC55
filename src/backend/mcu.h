@@ -234,12 +234,12 @@ struct mcu_t {
 
     Romset romset = Romset::MK2;
 
-    int is_mk1 = 0; // 0 - SC-55mkII, SC-55ST. 1 - SC-55, CM-300/SCC-1
-    int is_cm300 = 0; // 0 - SC-55, 1 - CM-300/SCC-1
-    int is_st = 0; // 0 - SC-55mk2, 1 - SC-55ST
-    int is_jv880 = 0; // 0 - SC-55, 1 - JV880
-    int is_scb55 = 0; // 0 - sub mcu (e.g SC-55mk2), 1 - no sub mcu (e.g SCB-55)
-    int is_sc155 = 0; // 0 - SC-55(MK2), 1 - SC-155(MK2)
+    bool is_mk1 = false; // 0 - SC-55mkII, SC-55ST. 1 - SC-55, CM-300/SCC-1
+    bool is_cm300 = false; // 0 - SC-55, 1 - CM-300/SCC-1
+    bool is_st = false; // 0 - SC-55mk2, 1 - SC-55ST
+    bool is_jv880 = false; // 0 - SC-55, 1 - JV880
+    bool is_scb55 = false; // 0 - sub mcu (e.g SC-55mk2), 1 - no sub mcu (e.g SCB-55)
+    bool is_sc155 = false; // 0 - SC-55(MK2), 1 - SC-155(MK2)
 
     int rom2_mask = ROM2_SIZE - 1;
 
