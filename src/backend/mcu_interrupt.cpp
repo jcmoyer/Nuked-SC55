@@ -43,17 +43,17 @@ void MCU_Interrupt_Start(mcu_t& mcu, int32_t mask)
     if (mask >= 0)
     {
         mcu.sr &= ~STATUS_INT_MASK;
-        mcu.sr |= mask << 8;
+        mcu.sr |= (uint16_t)(mask << 8);
     }
     mcu.sleep = 0;
 }
 
-void MCU_Interrupt_SetRequest(mcu_t& mcu, uint32_t interrupt, uint32_t value)
+void MCU_Interrupt_SetRequest(mcu_t& mcu, uint32_t interrupt, bool value)
 {
     mcu.interrupt_pending[interrupt] = value;
 }
 
-void MCU_Interrupt_Exception(mcu_t& mcu, uint32_t exception)
+void MCU_Interrupt_Exception(mcu_t& mcu, MCU_Exception_Source exception)
 {
 #if 0
     if (interrupt == INTERRUPT_SOURCE_IRQ0 && (mcu.dev_register[DEV_P1CR] & 0x20) == 0)
@@ -73,8 +73,8 @@ void MCU_Interrupt_StartVector(mcu_t& mcu, uint32_t vector, int32_t mask)
 {
     uint32_t address = MCU_GetVectorAddress(mcu, vector);
     MCU_Interrupt_Start(mcu, mask);
-    mcu.cp = address >> 16;
-    mcu.pc = address;
+    mcu.cp = (uint8_t)(address >> 16);
+    mcu.pc = (uint16_t)address;
 }
 
 void MCU_Interrupt_Handle(mcu_t& mcu)
@@ -121,7 +121,7 @@ void MCU_Interrupt_Handle(mcu_t& mcu)
                 break;
 
         }
-        mcu.exception_pending = -1;
+        mcu.exception_pending = (MCU_Exception_Source)-1;
         return;
     }
     if (mcu.interrupt_pending[INTERRUPT_SOURCE_NMI])
@@ -218,7 +218,7 @@ void MCU_Interrupt_Handle(mcu_t& mcu)
         if ((int32_t)mask < level)
         {
             // mcu.interrupt_pending[INTERRUPT_SOURCE_NMI] = 0;
-            MCU_Interrupt_StartVector(mcu, vector, level);
+            MCU_Interrupt_StartVector(mcu, (uint32_t)vector, level);
             return;
         }
     }

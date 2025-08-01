@@ -100,6 +100,7 @@ source_enable_conversion_warnings(
     src/backend/emu.cpp
     src/backend/lcd.cpp
     src/backend/mcu.cpp
+    src/backend/mcu_interrupt.cpp
 )
 
 #==============================================================================

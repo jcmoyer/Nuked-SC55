@@ -806,7 +806,7 @@ void MCU_Reset(mcu_t& mcu)
     mcu.cp = (reset_address >> 16) & 0xff;
     mcu.pc = reset_address & 0xffff;
 
-    mcu.exception_pending = -1;
+    mcu.exception_pending = (MCU_Exception_Source)-1;
 
     MCU_DeviceReset(mcu);
 

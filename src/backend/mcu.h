@@ -200,8 +200,8 @@ struct mcu_t {
     uint8_t cp = 0, dp = 0, ep = 0, tp = 0, br = 0;
     uint8_t sleep = 0;
     uint8_t ex_ignore = 0;
-    int32_t exception_pending = 0;
-    uint8_t interrupt_pending[INTERRUPT_SOURCE_MAX]{};
+    MCU_Exception_Source exception_pending{};
+    bool interrupt_pending[INTERRUPT_SOURCE_MAX]{};
     uint8_t trapa_pending[16]{};
     uint64_t cycles = 0;
 
