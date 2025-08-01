@@ -103,6 +103,9 @@ source_enable_conversion_warnings(
     src/backend/mcu_interrupt.cpp
     src/backend/mcu_opcodes.cpp
     src/backend/mcu_timer.cpp
+    src/backend/rom.cpp
+    src/backend/rom_io.cpp
+    src/backend/sha/sha224-256.c
 )
 
 #==============================================================================

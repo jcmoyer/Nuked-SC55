@@ -234,11 +234,11 @@ constexpr uint8_t HexValue(char x)
 {
     if (x >= '0' && x <= '9')
     {
-        return x - '0';
+        return (uint8_t)(x - '0');
     }
     else if (x >= 'a' && x <= 'f')
     {
-        return 10 + (x - 'a');
+        return 10 + (uint8_t)(x - 'a');
     }
     else
     {
@@ -255,7 +255,7 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
     SHA256Digest hash;
     for (size_t i = 0; i < N / 2; ++i)
     {
-        hash[i] = (HexValue(s[2 * i + 0]) << 4) | HexValue(s[2 * i + 1]);
+        hash[i] = (uint8_t)((HexValue(s[2 * i + 0]) << 4) | HexValue(s[2 * i + 1]));
     }
 
     return hash;
@@ -540,7 +540,7 @@ bool DetectRomsetsByHash(const std::filesystem::path& base_path,
         SHA256Digest  digest_bytes;
 
         SHA256Reset(&ctx);
-        SHA256Input(&ctx, buffer.data(), buffer.size());
+        SHA256Input(&ctx, buffer.data(), (unsigned int)buffer.size());
         SHA256Result(&ctx, digest_bytes.data());
 
         for (const auto& known : ROM_HASHES)
