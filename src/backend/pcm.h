@@ -40,48 +40,44 @@ struct mcu_t;
 struct PCM_Config
 {
     // config_reg_3c
-    int noise_mask = 0;
-    int orval      = 0;
-    int write_mask = 0;
-    int dac_mask   = 0; // unused
-
-    bool oversampling = false;
+    uint32_t orval        = 0;
+    int      dac_mask     = 0; // unused
+    uint8_t  noise_mask   = 0;
+    uint8_t  write_mask   = 0;
+    bool     oversampling = false;
 
     // config_reg_3d
     // important that this starts at 1, see derivation in PCM_Write
-    int reg_slots = 1;
+    uint8_t reg_slots = 1;
 };
 
-struct pcm_t {
+struct pcm_t
+{
     uint32_t ram1[32][8]{};
     uint16_t ram2[32][16]{};
-    uint32_t select_channel = 0;
-    uint32_t voice_mask = 0;
-    uint32_t voice_mask_pending = 0;
-    uint32_t voice_mask_updating = 0;
-    uint32_t write_latch = 0;
-    uint32_t wave_read_address = 0;
-    uint8_t wave_byte_latch = 0;
-    uint32_t read_latch = 0;
-    uint8_t config_reg_3c = 0; // SC55:c3 JV880:c0
-    uint8_t config_reg_3d = 0;
-    uint32_t irq_channel = 0;
-    uint32_t irq_assert = 0;
+    mcu_t*   mcu                 = nullptr;
+    uint64_t cycles              = 0;
+    uint32_t voice_mask          = 0; // same size as voice_mask_pending
+    uint32_t voice_mask_pending  = 0; // 28 bits wide?
+    uint32_t write_latch         = 0; // 20 bits wide?
+    uint32_t read_latch          = 0; // 20 bits wide?
+    uint32_t wave_read_address   = 0;
+    uint16_t tv_counter          = 0; // 14 bits wide?
+    uint8_t  wave_byte_latch     = 0;
+    uint8_t  select_channel      = 0; // 5 bits wide?
+    uint8_t  config_reg_3c       = 0; // SC55:c3 JV880:c0
+    uint8_t  config_reg_3d       = 0;
+    uint8_t  irq_channel         = 0; // range 1..32
+    bool     irq_assert          = 0;
+    bool     voice_mask_updating = false;
+    bool     nfs                 = false;
+    int32_t  accum_l             = 0;
+    int32_t  accum_r             = 0;
+    int32_t  rcsum[2]{};
+
     PCM_Config config{};
 
-    uint32_t nfs = 0;
-
-    uint32_t tv_counter = 0;
-
-    uint64_t cycles = 0;
-
     uint16_t eram[0x4000]{};
-
-    int accum_l = 0;
-    int accum_r = 0;
-    int rcsum[2]{};
-
-    mcu_t* mcu = nullptr;
 
     uint8_t waverom1[0x200000]{};
     uint8_t waverom2[0x200000]{};

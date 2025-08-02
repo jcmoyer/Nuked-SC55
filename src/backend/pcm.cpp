@@ -98,7 +98,7 @@ void PCM_Write(pcm_t& pcm, uint32_t address, uint8_t data)
                 pcm.voice_mask_pending |= (uint32_t)(data & 0xff) << 0;
                 break;
         }
-        pcm.voice_mask_updating = 1;
+        pcm.voice_mask_updating = true;
     }
     else if (address >= 0x20 && address < 0x24) // wave rom
     {
@@ -199,21 +199,21 @@ uint8_t PCM_Read(pcm_t& pcm, uint32_t address)
     {
         if (pcm.voice_mask_updating)
             pcm.voice_mask = pcm.voice_mask_pending;
-        pcm.voice_mask_updating = 0;
+        pcm.voice_mask_updating = false;
     }
     else if (address == 0x3c || address == 0x3e) // status
     {
         uint8_t status = 0;
         if (address == 0x3e && pcm.irq_assert)
         {
-            pcm.irq_assert = 0;
+            pcm.irq_assert = false;
             if (pcm.mcu->is_jv880)
                 MCU_GA_SetGAInt(*pcm.mcu, 5, 0);
             else
                 MCU_Interrupt_SetRequest(*pcm.mcu, INTERRUPT_SOURCE_IRQ0, 0);
         }
 
-        status |= (uint8_t)pcm.irq_channel;
+        status |= pcm.irq_channel;
         if (pcm.voice_mask_updating)
             status |= 32;
 
@@ -598,10 +598,10 @@ void PCM_Update(pcm_t& pcm, uint64_t cycles)
             pcm.accum_r = addclip20(pcm.accum_r, (int32_t)pcm.ram1[30][1], 0);
 
             pcm.ram1[30][2] = (uint32_t)addclip20(pcm.accum_l,
-                pcm.config.orval | (shifter & pcm.config.noise_mask), 0);
+                (int32_t)(pcm.config.orval | (shifter & pcm.config.noise_mask)), 0);
 
             pcm.ram1[30][4] = (uint32_t)addclip20(pcm.accum_r,
-                pcm.config.orval | (shifter & pcm.config.noise_mask), 0);
+                (int32_t)(pcm.config.orval | (shifter & pcm.config.noise_mask)), 0);
 
             pcm.ram1[30][0] = (uint32_t)(pcm.accum_l & pcm.config.write_mask);
             pcm.ram1[30][1] = (uint32_t)(pcm.accum_r & pcm.config.write_mask);
@@ -619,10 +619,10 @@ void PCM_Update(pcm_t& pcm, uint64_t cycles)
             pcm.accum_r = addclip20(pcm.accum_r, (int32_t)pcm.ram1[30][1], 0);
 
             pcm.ram1[30][3] = (uint32_t)addclip20(pcm.accum_l,
-                pcm.config.orval | (shifter & pcm.config.noise_mask), 0);
+                (int32_t)(pcm.config.orval | (shifter & pcm.config.noise_mask)), 0);
 
             pcm.ram1[30][5] = (uint32_t)addclip20(pcm.accum_r,
-                pcm.config.orval | (shifter & pcm.config.noise_mask), 0);
+                (int32_t)(pcm.config.orval | (shifter & pcm.config.noise_mask)), 0);
 
             if (!pcm.disable_oversampling && pcm.config.oversampling) // oversampling
             {
@@ -1432,8 +1432,8 @@ void PCM_Update(pcm_t& pcm, uint64_t cycles)
                 //fprintf(stderr, "irq voice %i\n", slot);
                 if (pcm.nfs)
                     ram2[8] |= 0x4000;
-                pcm.irq_assert = 1;
-                pcm.irq_channel = (uint32_t)slot;
+                pcm.irq_assert = true;
+                pcm.irq_channel = (uint8_t)slot;
                 if (pcm.mcu->is_jv880)
                     MCU_GA_SetGAInt(*pcm.mcu, 5, 1);
                 else
@@ -1566,7 +1566,7 @@ void PCM_Update(pcm_t& pcm, uint64_t cycles)
             pcm.ram2[31][7] |= 0x20;
         }
 
-        pcm.nfs = 1;
+        pcm.nfs = true;
 
         uint64_t new_cycles = (uint64_t)(pcm.config.reg_slots + 1) * 25;
 
