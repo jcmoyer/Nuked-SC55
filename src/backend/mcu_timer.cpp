@@ -209,35 +209,23 @@ uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address)
     return 0xff;
 }
 
-constexpr uint64_t FRT_STEP_TABLE_GENERIC[4] = {
-    3, 7, 31, 1
-};
+constexpr frt_step_table_type FRT_STEP_TABLE_GENERIC = {3, 7, 31, 1};
 
-constexpr uint64_t FRT_STEP_TABLE_MK1[4] = {
-    3, 7, 31, 3
-};
+constexpr frt_step_table_type FRT_STEP_TABLE_MK1 = {3, 7, 31, 3};
 
-constexpr uint64_t TIMER_STEP_TABLE_GENERIC[8] = {
-    0, 7, 63, 1023, 0, 1, 1, 1
-};
+constexpr timer_step_table_type TIMER_STEP_TABLE_GENERIC = {0, 7, 63, 1023, 0, 1, 1, 1};
 
-constexpr uint64_t TIMER_STEP_TABLE_MK1[8] = {
-    0, 7, 63, 1023, 0, 3, 3, 3
-};
+constexpr timer_step_table_type TIMER_STEP_TABLE_MK1 = {0, 7, 63, 1023, 0, 3, 3, 3};
 
 void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
 {
-    const bool mk1 = timer.mcu->is_mk1;
-    const auto& FRT_STEP_TABLE = mk1 ? FRT_STEP_TABLE_MK1 : FRT_STEP_TABLE_GENERIC;
-    const auto& TIMER_STEP_TABLE = mk1 ? TIMER_STEP_TABLE_MK1 : TIMER_STEP_TABLE_GENERIC;
-
     while (timer.cycles*2 < cycles) // FIXME
     {
         for (int i = 0; i < 3; i++)
         {
             frt_t *ftimer = &timer.frt[i];
 
-            const bool frt_step = !(timer.cycles & FRT_STEP_TABLE[ftimer->tcr & 3]);
+            const bool frt_step = !(timer.cycles & timer.frt_step_table[ftimer->tcr & 3]);
 
             if (frt_step)
             {
@@ -267,7 +255,7 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
             }
         }
 
-        const bool timer_step = !(timer.cycles & TIMER_STEP_TABLE[timer.tcr & 7]);
+        const bool timer_step = !(timer.cycles & timer.timer_step_table[timer.tcr & 7]);
 
         if (timer_step)
         {
@@ -300,4 +288,13 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
 
         timer.cycles++;
     }
+}
+
+void TIMER_NotifyRomsetChange(mcu_timer_t& timer)
+{
+    const bool mk1 = timer.mcu->is_mk1;
+    const auto& FRT_STEP_TABLE = mk1 ? FRT_STEP_TABLE_MK1 : FRT_STEP_TABLE_GENERIC;
+    const auto& TIMER_STEP_TABLE = mk1 ? TIMER_STEP_TABLE_MK1 : TIMER_STEP_TABLE_GENERIC;
+    memcpy(timer.frt_step_table, FRT_STEP_TABLE, sizeof(frt_step_table_type));
+    memcpy(timer.timer_step_table, TIMER_STEP_TABLE, sizeof(timer_step_table_type));
 }

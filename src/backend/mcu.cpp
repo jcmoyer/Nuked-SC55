@@ -1007,4 +1007,6 @@ void MCU_SetRomset(mcu_t& mcu, Romset romset)
         mcu.is_scb55 = true;
         break;
     }
+
+    TIMER_NotifyRomsetChange(*mcu.timer);
 }
