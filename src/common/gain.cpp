@@ -1,6 +1,7 @@
 #include "gain.h"
 
 #if defined(__clang__)
+#include <cerrno>
 #include <cstdlib>
 #else
 #include <charconv>
