@@ -21,6 +21,7 @@ TEST_CASE("Gain parsing")
 
     // Looks valid, but would produce a value out of range
     REQUIRE(ParseGain("-0.5", gain) != ParseGainResult{});
+    REQUIRE(ParseGain("999999999999999999999999999999999999999999999999999999999", gain) != ParseGainResult{});
 
     // Valid parses
     REQUIRE(ParseGain("0.5", gain) == ParseGainResult{});
