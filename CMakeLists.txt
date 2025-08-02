@@ -95,20 +95,7 @@ target_sources(nuked-sc55-backend
 target_include_directories(nuked-sc55-backend PUBLIC "src/backend" "${CMAKE_CURRENT_BINARY_DIR}/backend")
 target_compile_features(nuked-sc55-backend PRIVATE cxx_std_23)
 target_enable_warnings(nuked-sc55-backend)
-source_enable_conversion_warnings(
-    src/backend/config.cpp
-    src/backend/emu.cpp
-    src/backend/lcd.cpp
-    src/backend/mcu.cpp
-    src/backend/mcu_interrupt.cpp
-    src/backend/mcu_opcodes.cpp
-    src/backend/mcu_timer.cpp
-    src/backend/pcm.cpp
-    src/backend/rom.cpp
-    src/backend/rom_io.cpp
-    src/backend/submcu.cpp
-    src/backend/sha/sha224-256.c
-)
+target_enable_conversion_warnings(nuked-sc55-backend)
 
 #==============================================================================
 # Frontend shared code
