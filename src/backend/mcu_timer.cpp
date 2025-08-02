@@ -217,76 +217,96 @@ constexpr timer_step_table_type TIMER_STEP_TABLE_GENERIC = {0, 7, 63, 1023, 0, 1
 
 constexpr timer_step_table_type TIMER_STEP_TABLE_MK1 = {0, 7, 63, 1023, 0, 3, 3, 3};
 
+void TIMER_ClockFrt(mcu_timer_t& timer, int frt_id)
+{
+    frt_t& frt = timer.frt[frt_id];
+
+    if (timer.cycles & timer.frt_step_table[frt.tcr & 3])
+    {
+        return;
+    }
+
+    uint32_t   value  = frt.frc;
+    const bool matcha = value == frt.ocra;
+    const bool matchb = value == frt.ocrb;
+    if ((frt.tcsr & 1) != 0 && matcha) // CCLRA
+    {
+        value = 0;
+    }
+    else
+    {
+        ++value;
+    }
+    const bool of = (value >> 16) & 1;
+    frt.frc       = (uint16_t)value;
+
+    // flags
+    if (of)
+        frt.tcsr |= 0x10;
+    if (matcha)
+        frt.tcsr |= 0x20;
+    if (matchb)
+        frt.tcsr |= 0x40;
+    if ((frt.tcr & 0x10) != 0 && (frt.tcsr & 0x10) != 0)
+        MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_FOVI + frt_id * 4), 1);
+    if ((frt.tcr & 0x20) != 0 && (frt.tcsr & 0x20) != 0)
+        MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIA + frt_id * 4), 1);
+    if ((frt.tcr & 0x40) != 0 && (frt.tcsr & 0x40) != 0)
+        MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIB + frt_id * 4), 1);
+}
+
+void TIMER_ClockTimer(mcu_timer_t& timer)
+{
+    if (timer.cycles & timer.timer_step_table[timer.tcr & 7])
+    {
+        return;
+    }
+
+    uint32_t   value  = timer.tcnt;
+    const bool matcha = value == timer.tcora;
+    const bool matchb = value == timer.tcorb;
+    if ((timer.tcr & 24) == 8 && matcha)
+    {
+        value = 0;
+    }
+    else if ((timer.tcr & 24) == 16 && matchb)
+    {
+        value = 0;
+    }
+    else
+    {
+        ++value;
+    }
+    const bool of = (value >> 8) & 1;
+    timer.tcnt    = (uint8_t)value;
+
+    // flags
+    if (of)
+        timer.tcsr |= 0x20;
+    if (matcha)
+        timer.tcsr |= 0x40;
+    if (matchb)
+        timer.tcsr |= 0x80;
+    if ((timer.tcr & 0x20) != 0 && (timer.tcsr & 0x20) != 0)
+        MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_OVI, 1);
+    if ((timer.tcr & 0x40) != 0 && (timer.tcsr & 0x40) != 0)
+        MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIA, 1);
+    if ((timer.tcr & 0x80) != 0 && (timer.tcsr & 0x80) != 0)
+        MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIB, 1);
+}
+
 void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
 {
-    while (timer.cycles*2 < cycles) // FIXME
+    while (timer.cycles * 2 < cycles) // FIXME
     {
         for (int i = 0; i < 3; i++)
         {
-            frt_t *ftimer = &timer.frt[i];
-
-            const bool frt_step = !(timer.cycles & timer.frt_step_table[ftimer->tcr & 3]);
-
-            if (frt_step)
-            {
-                uint32_t value = ftimer->frc;
-                uint32_t matcha = value == ftimer->ocra;
-                uint32_t matchb = value == ftimer->ocrb;
-                if ((ftimer->tcsr & 1) != 0 && matcha) // CCLRA
-                    value = 0;
-                else
-                    value++;
-                uint32_t of = (value >> 16) & 1;
-                ftimer->frc = (uint16_t)value;
-
-                // flags
-                if (of)
-                    ftimer->tcsr |= 0x10;
-                if (matcha)
-                    ftimer->tcsr |= 0x20;
-                if (matchb)
-                    ftimer->tcsr |= 0x40;
-                if ((ftimer->tcr & 0x10) != 0 && (ftimer->tcsr & 0x10) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_FOVI + i * 4), 1);
-                if ((ftimer->tcr & 0x20) != 0 && (ftimer->tcsr & 0x20) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIA + i * 4), 1);
-                if ((ftimer->tcr & 0x40) != 0 && (ftimer->tcsr & 0x40) != 0)
-                    MCU_Interrupt_SetRequest(*timer.mcu, (MCU_Interrupt_Source)(INTERRUPT_SOURCE_FRT0_OCIB + i * 4), 1);
-            }
+            TIMER_ClockFrt(timer, i);
         }
 
-        const bool timer_step = !(timer.cycles & timer.timer_step_table[timer.tcr & 7]);
+        TIMER_ClockTimer(timer);
 
-        if (timer_step)
-        {
-            uint32_t value = timer.tcnt;
-            uint32_t matcha = value == timer.tcora;
-            uint32_t matchb = value == timer.tcorb;
-            if ((timer.tcr & 24) == 8 && matcha)
-                value = 0;
-            else if ((timer.tcr & 24) == 16 && matchb)
-                value = 0;
-            else
-                value++;
-            uint32_t of = (value >> 8) & 1;
-            timer.tcnt = (uint8_t)value;
-
-            // flags
-            if (of)
-                timer.tcsr |= 0x20;
-            if (matcha)
-                timer.tcsr |= 0x40;
-            if (matchb)
-                timer.tcsr |= 0x80;
-            if ((timer.tcr & 0x20) != 0 && (timer.tcsr & 0x20) != 0)
-                MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_OVI, 1);
-            if ((timer.tcr & 0x40) != 0 && (timer.tcsr & 0x40) != 0)
-                MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIA, 1);
-            if ((timer.tcr & 0x80) != 0 && (timer.tcsr & 0x80) != 0)
-                MCU_Interrupt_SetRequest(*timer.mcu, INTERRUPT_SOURCE_TIMER_CMIB, 1);
-        }
-
-        timer.cycles++;
+        ++timer.cycles;
     }
 }
 
