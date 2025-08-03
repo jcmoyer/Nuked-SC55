@@ -33,6 +33,7 @@
  */
 #include "mcu_timer.h"
 #include "mcu.h"
+#include <cstring>
 #include <cstdint>
 
 enum {
