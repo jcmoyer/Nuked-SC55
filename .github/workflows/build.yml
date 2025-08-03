@@ -1,0 +1,116 @@
+name: Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build-msvc:
+    name: Windows-MSVC
+    runs-on: windows-latest
+    env:
+      SDL_VERSION: 2.32.8
+      CATCH2_VERSION: 3.9.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache SDL
+        id: cache-windows-sdl
+        uses: actions/cache@v3
+        with:
+          path: C:\SDL2-*
+          key: ${{ runner.os }}-sdl-${{ env.SDL_VERSION }}
+
+      - name: Install SDL
+        if: ${{ steps.cache-windows-sdl.outputs.cache-hit != 'true' }}
+        run: |
+          Invoke-WebRequest "https://github.com/libsdl-org/SDL/releases/download/release-$env:SDL_VERSION/SDL2-devel-$env:SDL_VERSION-VC.zip" -OutFile C:\SDL.zip
+          Expand-Archive C:\SDL.zip -DestinationPath C:\
+
+      - name: Cache CMakeInstalls
+        id: cache-windows-cmakeinstalls
+        uses: actions/cache@v3
+        with:
+          path: C:\CMakeInstalls
+          key: ${{ runner.os }}-cmakeinstalls-${{ env.CATCH2_VERSION }}
+
+      - name: Install Catch2
+        if: ${{ steps.cache-windows-cmakeinstalls.outputs.cache-hit != 'true' }}
+        run: |
+          Invoke-WebRequest "https://github.com/catchorg/Catch2/archive/refs/tags/v$env:CATCH2_VERSION.zip" -OutFile C:\Catch2.zip
+          Expand-Archive C:\Catch2.zip -DestinationPath C:\
+          cd C:\Catch2-$env:CATCH2_VERSION
+          cmake -B C:\Catch2-build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=C:\CMakeInstalls
+          cmake --build C:\Catch2-build
+          cmake --install C:\Catch2-build --config Debug
+
+      - name: Configure Nuked-SC55
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_PREFIX_PATH="C:\SDL2-$env:SDL_VERSION;C:\CMakeInstalls"
+          -DNUKED_ENABLE_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        run: >
+          ctest --test-dir build
+          -C Debug
+          --output-on-failure
+
+  build-linux-gcc:
+    name: Linux-gcc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt install -y libsdl2-dev librtmidi-dev catch2
+
+      - name: Configure Nuked-SC55
+        run: >
+          cmake -B build
+          -DCMAKE_C_COMPILER=gcc
+          -DCMAKE_CXX_COMPILER=g++
+          -DCMAKE_BUILD_TYPE=Debug
+          -DNUKED_ENABLE_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        run: >
+          ctest --test-dir build
+          -C Debug
+          --output-on-failure
+
+  build-linux-clang:
+    name: Linux-clang
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt install -y libsdl2-dev librtmidi-dev catch2
+
+      - name: Configure Nuked-SC55
+        run: >
+          cmake -B build
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_BUILD_TYPE=Debug
+          -DNUKED_ENABLE_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        run: >
+          ctest --test-dir build
+          -C Debug
+          --output-on-failure
+
