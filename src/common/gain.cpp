@@ -20,12 +20,12 @@ enum class ParseUnit
 
 float DbToScalar(float db)
 {
-    return std::powf(10.f, db / 20.f);
+    return std::pow(10.f, db / 20.f);
 }
 
 float ScalarToDb(float scalar)
 {
-    return 20.f * std::log10f(scalar);
+    return 20.f * std::log10(scalar);
 }
 
 static bool IsDigit(char ch)
