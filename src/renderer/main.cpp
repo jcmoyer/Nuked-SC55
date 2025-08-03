@@ -6,6 +6,7 @@
 #include "smf.h"
 #include "wav.h"
 #include <algorithm>
+#include <cinttypes>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdio>
@@ -1440,23 +1441,24 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
             {
             case R_LoopPointType::TrackStart:
                 fprintf(stderr,
-                        "track %d loop start at sample=%zu timestamp=%s\n",
+                        "track %d loop start at sample=%" PRIu64 " timestamp=%s\n",
                         point.midi_track,
                         point.frame,
                         time_str.c_str());
                 break;
             case R_LoopPointType::TrackEnd:
                 fprintf(stderr,
-                        "track %d loop end at sample=%zu timestamp=%s\n",
+                        "track %d loop end at sample=%" PRIu64 " timestamp=%s\n",
                         point.midi_track,
                         point.frame,
                         time_str.c_str());
                 break;
             case R_LoopPointType::GlobalStart:
-                fprintf(stderr, "global loop start at sample=%zu timestamp=%s\n", point.frame, time_str.c_str());
+                fprintf(
+                    stderr, "global loop start at sample=%" PRIu64 " timestamp=%s\n", point.frame, time_str.c_str());
                 break;
             case R_LoopPointType::GlobalEnd:
-                fprintf(stderr, "global loop end at sample=%zu timestamp=%s\n", point.frame, time_str.c_str());
+                fprintf(stderr, "global loop end at sample=%" PRIu64 " timestamp=%s\n", point.frame, time_str.c_str());
                 break;
             }
         }
