@@ -1374,7 +1374,7 @@ int main(int argc, char *argv[])
 
     if (err != common::LoadRomsetError{})
     {
-        return false;
+        return 1;
     }
 
     frontend.romset = load_result.romset;
