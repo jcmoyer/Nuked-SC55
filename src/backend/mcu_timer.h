@@ -33,48 +33,60 @@
  */
 #pragma once
 
+#include <array>
 #include <cstdint>
-
-using frt_step_table_type = uint8_t[4];
-using timer_step_table_type = uint16_t[8];
 
 struct mcu_t;
 
-struct frt_t {
-    uint8_t tcr = 0;
-    uint8_t tcsr = 0;
-    uint16_t frc = 0;
-    uint16_t ocra = 0;
-    uint16_t ocrb = 0;
-    uint16_t icr = 0;
+using FRT_Step_Table = std::array<uint8_t, 4>;
+using TMR_Step_Table = std::array<uint16_t, 8>;
+
+// 16-bit free running timers
+struct frt_t
+{
+    uint8_t  tcr       = 0;
+    uint8_t  tcsr      = 0;
+    uint16_t frc       = 0;
+    uint16_t ocra      = 0;
+    uint16_t ocrb      = 0;
+    uint16_t icr       = 0;
+    uint8_t  status_rd = 0; // not an actual FRT register
+};
+
+// 8-bit timer
+struct tmr_t
+{
+    uint8_t tcr       = 0;
+    uint8_t tcsr      = 0;
+    uint8_t tcora     = 0;
+    uint8_t tcorb     = 0;
+    uint8_t tcnt      = 0;
     uint8_t status_rd = 0;
 };
 
-struct mcu_timer_t {
-    uint8_t tcr = 0;
-    uint8_t tcsr = 0;
-    uint8_t tcora = 0;
-    uint8_t tcorb = 0;
-    uint8_t tcnt = 0;
-    uint8_t status_rd = 0;
+struct mcu_timer_t
+{
+    uint64_t cycles = 0;
+    FRT_Step_Table frt_step_table;
+    TMR_Step_Table tmr_step_table;
 
     mcu_t* mcu = nullptr;
-
-    uint64_t cycles = 0;
+    frt_t   frt[3]{};
+    tmr_t   tmr{};
     uint8_t tempreg = 0;
-
-    frt_t frt[3]{};
-
-    frt_step_table_type frt_step_table;
-    timer_step_table_type timer_step_table;
 };
 
 void TIMER_Init(mcu_timer_t& timer, mcu_t& mcu);
+
+// Read/write 16-bit FRTs
 void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data);
 uint8_t TIMER_Read(mcu_timer_t& timer, uint32_t address);
-void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles);
 
+// Read/write 8-bit timer
 void TIMER2_Write(mcu_timer_t& timer, uint32_t address, uint8_t data);
 uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address);
+
+// Update all timers and trigger interrupts
+void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles);
 
 void TIMER_NotifyRomsetChange(mcu_timer_t& timer);
