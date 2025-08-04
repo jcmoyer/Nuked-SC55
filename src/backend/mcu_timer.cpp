@@ -103,6 +103,30 @@ void TIMER_Init(mcu_timer_t& timer, mcu_t& mcu)
     timer.mcu = &mcu;
 }
 
+void TIMER_Reset(mcu_timer_t& timer)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        timer.frt[i] = {
+            .tcr       = 0,
+            .tcsr      = 0,
+            .frc       = 0,
+            .ocra      = 0xffff,
+            .ocrb      = 0xffff,
+            .icr       = 0,
+            .status_rd = 0,
+        };
+    }
+    timer.tmr = {
+        .tcr       = 0,
+        .tcsr      = TMR_TCSR_BIT4,
+        .tcora     = 0xff,
+        .tcorb     = 0xff,
+        .tcnt      = 0,
+        .status_rd = 0,
+    };
+}
+
 void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
 {
     uint32_t t = (address >> 4) - 1;

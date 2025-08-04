@@ -358,10 +358,65 @@ uint8_t MCU_DeviceRead(mcu_t& mcu, uint32_t address)
 
 void MCU_DeviceReset(mcu_t& mcu)
 {
-    // mcu.dev_register[0x00] = 0x03;
-    // mcu.dev_register[0x7c] = 0x87;
+    mcu.dev_register[DEV_P1DDR] = 0x03;
+    mcu.dev_register[DEV_P1DR]  = 0;
+    mcu.dev_register[DEV_P1CR]  = 0x87;
+
+    mcu.dev_register[DEV_P2DDR] = 0xE0;
+    mcu.dev_register[DEV_P2DR]  = 0xE0;
+
+    mcu.dev_register[DEV_P3DDR] = 0;
+    mcu.dev_register[DEV_P3DR]  = 0;
+
+    mcu.dev_register[DEV_P4DDR] = 0;
+    mcu.dev_register[DEV_P4DR]  = 0;
+
+    mcu.dev_register[DEV_P5DDR] = 0;
+    mcu.dev_register[DEV_P5DR]  = 0;
+
+    mcu.dev_register[DEV_P6DDR] = 0xF0;
+    mcu.dev_register[DEV_P6DR]  = 0xF0;
+
+    mcu.dev_register[DEV_P7DDR] = 0;
+    mcu.dev_register[DEV_P7DR]  = 0;
+
+    mcu.dev_register[DEV_P8DR] = 0;
+
+    mcu.dev_register[DEV_P9DDR] = 0;
+    mcu.dev_register[DEV_P9DR]  = 0;
+
+    // dev_register bypassed for timers
+    TIMER_Reset(*mcu.timer);
+
+    mcu.dev_register[DEV_RDR] = 0;
+    mcu.dev_register[DEV_TDR] = 0xFF;
+    mcu.dev_register[DEV_SMR] = 0x04;
+    mcu.dev_register[DEV_SCR] = 0x0C;
+    mcu.dev_register[DEV_SSR] = 0x87;
+    mcu.dev_register[DEV_BRR] = 0xFF;
+
+    mcu.dev_register[DEV_ADDRAH] = 0;
+    mcu.dev_register[DEV_ADDRAL] = 0;
+    mcu.dev_register[DEV_ADDRBH] = 0;
+    mcu.dev_register[DEV_ADDRBL] = 0;
+    mcu.dev_register[DEV_ADDRCH] = 0;
+    mcu.dev_register[DEV_ADDRCL] = 0;
+    mcu.dev_register[DEV_ADDRDH] = 0;
+    mcu.dev_register[DEV_ADDRDL] = 0;
+    mcu.dev_register[DEV_ADCSR]  = 0;
+
+    mcu.dev_register[DEV_IPRA] = 0;
+    mcu.dev_register[DEV_IPRB] = 0;
+    mcu.dev_register[DEV_IPRC] = 0;
+    mcu.dev_register[DEV_IPRD] = 0;
+    mcu.dev_register[DEV_DTEA] = 0;
+    mcu.dev_register[DEV_DTEB] = 0;
+    mcu.dev_register[DEV_DTEC] = 0;
+    mcu.dev_register[DEV_DTED] = 0;
+
+    mcu.dev_register[DEV_WCR] = 0xF3;
+
     mcu.dev_register[DEV_RAME] = 0x80;
-    mcu.dev_register[DEV_SSR] = 0x80;
 }
 
 void MCU_UpdateAnalog(mcu_t& mcu, uint64_t cycles)

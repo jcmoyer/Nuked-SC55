@@ -77,6 +77,7 @@ struct mcu_timer_t
 };
 
 void TIMER_Init(mcu_timer_t& timer, mcu_t& mcu);
+void TIMER_Reset(mcu_timer_t& timer);
 
 // Read/write 16-bit FRTs
 void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data);
