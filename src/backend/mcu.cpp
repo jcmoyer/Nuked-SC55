@@ -190,7 +190,7 @@ void MCU_DeviceWrite(mcu_t& mcu, uint32_t address, uint8_t data)
         break;
     case DEV_P9DDR:
         break;
-    case DEV_RAME: // RAME
+    case DEV_RAMCR:
         break;
     case DEV_P1CR: // P1CR
         break;
@@ -416,7 +416,7 @@ void MCU_DeviceReset(mcu_t& mcu)
 
     mcu.dev_register[DEV_WCR] = 0xF3;
 
-    mcu.dev_register[DEV_RAME] = 0x80;
+    mcu.dev_register[DEV_RAMCR] = 0x80;
 }
 
 void MCU_UpdateAnalog(mcu_t& mcu, uint64_t cycles)
@@ -483,7 +483,7 @@ uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
                     ret = MCU_DeviceRead(mcu, address & 0x7f);
                 }
                 else if (address >= 0xfb80u && address < 0xff80u
-                    && (mcu.dev_register[DEV_RAME] & 0x80) != 0)
+                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
                     ret = mcu.ram[(address - 0xfb80) & 0x3ff];
                 else if (address >= 0x8000u && address < 0xe000u)
                 {
@@ -515,7 +515,7 @@ uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
                     ret = MCU_DeviceRead(mcu, address & 0x7f);
                 }
                 else if (address >= 0xfb80 && address < 0xff80
-                    && (mcu.dev_register[DEV_RAME] & 0x80) != 0)
+                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
                 {
                     ret = mcu.ram[(address - 0xfb80) & 0x3ff];
                 }
@@ -702,7 +702,7 @@ void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
                     MCU_DeviceWrite(mcu, address & 0x7f, value);
                 }
                 else if (address >= 0xfb80 && address < 0xff80
-                    && (mcu.dev_register[DEV_RAME] & 0x80) != 0)
+                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
                 {
                     mcu.ram[(address - 0xfb80) & 0x3ff] = value;
                 }
@@ -726,7 +726,7 @@ void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
                     MCU_DeviceWrite(mcu, address & 0x7f, value);
                 }
                 else if (address >= 0xfb80 && address < 0xff80
-                    && (mcu.dev_register[DEV_RAME] & 0x80) != 0)
+                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
                 {
                     mcu.ram[(address - 0xfb80) & 0x3ff] = value;
                 }

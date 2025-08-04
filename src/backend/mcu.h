@@ -125,7 +125,7 @@ enum {
     DEV_DTEC = 0x76,
     DEV_DTED = 0x77,
     DEV_WCR = 0x78,
-    DEV_RAME = 0x79, // TODO: this should be RAMCR; RAME is bit 7
+    DEV_RAMCR = 0x79,
     DEV_P1CR = 0x7c,
     DEV_P9DDR = 0x7e,
     DEV_P9DR = 0x7f,
