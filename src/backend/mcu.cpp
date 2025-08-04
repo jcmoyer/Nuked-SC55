@@ -351,14 +351,6 @@ uint8_t MCU_DeviceRead(mcu_t& mcu, uint32_t address)
     case DEV_IPRD:
     case DEV_DTEC:
     case DEV_DTED:
-    case DEV_FRT2_TCSR:
-    case DEV_FRT1_TCSR:
-    case DEV_FRT1_TCR:
-    case DEV_FRT1_FRCH:
-    case DEV_FRT1_FRCL:
-    case DEV_FRT3_TCSR:
-    case DEV_FRT3_OCRAH:
-    case DEV_FRT3_OCRAL:
         return mcu.dev_register[address];
     }
     return mcu.dev_register[address];
