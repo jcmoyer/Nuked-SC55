@@ -264,6 +264,7 @@ uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address)
     return 0xff;
 }
 
+
 inline void TIMER_ClockFrt(mcu_timer_t& timer, int frt_id)
 {
     frt_t& frt = timer.frt[frt_id];
@@ -273,23 +274,22 @@ inline void TIMER_ClockFrt(mcu_timer_t& timer, int frt_id)
         return;
     }
 
-    uint32_t   value  = frt.frc;
-    const bool matcha = value == frt.ocra;
-    const bool matchb = value == frt.ocrb;
+    const bool matcha = frt.frc == frt.ocra;
+    const bool matchb = frt.frc == frt.ocrb;
     if ((frt.tcsr & FRT_TCSR_CCLRA) && matcha) // CCLRA
     {
-        value = 0;
+        frt.frc = 0;
     }
     else
     {
-        ++value;
+        ++frt.frc;
+        if (frt.frc == 0)
+        {
+            frt.tcsr |= FRT_TCSR_OVF;
+        }
     }
-    const bool of = (value >> 16) & 1;
-    frt.frc       = (uint16_t)value;
 
     // flags
-    if (of)
-        frt.tcsr |= FRT_TCSR_OVF;
     if (matcha)
         frt.tcsr |= FRT_TCSR_OCFA;
     if (matchb)
@@ -312,27 +312,26 @@ inline void TIMER_ClockTmr(mcu_timer_t& timer)
         return;
     }
 
-    uint32_t   value  = tmr.tcnt;
-    const bool matcha = value == tmr.tcora;
-    const bool matchb = value == tmr.tcorb;
+    const bool matcha = tmr.tcnt == tmr.tcora;
+    const bool matchb = tmr.tcnt == tmr.tcorb;
     if ((tmr.tcr & (TMR_TCR_CCLR0 | TMR_TCR_CCLR1)) == TMR_TCR_CCLR0 && matcha)
     {
-        value = 0;
+        tmr.tcnt = 0;
     }
     else if ((tmr.tcr & (TMR_TCR_CCLR0 | TMR_TCR_CCLR1)) == TMR_TCR_CCLR1 && matchb)
     {
-        value = 0;
+        tmr.tcnt = 0;
     }
     else
     {
-        ++value;
+        ++tmr.tcnt;
+        if (tmr.tcnt == 0)
+        {
+            tmr.tcsr |= TMR_TCSR_OVF;
+        }
     }
-    const bool of = (value >> 8) & 1;
-    tmr.tcnt      = (uint8_t)value;
 
     // flags
-    if (of)
-        tmr.tcsr |= TMR_TCSR_OVF;
     if (matcha)
         tmr.tcsr |= TMR_TCSR_CMFA;
     if (matchb)
