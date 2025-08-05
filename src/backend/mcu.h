@@ -34,6 +34,7 @@
 #pragma once
 
 #include "audio.h"
+#include "bounded_ordered_bitset.h"
 #include "mcu_interrupt.h"
 #include "rom.h"
 #include <atomic>
@@ -232,8 +233,8 @@ struct mcu_t {
     uint8_t sleep = 0;
     uint8_t ex_ignore = 0;
     MCU_Exception_Source exception_pending{};
-    bool interrupt_pending[INTERRUPT_SOURCE_MAX]{};
-    uint8_t trapa_pending[16]{};
+    BoundedOrderedBitSet<INTERRUPT_SOURCE_MAX, MCU_Interrupt_Source> interrupt_pending;
+    BoundedOrderedBitSet<16> trapa_pending;
     uint64_t cycles = 0;
 
     uint8_t rom1[ROM1_SIZE]{};
