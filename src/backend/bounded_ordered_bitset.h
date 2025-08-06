@@ -2,6 +2,7 @@
 
 #include <bit>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 
 // Implements an ordered set of integers backed by a single word. This is
