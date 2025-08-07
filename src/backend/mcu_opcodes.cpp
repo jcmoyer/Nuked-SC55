@@ -572,7 +572,7 @@ void MCU_Operand_General(mcu_t& mcu, uint8_t operand)
     uint8_t siz = OPERAND_BYTE;
     uint16_t data = 0;
     uint32_t addr = 0;
-    uint32_t addrpage = 0;
+    uint8_t addrpage = 0;
     uint16_t ea = 0;
     uint8_t ep = 0;
     uint8_t opcode;
@@ -663,13 +663,13 @@ void MCU_Operand_General(mcu_t& mcu, uint8_t operand)
             }
         }
 
-        ep = MCU_GetPageForRegister(mcu, reg) & 0xff;
+        ep = MCU_GetPageForRegister(mcu, reg);
     }
     else if (type == GENERAL_ABSOLUTE)
     {
         ea = (uint16_t)addr;
 
-        ep = addrpage & 0xff;
+        ep = addrpage;
     }
 
     opcode = MCU_ReadCodeAdvance(mcu);

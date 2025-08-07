@@ -341,7 +341,7 @@ inline uint32_t MCU_GetVectorAddress(mcu_t& mcu, uint32_t vector)
     return MCU_Read32(mcu, vector * 4);
 }
 
-inline uint32_t MCU_GetPageForRegister(mcu_t& mcu, uint32_t reg)
+inline uint8_t MCU_GetPageForRegister(mcu_t& mcu, uint8_t reg)
 {
     if (reg >= 6)
         return mcu.tp;
