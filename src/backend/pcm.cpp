@@ -335,7 +335,7 @@ inline void calc_tv(pcm_t& pcm, int e, int adjust, uint16_t *levelcur, int activ
     const bool w3 = pcm.nfs &&
         ((speed & 0x80) == 0 || ((speed & 0x40) == 0 && (!w2 || (speed & 0x20) == 0)));
 
-    int type = w2 | (w3 << 3);
+    int type = (int)w2 | ((int)w3 << 3);
     if (speed & 0x20)
         type |= 2;
     if ((speed & 0x80) == 0 || (speed & 0x40) == 0)
@@ -439,7 +439,7 @@ inline void calc_tv(pcm_t& pcm, int e, int adjust, uint16_t *levelcur, int activ
     else
     {
         int shift = (speed >> 4) & 14;
-        shift |= w2;
+        shift |= (int)w2;
         shift = (10 - shift) & 15;
 
         int sum1 = target << 11; // 5
