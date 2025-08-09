@@ -167,21 +167,23 @@ static void MCU_Interrupt_GetVL(const mcu_t& mcu, uint32_t source, int32_t& vect
 
 void MCU_Interrupt_Handle(mcu_t& mcu)
 {
-    // if (mcu.cycles % 2000 == 0 && mcu.sleep)
-    // {
-    //     MCU_Interrupt_StartVector(VECTOR_INTERNAL_INTERRUPT_94);
-    //     return;
-    // }
-    // if (mcu.cycles % 2000 == 1000 && mcu.sleep)
-    // {
-    //     MCU_Interrupt_StartVector(VECTOR_INTERNAL_INTERRUPT_A4);
-    //     return;
-    // }
-    // if (mcu.cycles % 2000 == 1500 && mcu.sleep)
-    // {
-    //     MCU_Interrupt_StartVector(VECTOR_INTERNAL_INTERRUPT_B4);
-    //     return;
-    // }
+#if 0
+    if (mcu.cycles % 2000 == 0 && mcu.sleep)
+    {
+        MCU_Interrupt_StartVector(VECTOR_INTERNAL_INTERRUPT_94);
+        return;
+    }
+    if (mcu.cycles % 2000 == 1000 && mcu.sleep)
+    {
+        MCU_Interrupt_StartVector(VECTOR_INTERNAL_INTERRUPT_A4);
+        return;
+    }
+    if (mcu.cycles % 2000 == 1500 && mcu.sleep)
+    {
+        MCU_Interrupt_StartVector(VECTOR_INTERNAL_INTERRUPT_B4);
+        return;
+    }
+#endif
     for (auto i : mcu.trapa_pending)
     {
         mcu.trapa_pending.Exclude(i);
