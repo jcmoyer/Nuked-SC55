@@ -49,9 +49,7 @@ static MIDIHDR midi_buffer;
 
 static uint8_t midi_in_buffer[1024];
 
-static FE_Application* midi_frontend = nullptr;
-
-void FE_RouteMIDI(FE_Application& fe, std::span<const uint8_t> bytes);
+static MIDI_Output* midi_output = nullptr;
 
 void CALLBACK MIDI_Callback(
     HMIDIIN   hMidiIn,
@@ -85,7 +83,7 @@ void CALLBACK MIDI_Callback(
                             (uint8_t)((dwParam1 >> 8) & 0xff),
                             (uint8_t)((dwParam1 >> 16) & 0xff),
                         };
-                        FE_RouteMIDI(*midi_frontend, buf);
+                        midi_output->Write(buf);
                     }
                     break;
                 case 0xc0:
@@ -95,7 +93,7 @@ void CALLBACK MIDI_Callback(
                             (uint8_t)b1,
                             (uint8_t)((dwParam1 >> 8) & 0xff),
                         };
-                        FE_RouteMIDI(*midi_frontend, buf);
+                        midi_output->Write(buf);
                     }
                     break;
             }
@@ -116,7 +114,7 @@ void CALLBACK MIDI_Callback(
 
             if (wMsg == MIM_LONGDATA)
             {
-                FE_RouteMIDI(*midi_frontend, std::span(midi_in_buffer, midi_buffer.dwBytesRecorded));
+                midi_output->Write(std::span(midi_in_buffer, midi_buffer.dwBytesRecorded));
             }
 
             midiInPrepareHeader(midi_handle, &midi_buffer, sizeof(MIDIHDR));
@@ -220,9 +218,9 @@ bool MIDI_PickInputDevice(std::string_view preferred_name, MIDI_PickedDevice& ou
     return false;
 }
 
-bool MIDI_Init(FE_Application& fe, std::string_view port_name_or_id)
+bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id)
 {
-    midi_frontend = &fe;
+    midi_output = &output;
 
     MIDI_PickedDevice picked_device;
     if (!MIDI_PickInputDevice(port_name_or_id, picked_device))
@@ -274,5 +272,5 @@ void MIDI_Quit()
         midiInClose(midi_handle);
         midi_handle = 0;
     }
-    midi_frontend = nullptr;
+    midi_output = nullptr;
 }

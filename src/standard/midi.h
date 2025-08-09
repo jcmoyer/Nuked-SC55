@@ -33,11 +33,19 @@
  */
 #pragma once
 
+#include <cstdint>
+#include <span>
 #include <string_view>
 
-struct FE_Application;
+// Abstractly represents something that can accept MIDI data and do something
+// with it. MIDI backends like win32 or rtmidi should forward MIDI data to the
+// output they receive at initialization.
+struct MIDI_Output
+{
+    virtual void Write(std::span<const uint8_t> bytes) = 0;
+};
 
-bool MIDI_Init(FE_Application& fe, std::string_view port_name_or_id);
+bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id);
 void MIDI_Quit(void);
 void MIDI_PrintDevices();
 

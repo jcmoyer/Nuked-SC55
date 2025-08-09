@@ -10,13 +10,11 @@
 
 static RtMidiIn *s_midi_in = nullptr;
 
-static FE_Application* midi_frontend = nullptr;
-
-void FE_RouteMIDI(FE_Application& fe, std::span<const uint8_t> bytes);
+static MIDI_Output* midi_output = nullptr;
 
 static void MidiOnReceive(double, std::vector<uint8_t> *message, void *)
 {
-    FE_RouteMIDI(*midi_frontend, *message);
+    midi_output->Write(*message);
 }
 
 static void MidiOnError(RtMidiError::Type, const std::string &errorText, void *)
@@ -134,7 +132,7 @@ bool MIDI_PickInputDevice(RtMidiIn& midi, std::string_view preferred_name, MIDI_
     return false;
 }
 
-bool MIDI_Init(FE_Application& fe, std::string_view port_name_or_id)
+bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id)
 {
     if (s_midi_in)
     {
@@ -142,7 +140,7 @@ bool MIDI_Init(FE_Application& fe, std::string_view port_name_or_id)
         return false; // Already running
     }
 
-    midi_frontend = &fe;
+    midi_output = &output;
 
     s_midi_in = new RtMidiIn(RtMidi::UNSPECIFIED, "Nuked SC55", 1024);
     s_midi_in->ignoreTypes(false, false, false); // SysEx disabled by default
@@ -177,6 +175,6 @@ void MIDI_Quit()
         s_midi_in->closePort();
         delete s_midi_in;
         s_midi_in = nullptr;
-        midi_frontend = nullptr;
+        midi_output = nullptr;
     }
 }

@@ -118,16 +118,57 @@ struct FE_Instance
 
 const size_t FE_MAX_INSTANCES = 16;
 
-struct FE_Application {
-    FE_Instance instances[FE_MAX_INSTANCES];
-    size_t instances_in_use = 0;
+struct FE_Parameters;
 
-    AllRomsetInfo romset_info;
-    Romset            romset;
+class FE_Application : private MIDI_Output
+{
+public:
+    FE_Application() = default;
+    ~FE_Application();
 
-    AudioOutput audio_output{};
+    FE_Application(const FE_Application&)            = delete;
+    FE_Application& operator=(const FE_Application&) = delete;
 
-    bool running = false;
+    FE_Application(FE_Application&&)            = delete;
+    FE_Application& operator=(FE_Application&&) = delete;
+
+    bool Initialize(const FE_Parameters& params);
+
+    void Run();
+    bool CreateInstance(const std::filesystem::path& base_path, const FE_Parameters& params);
+
+    void SendMIDI(size_t n, std::span<const uint8_t> bytes);
+    void BroadcastMIDI(std::span<const uint8_t> bytes);
+    void RouteMIDI(std::span<const uint8_t> bytes);
+
+private:
+    void RunEventLoop();
+    bool HandleGlobalEvent(const SDL_Event& ev);
+    bool AllocateInstance(FE_Instance** result);
+    bool OpenSDLAudio(const AudioOutputParameters& params, const char* device_name);
+#if NUKED_ENABLE_ASIO
+    bool OpenASIOAudio(const ASIO_OutputParameters& params, const char* name);
+#endif
+    bool OpenAudio(const FE_Parameters& params);
+
+    constexpr mcu_sample_callback PickCallback(const FE_Instance& inst);
+
+    // MIDI_Output interface
+    void Write(std::span<const uint8_t> bytes) override
+    {
+        RouteMIDI(bytes);
+    }
+
+private:
+    FE_Instance m_instances[FE_MAX_INSTANCES];
+    size_t      m_instances_in_use = 0;
+
+    AllRomsetInfo m_romset_info;
+    Romset        m_romset;
+
+    AudioOutput m_audio_output{};
+
+    bool m_running = false;
 };
 
 struct FE_AdvancedParameters
@@ -159,15 +200,15 @@ struct FE_Parameters
     float gain = 1.0f;
 };
 
-bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
+bool FE_Application::AllocateInstance(FE_Instance** result)
 {
-    if (container.instances_in_use == FE_MAX_INSTANCES)
+    if (m_instances_in_use == FE_MAX_INSTANCES)
     {
         return false;
     }
 
-    FE_Instance& fe = container.instances[container.instances_in_use];
-    ++container.instances_in_use;
+    FE_Instance& fe = m_instances[m_instances_in_use];
+    ++m_instances_in_use;
 
     if (result)
     {
@@ -177,20 +218,20 @@ bool FE_AllocateInstance(FE_Application& container, FE_Instance** result)
     return true;
 }
 
-void FE_SendMIDI(FE_Application& fe, size_t n, std::span<const uint8_t> bytes)
+void FE_Application::SendMIDI(size_t n, std::span<const uint8_t> bytes)
 {
-    fe.instances[n].emu.PostMIDI(bytes);
+    m_instances[n].emu.PostMIDI(bytes);
 }
 
-void FE_BroadcastMIDI(FE_Application& fe, std::span<const uint8_t> bytes)
+void FE_Application::BroadcastMIDI(std::span<const uint8_t> bytes)
 {
-    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances_in_use; ++i)
     {
-        FE_SendMIDI(fe, i, bytes);
+        SendMIDI(i, bytes);
     }
 }
 
-void FE_RouteMIDI(FE_Application& fe, std::span<const uint8_t> bytes)
+void FE_Application::RouteMIDI(std::span<const uint8_t> bytes)
 {
     if (bytes.size() == 0)
     {
@@ -210,11 +251,11 @@ void FE_RouteMIDI(FE_Application& fe, std::span<const uint8_t> bytes)
 
     if (is_sysex)
     {
-        FE_BroadcastMIDI(fe, bytes);
+        BroadcastMIDI(bytes);
     }
     else
     {
-        FE_SendMIDI(fe, channel % fe.instances_in_use, bytes);
+        SendMIDI(channel % m_instances_in_use, bytes);
     }
 }
 
@@ -268,9 +309,9 @@ void FE_ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
 }
 #endif
 
-constexpr mcu_sample_callback FE_PickCallback(const FE_Application& app, const FE_Instance& inst)
+constexpr mcu_sample_callback FE_Application::PickCallback(const FE_Instance& inst)
 {
-    if (app.audio_output.kind == AudioOutputKind::SDL)
+    if (m_audio_output.kind == AudioOutputKind::SDL)
     {
         if (inst.gain != 1.f)
         {
@@ -330,7 +371,7 @@ constexpr mcu_sample_callback FE_PickCallback(const FE_Application& app, const F
 #endif
     }
 
-    fprintf(stderr, "output kind = %d\n", (int)app.audio_output.kind);
+    fprintf(stderr, "output kind = %d\n", (int)m_audio_output.kind);
     fprintf(stderr, "gain = %f\n", inst.gain);
     fprintf(stderr, "format = %d\n", (int)inst.format);
     return nullptr;
@@ -492,7 +533,7 @@ void FE_PrintAudioDevices()
     }
 }
 
-bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, const char* device_name)
+bool FE_Application::OpenSDLAudio(const AudioOutputParameters& params, const char* device_name)
 {
     if (!Out_SDL_Create(device_name, params))
     {
@@ -500,10 +541,10 @@ bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, co
         return false;
     }
 
-    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances_in_use; ++i)
     {
-        FE_Instance& inst = fe.instances[i];
-        inst.emu.SetSampleCallback(FE_PickCallback(fe, inst), &inst);
+        FE_Instance& inst = m_instances[i];
+        inst.emu.SetSampleCallback(PickCallback(inst), &inst);
         switch (inst.format)
         {
         case AudioFormat::S16:
@@ -516,7 +557,7 @@ bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, co
             inst.CreateAndPrepareBuffer<float>();
             break;
         }
-        Out_SDL_AddSource(fe.instances[i].view);
+        Out_SDL_AddSource(m_instances[i].view);
         fprintf(stderr, "#%02zu: allocated %zu bytes for audio\n", i, inst.sample_buffer.GetByteLength());
     }
 
@@ -530,7 +571,7 @@ bool FE_OpenSDLAudio(FE_Application& fe, const AudioOutputParameters& params, co
 }
 
 #if NUKED_ENABLE_ASIO
-bool FE_OpenASIOAudio(FE_Application& fe, const ASIO_OutputParameters& params, const char* name)
+bool FE_Application::OpenASIOAudio(const ASIO_OutputParameters& params, const char* name)
 {
     if (!Out_ASIO_Create(name, params))
     {
@@ -538,9 +579,9 @@ bool FE_OpenASIOAudio(FE_Application& fe, const ASIO_OutputParameters& params, c
         return false;
     }
 
-    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances_in_use; ++i)
     {
-        FE_Instance& inst = fe.instances[i];
+        FE_Instance& inst = m_instances[i];
 
         inst.stream = SDL_NewAudioStream(AudioFormatToSDLAudioFormat(inst.format),
                                          2,
@@ -550,7 +591,7 @@ bool FE_OpenASIOAudio(FE_Application& fe, const ASIO_OutputParameters& params, c
                                          Out_ASIO_GetFrequency());
         Out_ASIO_AddSource(inst.stream);
 
-        inst.emu.SetSampleCallback(FE_PickCallback(fe, inst), &inst);
+        inst.emu.SetSampleCallback(PickCallback(inst), &inst);
 
         switch (inst.format)
         {
@@ -593,15 +634,15 @@ void FE_FixupParameters(FE_Parameters& params)
     }
 }
 
-bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
+bool FE_Application::OpenAudio(const FE_Parameters& params)
 {
     AudioOutput         output;
     FE_PickOutputResult output_result = FE_PickOutputDevice(params.audio_device, output);
 
-    fe.audio_output = output;
+    m_audio_output = output;
 
     AudioOutputParameters out_params;
-    out_params.frequency = PCM_GetOutputFrequency(fe.instances[0].emu.GetPCM());
+    out_params.frequency = PCM_GetOutputFrequency(m_instances[0].emu.GetPCM());
     switch (output.kind)
     {
     case AudioOutputKind::SDL:
@@ -622,7 +663,7 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
     case FE_PickOutputResult::WantMatchedName:
         if (output.kind == AudioOutputKind::SDL)
         {
-            return FE_OpenSDLAudio(fe, out_params, output.name.c_str());
+            return OpenSDLAudio(out_params, output.name.c_str());
         }
         else if (output.kind == AudioOutputKind::ASIO)
         {
@@ -631,22 +672,22 @@ bool FE_OpenAudio(FE_Application& fe, const FE_Parameters& params)
             asio_params.common = out_params;
             asio_params.left_channel  = params.asio_left_channel;
             asio_params.right_channel = params.asio_right_channel;
-            return FE_OpenASIOAudio(fe, asio_params, output.name.c_str());
+            return OpenASIOAudio(asio_params, output.name.c_str());
 #else
             fprintf(stderr, "Attempted to open ASIO output without ASIO support\n");
 #endif
         }
         return false;
     case FE_PickOutputResult::WantDefaultDevice:
-        return FE_OpenSDLAudio(fe, out_params, nullptr);
+        return OpenSDLAudio(out_params, nullptr);
     case FE_PickOutputResult::NoOutputDevices:
         // in some cases this may still work
         fprintf(stderr, "No output devices found; attempting to open default device\n");
-        return FE_OpenSDLAudio(fe, out_params, nullptr);
+        return OpenSDLAudio(out_params, nullptr);
     case FE_PickOutputResult::NoMatchingName:
         // in some cases SDL cannot list all audio devices so we should still try
         fprintf(stderr, "No output device named '%s'; attempting to open it anyways...\n", params.audio_device.c_str());
-        return FE_OpenSDLAudio(fe, out_params, output.name.c_str());
+        return OpenSDLAudio(out_params, output.name.c_str());
     }
 
     return false;
@@ -690,21 +731,21 @@ void FE_RunInstanceASIO(FE_Instance& instance)
 }
 #endif
 
-bool FE_HandleGlobalEvent(FE_Application& fe, const SDL_Event& ev)
+bool FE_Application::HandleGlobalEvent(const SDL_Event& ev)
 {
     switch (ev.type)
     {
         case SDL_QUIT:
-            fe.running = false;
+            m_running = false;
             return true;
         default:
             return false;
     }
 }
 
-void FE_EventLoop(FE_Application& fe)
+void FE_Application::RunEventLoop()
 {
-    while (fe.running)
+    while (m_running)
     {
 #if NUKED_ENABLE_ASIO
         if (Out_ASIO_IsResetRequested())
@@ -713,33 +754,33 @@ void FE_EventLoop(FE_Application& fe)
         }
 #endif
 
-        for (size_t i = 0; i < fe.instances_in_use; ++i)
+        for (size_t i = 0; i < m_instances_in_use; ++i)
         {
-            if (fe.instances[i].sdl_lcd)
+            if (m_instances[i].sdl_lcd)
             {
-                if (fe.instances[i].sdl_lcd->IsQuitRequested())
+                if (m_instances[i].sdl_lcd->IsQuitRequested())
                 {
-                    fe.running = false;
+                    m_running = false;
                 }
             }
-            LCD_Render(fe.instances[i].emu.GetLCD());
+            LCD_Render(m_instances[i].emu.GetLCD());
         }
 
         SDL_Event ev;
         while (SDL_PollEvent(&ev))
         {
-            if (FE_HandleGlobalEvent(fe, ev))
+            if (HandleGlobalEvent(ev))
             {
                 // not directed at any particular window; don't let LCDs
                 // handle this one
                 continue;
             }
 
-            for (size_t i = 0; i < fe.instances_in_use; ++i)
+            for (size_t i = 0; i < m_instances_in_use; ++i)
             {
-                if (fe.instances[i].sdl_lcd)
+                if (m_instances[i].sdl_lcd)
                 {
-                    fe.instances[i].sdl_lcd->HandleEvent(ev);
+                    m_instances[i].sdl_lcd->HandleEvent(ev);
                 }
             }
         }
@@ -748,44 +789,44 @@ void FE_EventLoop(FE_Application& fe)
     }
 }
 
-void FE_Run(FE_Application& fe)
+void FE_Application::Run()
 {
-    fe.running = true;
+    m_running = true;
 
-    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances_in_use; ++i)
     {
-        fe.instances[i].running = true;
-        if (fe.audio_output.kind == AudioOutputKind::SDL)
+        m_instances[i].running = true;
+        if (m_audio_output.kind == AudioOutputKind::SDL)
         {
-            switch (fe.instances[i].format)
+            switch (m_instances[i].format)
             {
             case AudioFormat::S16:
-                fe.instances[i].thread = std::thread(FE_RunInstanceSDL<int16_t>, std::ref(fe.instances[i]));
+                m_instances[i].thread = std::thread(FE_RunInstanceSDL<int16_t>, std::ref(m_instances[i]));
                 break;
             case AudioFormat::S32:
-                fe.instances[i].thread = std::thread(FE_RunInstanceSDL<int32_t>, std::ref(fe.instances[i]));
+                m_instances[i].thread = std::thread(FE_RunInstanceSDL<int32_t>, std::ref(m_instances[i]));
                 break;
             case AudioFormat::F32:
-                fe.instances[i].thread = std::thread(FE_RunInstanceSDL<float>, std::ref(fe.instances[i]));
+                m_instances[i].thread = std::thread(FE_RunInstanceSDL<float>, std::ref(m_instances[i]));
                 break;
             }
         }
-        else if (fe.audio_output.kind == AudioOutputKind::ASIO)
+        else if (m_audio_output.kind == AudioOutputKind::ASIO)
         {
 #if NUKED_ENABLE_ASIO
-            fe.instances[i].thread = std::thread(FE_RunInstanceASIO, std::ref(fe.instances[i]));
+            m_instances[i].thread = std::thread(FE_RunInstanceASIO, std::ref(m_instances[i]));
 #else
             fprintf(stderr, "Attempted to start ASIO instance without ASIO support\n");
 #endif
         }
     }
 
-    FE_EventLoop(fe);
+    RunEventLoop();
 
-    for (size_t i = 0; i < fe.instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances_in_use; ++i)
     {
-        fe.instances[i].running = false;
-        fe.instances[i].thread.join();
+        m_instances[i].running = false;
+        m_instances[i].thread.join();
     }
 }
 
@@ -803,11 +844,11 @@ BOOL WINAPI FE_CtrlCHandler(DWORD dwCtrlType)
 }
 #endif
 
-bool FE_Init()
+bool FE_GlobalInit()
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
-        fprintf(stderr, "FATAL ERROR: Failed to initialize the SDL2: %s.\n", SDL_GetError());
+        fprintf(stderr, "FATAL ERROR: Failed to initialize SDL: %s.\n", SDL_GetError());
         fflush(stderr);
         return false;
     }
@@ -819,15 +860,20 @@ bool FE_Init()
     return true;
 }
 
-bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& base_path, const FE_Parameters& params)
+void FE_GlobalQuit()
+{
+    SDL_Quit();
+}
+
+bool FE_Application::CreateInstance(const std::filesystem::path& base_path, const FE_Parameters& params)
 {
     (void)base_path;
 
     FE_Instance* fe = nullptr;
 
-    const size_t instance_id = container.instances_in_use;
+    const size_t instance_id = m_instances_in_use;
 
-    if (!FE_AllocateInstance(container, &fe))
+    if (!AllocateInstance(&fe))
     {
         fprintf(stderr, "ERROR: Failed to allocate instance.\n");
         return false;
@@ -847,7 +893,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
     if (!this_nvram.empty())
     {
         // append instance number so that multiple instances don't clobber each other's nvram
-        this_nvram += std::to_string(container.instances_in_use - 1);
+        this_nvram += std::to_string(m_instances_in_use - 1);
     }
 
     if (!fe->emu.Init({.lcd_backend = fe->sdl_lcd.get(), .nvram_filename = this_nvram}))
@@ -856,7 +902,7 @@ bool FE_CreateInstance(FE_Application& container, const std::filesystem::path& b
         return false;
     }
 
-    if (!fe->emu.LoadRoms(container.romset, container.romset_info))
+    if (!fe->emu.LoadRoms(m_romset, m_romset_info))
     {
         fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", instance_id);
         return false;
@@ -887,9 +933,9 @@ void FE_DestroyInstance(FE_Instance& instance)
 #endif
 }
 
-void FE_Quit(FE_Application& container)
+FE_Application::~FE_Application()
 {
-    switch (container.audio_output.kind)
+    switch (m_audio_output.kind)
     {
     case AudioOutputKind::ASIO:
 #if NUKED_ENABLE_ASIO
@@ -905,13 +951,98 @@ void FE_Quit(FE_Application& container)
         break;
     }
 
-    for (size_t i = 0; i < container.instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances_in_use; ++i)
     {
-        FE_DestroyInstance(container.instances[i]);
+        FE_DestroyInstance(m_instances[i]);
     }
 
     MIDI_Quit();
-    SDL_Quit();
+}
+
+bool FE_Application::Initialize(const FE_Parameters& params)
+{
+    std::filesystem::path base_path = common::GetProcessPath().parent_path();
+
+    if (std::filesystem::exists(base_path / "../share/nuked-sc55"))
+        base_path = base_path / "../share/nuked-sc55";
+
+    fprintf(stderr, "Base path is: %s\n", base_path.generic_string().c_str());
+
+    std::filesystem::path rom_directory;
+
+    if (params.rom_directory)
+    {
+        rom_directory = *params.rom_directory;
+    }
+    else
+    {
+        rom_directory = base_path;
+    }
+
+    fprintf(stderr, "ROM directory is: %s\n", rom_directory.generic_string().c_str());
+
+    common::LoadRomsetResult load_result;
+
+    common::LoadRomsetError err = common::LoadRomset(m_romset_info,
+                                                     rom_directory,
+                                                     params.romset_name,
+                                                     params.legacy_romset_detection,
+                                                     params.adv.rom_overrides,
+                                                     load_result);
+
+    common::PrintLoadRomsetDiagnostics(stderr, err, load_result, m_romset_info);
+
+    if (err != common::LoadRomsetError{})
+    {
+        return false;
+    }
+
+    m_romset = load_result.romset;
+
+    EMU_SystemReset reset = EMU_SystemReset::NONE;
+    if (params.reset)
+    {
+        reset = *params.reset;
+    }
+    else if (!params.reset && m_romset == Romset::MK2)
+    {
+        // user didn't explicitly pass a reset and we're using a buggy romset
+        fprintf(stderr, "WARNING: No reset specified with mk2 romset; using gs\n");
+        reset = EMU_SystemReset::GS_RESET;
+    }
+
+    fprintf(stderr, "Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
+
+    for (size_t i = 0; i < params.instances; ++i)
+    {
+        if (!CreateInstance(base_path, params))
+        {
+            fprintf(stderr, "FATAL ERROR: Failed to create instance %zu\n", i);
+            return false;
+        }
+    }
+
+    m_romset_info.PurgeRomData();
+
+    if (!OpenAudio(params))
+    {
+        fprintf(stderr, "FATAL ERROR: Failed to open the audio stream.\n");
+        fflush(stderr);
+        return false;
+    }
+
+    if (!MIDI_Init(*this, params.midi_device))
+    {
+        fprintf(stderr, "ERROR: Failed to initialize the MIDI Input.\nWARNING: Continuing without MIDI Input...\n");
+        fflush(stderr);
+    }
+
+    for (size_t i = 0; i < m_instances_in_use; ++i)
+    {
+        m_instances[i].emu.PostSystemReset(reset);
+    }
+
+    return true;
 }
 
 enum class FE_ParseError
@@ -1317,7 +1448,7 @@ ROM management options:
     FE_PrintAudioDevices();
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     FE_Parameters params;
     FE_ParseError result = FE_ParseCommandLine(argc, argv, params);
@@ -1345,92 +1476,28 @@ int main(int argc, char *argv[])
 
     FE_FixupParameters(params);
 
-    FE_Application frontend;
-
-    std::filesystem::path base_path = common::GetProcessPath().parent_path();
-
-    if (std::filesystem::exists(base_path / "../share/nuked-sc55"))
-        base_path = base_path / "../share/nuked-sc55";
-
-    fprintf(stderr, "Base path is: %s\n", base_path.generic_string().c_str());
-
-    if (!params.rom_directory)
+    if (!FE_GlobalInit())
     {
-        params.rom_directory = base_path;
-    }
-
-    fprintf(stderr, "ROM directory is: %s\n", params.rom_directory->generic_string().c_str());
-
-    common::LoadRomsetResult load_result;
-
-    common::LoadRomsetError err = common::LoadRomset(frontend.romset_info,
-                                                     *params.rom_directory,
-                                                     params.romset_name,
-                                                     params.legacy_romset_detection,
-                                                     params.adv.rom_overrides,
-                                                     load_result);
-
-    common::PrintLoadRomsetDiagnostics(stderr, err, load_result, frontend.romset_info);
-
-    if (err != common::LoadRomsetError{})
-    {
+        fprintf(stderr, "FATAL ERROR: Failed to initialize global state\n");
         return 1;
     }
 
-    frontend.romset = load_result.romset;
-
-    EMU_SystemReset reset = EMU_SystemReset::NONE;
-    if (params.reset)
+    // It is important that the application gets its own scope so it can be
+    // destroyed before SDL is deinitialized. This is required for destructors
+    // to be able to clean up SDL objects safely.
     {
-        reset = *params.reset;
-    }
-    else if (!params.reset && frontend.romset == Romset::MK2)
-    {
-        // user didn't explicitly pass a reset and we're using a buggy romset
-        fprintf(stderr, "WARNING: No reset specified with mk2 romset; using gs\n");
-        reset = EMU_SystemReset::GS_RESET;
-    }
+        FE_Application frontend;
 
-    if (!FE_Init())
-    {
-        fprintf(stderr, "FATAL ERROR: Failed to initialize frontend\n");
-        return 1;
-    }
-
-    fprintf(stderr, "Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
-
-    for (size_t i = 0; i < params.instances; ++i)
-    {
-        if (!FE_CreateInstance(frontend, base_path, params))
+        if (!frontend.Initialize(params))
         {
-            fprintf(stderr, "FATAL ERROR: Failed to create instance %zu\n", i);
+            fprintf(stderr, "FATAL ERROR: Failed to initialize application\n");
             return 1;
         }
+
+        frontend.Run();
     }
 
-    frontend.romset_info.PurgeRomData();
-
-    if (!FE_OpenAudio(frontend, params))
-    {
-        fprintf(stderr, "FATAL ERROR: Failed to open the audio stream.\n");
-        fflush(stderr);
-        return 1;
-    }
-
-    if (!MIDI_Init(frontend, params.midi_device))
-    {
-        fprintf(stderr, "ERROR: Failed to initialize the MIDI Input.\nWARNING: Continuing without MIDI Input...\n");
-        fflush(stderr);
-    }
-
-    for (size_t i = 0; i < frontend.instances_in_use; ++i)
-    {
-        frontend.instances[i].emu.PostSystemReset(reset);
-    }
-
-    FE_Run(frontend);
-
-    FE_Quit(frontend);
+    FE_GlobalQuit();
 
     return 0;
 }
