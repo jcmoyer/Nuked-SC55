@@ -33,6 +33,7 @@
  */
 #include "audio.h"
 #include "audio_sdl.h"
+#include "bounded_vector.h"
 #include "cast.h"
 #include "config.h"
 #include "emu.h"
@@ -92,6 +93,17 @@ struct FE_Instance
     // the stream one frame at a time is *slow* so we buffer audio in `sample_buffer` and add it all at once.
     SDL_AudioStream* stream = nullptr;
 #endif
+
+    ~FE_Instance()
+    {
+#if NUKED_ENABLE_ASIO
+        if (stream)
+        {
+            SDL_FreeAudioStream(stream);
+            stream = nullptr;
+        }
+#endif
+    }
 
     template <typename SampleT>
     void Prepare()
@@ -160,8 +172,7 @@ private:
     }
 
 private:
-    FE_Instance m_instances[FE_MAX_INSTANCES];
-    size_t      m_instances_in_use = 0;
+    BoundedVector<FE_Instance, FE_MAX_INSTANCES> m_instances;
 
     AllRomsetInfo m_romset_info;
     Romset        m_romset;
@@ -202,13 +213,12 @@ struct FE_Parameters
 
 bool FE_Application::AllocateInstance(FE_Instance** result)
 {
-    if (m_instances_in_use == FE_MAX_INSTANCES)
+    if (m_instances.IsFull())
     {
         return false;
     }
 
-    FE_Instance& fe = m_instances[m_instances_in_use];
-    ++m_instances_in_use;
+    FE_Instance& fe = m_instances.EmplaceBack();
 
     if (result)
     {
@@ -218,14 +228,14 @@ bool FE_Application::AllocateInstance(FE_Instance** result)
     return true;
 }
 
-void FE_Application::SendMIDI(size_t n, std::span<const uint8_t> bytes)
+void FE_Application::SendMIDI(size_t instance_id, std::span<const uint8_t> bytes)
 {
-    m_instances[n].emu.PostMIDI(bytes);
+    m_instances[instance_id].emu.PostMIDI(bytes);
 }
 
 void FE_Application::BroadcastMIDI(std::span<const uint8_t> bytes)
 {
-    for (size_t i = 0; i < m_instances_in_use; ++i)
+    for (size_t i = 0; i < m_instances.Count(); ++i)
     {
         SendMIDI(i, bytes);
     }
@@ -255,7 +265,7 @@ void FE_Application::RouteMIDI(std::span<const uint8_t> bytes)
     }
     else
     {
-        SendMIDI(channel % m_instances_in_use, bytes);
+        SendMIDI(channel % m_instances.Count(), bytes);
     }
 }
 
@@ -541,9 +551,9 @@ bool FE_Application::OpenSDLAudio(const AudioOutputParameters& params, const cha
         return false;
     }
 
-    for (size_t i = 0; i < m_instances_in_use; ++i)
+    for (size_t id = 0; id < m_instances.Count(); ++id)
     {
-        FE_Instance& inst = m_instances[i];
+        FE_Instance& inst = m_instances[id];
         inst.emu.SetSampleCallback(PickCallback(inst), &inst);
         switch (inst.format)
         {
@@ -557,8 +567,8 @@ bool FE_Application::OpenSDLAudio(const AudioOutputParameters& params, const cha
             inst.CreateAndPrepareBuffer<float>();
             break;
         }
-        Out_SDL_AddSource(m_instances[i].view);
-        fprintf(stderr, "#%02zu: allocated %zu bytes for audio\n", i, inst.sample_buffer.GetByteLength());
+        Out_SDL_AddSource(m_instances[id].view);
+        fprintf(stderr, "#%02zu: allocated %zu bytes for audio\n", id, inst.sample_buffer.GetByteLength());
     }
 
     if (!Out_SDL_Start())
@@ -579,9 +589,9 @@ bool FE_Application::OpenASIOAudio(const ASIO_OutputParameters& params, const ch
         return false;
     }
 
-    for (size_t i = 0; i < m_instances_in_use; ++i)
+    for (size_t id = 0; id < m_instances.Count(); ++id)
     {
-        FE_Instance& inst = m_instances[i];
+        FE_Instance& inst = m_instances[id];
 
         inst.stream = SDL_NewAudioStream(AudioFormatToSDLAudioFormat(inst.format),
                                          2,
@@ -605,8 +615,7 @@ bool FE_Application::OpenASIOAudio(const ASIO_OutputParameters& params, const ch
             inst.CreateAndPrepareBuffer<float>();
             break;
         }
-        fprintf(
-            stderr, "#%02zu: allocated %zu bytes for audio\n", i, inst.sample_buffer.GetByteLength());
+        fprintf(stderr, "#%02zu: allocated %zu bytes for audio\n", id, inst.sample_buffer.GetByteLength());
     }
 
     if (!Out_ASIO_Start())
@@ -754,16 +763,16 @@ void FE_Application::RunEventLoop()
         }
 #endif
 
-        for (size_t i = 0; i < m_instances_in_use; ++i)
+        for (FE_Instance& inst : m_instances)
         {
-            if (m_instances[i].sdl_lcd)
+            if (inst.sdl_lcd)
             {
-                if (m_instances[i].sdl_lcd->IsQuitRequested())
+                if (inst.sdl_lcd->IsQuitRequested())
                 {
                     m_running = false;
                 }
             }
-            LCD_Render(m_instances[i].emu.GetLCD());
+            LCD_Render(inst.emu.GetLCD());
         }
 
         SDL_Event ev;
@@ -776,11 +785,11 @@ void FE_Application::RunEventLoop()
                 continue;
             }
 
-            for (size_t i = 0; i < m_instances_in_use; ++i)
+            for (FE_Instance& inst : m_instances)
             {
-                if (m_instances[i].sdl_lcd)
+                if (inst.sdl_lcd)
                 {
-                    m_instances[i].sdl_lcd->HandleEvent(ev);
+                    inst.sdl_lcd->HandleEvent(ev);
                 }
             }
         }
@@ -793,28 +802,28 @@ void FE_Application::Run()
 {
     m_running = true;
 
-    for (size_t i = 0; i < m_instances_in_use; ++i)
+    for (FE_Instance& inst : m_instances)
     {
-        m_instances[i].running = true;
+        inst.running = true;
         if (m_audio_output.kind == AudioOutputKind::SDL)
         {
-            switch (m_instances[i].format)
+            switch (inst.format)
             {
             case AudioFormat::S16:
-                m_instances[i].thread = std::thread(FE_RunInstanceSDL<int16_t>, std::ref(m_instances[i]));
+                inst.thread = std::thread(FE_RunInstanceSDL<int16_t>, std::ref(inst));
                 break;
             case AudioFormat::S32:
-                m_instances[i].thread = std::thread(FE_RunInstanceSDL<int32_t>, std::ref(m_instances[i]));
+                inst.thread = std::thread(FE_RunInstanceSDL<int32_t>, std::ref(inst));
                 break;
             case AudioFormat::F32:
-                m_instances[i].thread = std::thread(FE_RunInstanceSDL<float>, std::ref(m_instances[i]));
+                inst.thread = std::thread(FE_RunInstanceSDL<float>, std::ref(inst));
                 break;
             }
         }
         else if (m_audio_output.kind == AudioOutputKind::ASIO)
         {
 #if NUKED_ENABLE_ASIO
-            m_instances[i].thread = std::thread(FE_RunInstanceASIO, std::ref(m_instances[i]));
+            inst.thread = std::thread(FE_RunInstanceASIO, std::ref(inst));
 #else
             fprintf(stderr, "Attempted to start ASIO instance without ASIO support\n");
 #endif
@@ -823,10 +832,10 @@ void FE_Application::Run()
 
     RunEventLoop();
 
-    for (size_t i = 0; i < m_instances_in_use; ++i)
+    for (FE_Instance& inst : m_instances)
     {
-        m_instances[i].running = false;
-        m_instances[i].thread.join();
+        inst.running = false;
+        inst.thread.join();
     }
 }
 
@@ -871,7 +880,7 @@ bool FE_Application::CreateInstance(const std::filesystem::path& base_path, cons
 
     FE_Instance* fe = nullptr;
 
-    const size_t instance_id = m_instances_in_use;
+    const size_t instance_id = m_instances.Count();
 
     if (!AllocateInstance(&fe))
     {
@@ -893,7 +902,7 @@ bool FE_Application::CreateInstance(const std::filesystem::path& base_path, cons
     if (!this_nvram.empty())
     {
         // append instance number so that multiple instances don't clobber each other's nvram
-        this_nvram += std::to_string(m_instances_in_use - 1);
+        this_nvram += std::to_string(instance_id);
     }
 
     if (!fe->emu.Init({.lcd_backend = fe->sdl_lcd.get(), .nvram_filename = this_nvram}))
@@ -920,19 +929,6 @@ bool FE_Application::CreateInstance(const std::filesystem::path& base_path, cons
     return true;
 }
 
-void FE_DestroyInstance(FE_Instance& instance)
-{
-#if NUKED_ENABLE_ASIO
-    if (instance.stream)
-    {
-        SDL_FreeAudioStream(instance.stream);
-        instance.stream = nullptr;
-    }
-#else
-    (void)instance;
-#endif
-}
-
 FE_Application::~FE_Application()
 {
     switch (m_audio_output.kind)
@@ -949,11 +945,6 @@ FE_Application::~FE_Application()
         Out_SDL_Stop();
         Out_SDL_Destroy();
         break;
-    }
-
-    for (size_t i = 0; i < m_instances_in_use; ++i)
-    {
-        FE_DestroyInstance(m_instances[i]);
     }
 
     MIDI_Quit();
@@ -1037,9 +1028,9 @@ bool FE_Application::Initialize(const FE_Parameters& params)
         fflush(stderr);
     }
 
-    for (size_t i = 0; i < m_instances_in_use; ++i)
+    for (FE_Instance& inst : m_instances)
     {
-        m_instances[i].emu.PostSystemReset(reset);
+        inst.emu.PostSystemReset(reset);
     }
 
     return true;
