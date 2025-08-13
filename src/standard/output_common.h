@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "audio.h"
@@ -27,3 +28,17 @@ struct AudioOutputParameters
     uint32_t    buffer_size;
     AudioFormat format;
 };
+
+enum class PickOutputResult
+{
+    WantMatchedName,
+    WantDefaultDevice,
+    NoOutputDevices,
+    NoMatchingName,
+};
+
+void QueryAllOutputs(AudioOutputList& outputs);
+
+PickOutputResult PickOutputDevice(std::string_view preferred_name, AudioOutput& out_device);
+
+void PrintAudioDevices(FILE* output);

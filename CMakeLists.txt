@@ -121,15 +121,23 @@ if(SDL2_FOUND)
     add_executable(nuked-sc55)
     target_sources(nuked-sc55
         PRIVATE
+        src/standard/application_cli.cpp
+        src/standard/application.cpp
         src/standard/audio_sdl.cpp
+        src/standard/instance.cpp
         src/standard/lcd_sdl.cpp
         src/standard/main.cpp
-        src/standard/midi.h
+        src/standard/output_common.cpp
         src/standard/output_sdl.cpp
 
         PRIVATE FILE_SET headers TYPE HEADERS FILES
+        src/standard/application.h
         src/standard/audio_sdl.h
+        src/standard/bounded_vector.h
+        src/standard/instance.h
         src/standard/lcd_sdl.h
+        src/standard/midi.h
+        src/standard/output_common.h
         src/standard/output_sdl.h
     )
 
