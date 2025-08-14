@@ -1,6 +1,7 @@
 #include "output_sdl.h"
 
 #include "audio_sdl.h"
+#include "bounded_vector.h"
 #include "cast.h"
 #include <SDL.h>
 
@@ -14,8 +15,7 @@ struct SDLOutput
 
     SDL_AudioDeviceID device = 0;
 
-    RingbufferView* views[MAX_STREAMS]{};
-    size_t          stream_count = 0;
+    BoundedVector<RingbufferView*, MAX_STREAMS> views;
 
     // Parameters requested by the user
     AudioOutputParameters create_params;
@@ -32,16 +32,16 @@ void AudioCallback(void* userdata, Uint8* stream, int len)
 
     memset(stream, 0, (size_t)len);
 
-    for (size_t i = 0; i < g_output.stream_count; ++i)
+    for (RingbufferView* view : g_output.views)
     {
-        if (g_output.views[i]->GetReadableElements<Frame>() >= g_output.create_params.buffer_size)
+        if (view->GetReadableElements<Frame>() >= g_output.create_params.buffer_size)
         {
-            auto span = g_output.views[i]->UncheckedPrepareRead<Frame>(g_output.create_params.buffer_size);
+            auto span = view->UncheckedPrepareRead<Frame>(g_output.create_params.buffer_size);
             for (size_t samp = 0; samp < span.size(); ++samp)
             {
                 MixFrame(*((Frame*)stream + samp), span[samp]);
             }
-            g_output.views[i]->UncheckedFinishRead<Frame>(g_output.create_params.buffer_size);
+            view->UncheckedFinishRead<Frame>(g_output.create_params.buffer_size);
         }
     }
 }
@@ -149,13 +149,5 @@ void Out_SDL_Stop()
 
 void Out_SDL_AddSource(RingbufferView& view)
 {
-    if (g_output.stream_count == MAX_STREAMS)
-    {
-        fprintf(stderr, "PANIC: attempted to add more than %zu SDL streams\n", MAX_STREAMS);
-        exit(1);
-    }
-
-    g_output.views[g_output.stream_count] = &view;
-
-    ++g_output.stream_count;
+    g_output.views.EmplaceBack(&view);
 }
