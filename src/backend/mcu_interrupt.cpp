@@ -184,10 +184,10 @@ void MCU_Interrupt_Handle(mcu_t& mcu)
         return;
     }
 #endif
-    for (auto i : mcu.trapa_pending)
+    if (auto it = mcu.trapa_pending.begin(); it != mcu.trapa_pending.end())
     {
-        mcu.trapa_pending.Exclude(i);
-        MCU_Interrupt_StartVector(mcu, VECTOR_TRAPA_0 + i, -1);
+        mcu.trapa_pending.Exclude(*it);
+        MCU_Interrupt_StartVector(mcu, VECTOR_TRAPA_0 + (*it), -1);
         return;
     }
     if (mcu.exception_pending >= 0)
