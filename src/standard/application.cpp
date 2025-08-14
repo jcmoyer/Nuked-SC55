@@ -378,7 +378,6 @@ bool Application::CreateInstance(const CliParameters& app_params)
         .gain                = app_params.gain,
         .enable_lcd          = !app_params.no_lcd,
         .enable_oversampling = !app_params.disable_oversampling,
-        .output_kind         = m_audio_output.kind,
         .nvram_filename      = app_params.nvram_filename,
         .romset_info         = &m_romset_info,
         .romset              = m_romset,

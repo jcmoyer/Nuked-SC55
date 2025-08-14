@@ -32,7 +32,6 @@ bool Instance::Initialize(const InstanceParameters& params)
     }
 
     m_instance_id  = params.instance_id;
-    m_output_kind  = params.output_kind;
     m_buffer_size  = params.buffer_size;
     m_buffer_count = params.buffer_count;
     m_gain         = params.gain;
@@ -251,7 +250,8 @@ mcu_sample_callback Instance::PickSampleCallback(AudioOutputKind kind) const
 
 void Instance::OpenSDLAudio()
 {
-    m_emu.SetSampleCallback(PickSampleCallback(AudioOutputKind::SDL), this);
+    m_output_kind = AudioOutputKind::SDL;
+    m_emu.SetSampleCallback(PickSampleCallback(m_output_kind), this);
     switch (m_format)
     {
     case AudioFormat::S16:
@@ -279,7 +279,8 @@ void Instance::OpenASIOAudio()
                                   Out_ASIO_GetFrequency());
     Out_ASIO_AddSource(m_stream);
 
-    m_emu.SetSampleCallback(PickSampleCallback(AudioOutputKind::ASIO), this);
+    m_output_kind = AudioOutputKind::ASIO;
+    m_emu.SetSampleCallback(PickSampleCallback(m_output_kind), this);
 
     switch (m_format)
     {

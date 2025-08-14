@@ -20,7 +20,6 @@ struct InstanceParameters
     float           gain;
     bool            enable_lcd;
     bool            enable_oversampling;
-    AudioOutputKind output_kind;
 
     std::filesystem::path nvram_filename;
 
