@@ -110,6 +110,6 @@ private:
 #if NUKED_ENABLE_ASIO
     // ASIO uses an SDL_AudioStream because it needs resampling to a more conventional frequency, but putting data into
     // the stream one frame at a time is *slow* so we buffer audio in `sample_buffer` and add it all at once.
-    SDL_AudioStream* stream = nullptr;
+    SDL_AudioStream* m_stream = nullptr;
 #endif
 };

@@ -15,10 +15,10 @@ size_t CalcRingbufferSizeBytes(uint32_t buffer_size, uint32_t buffer_count)
 Instance::~Instance()
 {
 #if NUKED_ENABLE_ASIO
-    if (stream)
+    if (m_stream)
     {
-        SDL_FreeAudioStream(stream);
-        stream = nullptr;
+        SDL_FreeAudioStream(m_stream);
+        m_stream = nullptr;
     }
 #endif
 }
@@ -107,7 +107,7 @@ void Instance::RunInstanceASIO(Instance& self)
         // put in so be careful not to confuse the two!!
         const size_t max_byte_count = self.m_buffer_count * buffer_size * Out_ASIO_GetFormatFrameSizeBytes();
 
-        while ((size_t)SDL_AudioStreamAvailable(self.stream) >= max_byte_count)
+        while ((size_t)SDL_AudioStreamAvailable(self.m_stream) >= max_byte_count)
         {
             SDL_Delay(1);
         }
@@ -137,7 +137,7 @@ void Instance::ReceiveSampleASIO(void* userdata, const AudioFrame<int32_t>& in)
         inst.Prepare<SampleT>();
 
         auto span = inst.m_view.UncheckedPrepareRead<AudioFrame<SampleT>>(inst.m_buffer_size);
-        SDL_AudioStreamPut(inst.stream, span.data(), (int)(span.size() * sizeof(AudioFrame<SampleT>)));
+        SDL_AudioStreamPut(inst.m_stream, span.data(), (int)(span.size() * sizeof(AudioFrame<SampleT>)));
         inst.m_view.UncheckedFinishRead<AudioFrame<SampleT>>(inst.m_buffer_size);
     }
 }
@@ -271,13 +271,13 @@ void Instance::OpenSDLAudio()
 #if NUKED_ENABLE_ASIO
 void Instance::OpenASIOAudio()
 {
-    stream = SDL_NewAudioStream(AudioFormatToSDLAudioFormat(m_format),
-                                2,
-                                (int)PCM_GetOutputFrequency(m_emu.GetPCM()),
-                                Out_ASIO_GetFormat(),
-                                2,
-                                Out_ASIO_GetFrequency());
-    Out_ASIO_AddSource(stream);
+    m_stream = SDL_NewAudioStream(AudioFormatToSDLAudioFormat(m_format),
+                                  2,
+                                  (int)PCM_GetOutputFrequency(m_emu.GetPCM()),
+                                  Out_ASIO_GetFormat(),
+                                  2,
+                                  Out_ASIO_GetFrequency());
+    Out_ASIO_AddSource(m_stream);
 
     m_emu.SetSampleCallback(PickSampleCallback(AudioOutputKind::ASIO), this);
 
