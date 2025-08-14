@@ -260,8 +260,8 @@ void MCU_Jump_Bcc(mcu_t& mcu, uint8_t operand)
 {
     uint16_t disp;
     uint32_t cond;
-    uint32_t branch = 0;
-    uint32_t N, C, Z, V;
+    bool branch = false;
+    bool N, C, Z, V;
     if (operand & 0x10)
     {
         disp = (uint16_t)(MCU_ReadCodeAdvance(mcu) << 8);
