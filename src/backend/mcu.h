@@ -275,10 +275,10 @@ struct mcu_t {
 
     uint32_t rom2_mask = ROM2_SIZE - 1;
 
-    int ga_int[8]{};
-    int ga_int_enable = 0;
-    int ga_int_trigger = 0;
-    int ga_lcd_counter = 0;
+    bool ga_int[8]{};
+    uint8_t ga_int_enable = 0; // mask of ga_int indices
+    uint8_t ga_int_trigger = 0; // index into ga_int
+    int ga_lcd_counter = 0; // timer range 0..500, decrements to 0
 
     std::atomic<uint32_t> button_pressed;
 
@@ -552,7 +552,7 @@ uint8_t MCU_ReadP0(mcu_t& mcu);
 uint8_t MCU_ReadP1(mcu_t& mcu);
 void MCU_WriteP0(mcu_t& mcu, uint8_t data);
 void MCU_WriteP1(mcu_t& mcu, uint8_t data);
-void MCU_GA_SetGAInt(mcu_t& mcu, int line, int value);
+void MCU_GA_SetGAInt(mcu_t& mcu, uint8_t line, bool value);
 
 void MCU_EncoderTrigger(mcu_t& mcu, int dir);
 

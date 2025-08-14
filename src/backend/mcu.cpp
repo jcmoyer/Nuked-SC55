@@ -995,7 +995,7 @@ void MCU_PostSample(mcu_t& mcu, const AudioFrame<int32_t>& frame)
     mcu.sample_callback(mcu.callback_userdata, frame);
 }
 
-void MCU_GA_SetGAInt(mcu_t& mcu, int line, int value)
+void MCU_GA_SetGAInt(mcu_t& mcu, uint8_t line, bool value)
 {
     // guesswork
     if (value && !mcu.ga_int[line] && (mcu.ga_int_enable & (1 << line)) != 0)
