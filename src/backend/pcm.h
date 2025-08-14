@@ -85,7 +85,7 @@ struct pcm_t
     uint8_t waverom_card[0x200000]{};
     uint8_t waverom_exp[0x800000]{};
 
-    bool disable_oversampling = false;
+    bool enable_oversampling = true;
 };
 
 void PCM_Write(pcm_t& pcm, uint32_t address, uint8_t data);

@@ -61,7 +61,7 @@ bool Instance::Initialize(const InstanceParameters& params)
     }
 
     m_emu.Reset();
-    m_emu.GetPCM().disable_oversampling = !params.enable_oversampling;
+    m_emu.GetPCM().enable_oversampling = params.enable_oversampling;
 
     if (!m_emu.StartLCD())
     {
