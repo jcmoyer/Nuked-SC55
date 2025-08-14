@@ -465,12 +465,12 @@ inline uint32_t MCU_ControlRegisterRead(mcu_t& mcu, uint32_t reg, uint32_t siz)
     return ret;
 }
 
-inline void MCU_SetStatus(mcu_t& mcu, bool condition, uint32_t mask)
+inline void MCU_SetStatus(mcu_t& mcu, bool condition, uint16_t mask)
 {
     if (condition)
-        mcu.sr |= (uint16_t)mask;
+        mcu.sr |= mask;
     else
-        mcu.sr &= (uint16_t)(~mask);
+        mcu.sr &= ~mask;
 }
 
 inline void MCU_PushStack(mcu_t& mcu, uint16_t data)
