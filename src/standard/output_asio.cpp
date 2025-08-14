@@ -7,6 +7,7 @@
 
 #include "audio.h"
 #include "audio_sdl.h"
+#include "bounded_vector.h"
 #include "common/command_line.h"
 #include "math_util.h"
 #include "ringbuffer.h"
@@ -27,10 +28,10 @@ struct ASIOOutput
     ASIODriverInfo driver_info;
     ASIOCallbacks  callbacks;
 
-    ASIOBufferInfo   buffer_info[N_BUFFERS]{};
-    ASIOChannelInfo  channel_info[MAX_CHANNELS]{};
-    SDL_AudioStream* streams[MAX_STREAMS]{};
-    size_t           stream_count = 0;
+    ASIOBufferInfo  buffer_info[N_BUFFERS]{};
+    ASIOChannelInfo channel_info[MAX_CHANNELS]{};
+
+    BoundedVector<SDL_AudioStream*, MAX_STREAMS> streams;
 
     // Size of a buffer as requested by ASIO driver
     long min_size;
@@ -500,13 +501,7 @@ bool Out_ASIO_Start()
 
 void Out_ASIO_AddSource(SDL_AudioStream* stream)
 {
-    if (g_output.stream_count == MAX_STREAMS)
-    {
-        fprintf(stderr, "PANIC: attempted to add more than %zu ASIO streams\n", MAX_STREAMS);
-        exit(1);
-    }
-    g_output.streams[g_output.stream_count] = stream;
-    ++g_output.stream_count;
+    g_output.streams.EmplaceBack(stream);
 }
 
 int Out_ASIO_GetFrequency()
@@ -657,27 +652,29 @@ static ASIOTime* bufferSwitchTimeInfo(ASIOTime* params, long index, ASIOBool dir
     (void)directProcess;
 
     size_t renderable_frames = g_output.buffer_size_frames;
-    for (size_t i = 0; i < g_output.stream_count; ++i)
+    for (auto* stream : g_output.streams)
     {
         renderable_frames =
-            Min(renderable_frames, (size_t)SDL_AudioStreamAvailable(g_output.streams[i]) / sizeof(AudioFrame<int32_t>));
+            Min(renderable_frames, (size_t)SDL_AudioStreamAvailable(stream) / sizeof(AudioFrame<int32_t>));
     }
 
-    if (renderable_frames < g_output.buffer_size_frames || g_output.stream_count == 0)
+    if (renderable_frames < g_output.buffer_size_frames || g_output.streams.Count() == 0)
     {
         memset(g_output.buffer_info[0].buffers[index], 0, g_output.buffer_size_bytes);
         memset(g_output.buffer_info[1].buffers[index], 0, g_output.buffer_size_bytes);
         return 0;
     }
 
-    SDL_AudioStreamGet(
-        g_output.streams[0], g_output.mix_buffers[1].DataFirst(), (int)g_output.mix_buffers[1].GetByteLength());
+    SDL_AudioStreamGet(g_output.streams.UncheckedAt(0), // safety: checked Count() != 0 above
+                       g_output.mix_buffers[1].DataFirst(),
+                       (int)g_output.mix_buffers[1].GetByteLength());
 
-    for (size_t i = 1; i < g_output.stream_count; ++i)
+    for (size_t i = 1; i < g_output.streams.Count(); ++i)
     {
         // read from stream into staging buffer
-        SDL_AudioStreamGet(
-            g_output.streams[i], g_output.mix_buffers[0].DataFirst(), (int)g_output.mix_buffers[0].GetByteLength());
+        SDL_AudioStreamGet(g_output.streams.UncheckedAt(i), // safety: index bounded by streams.Count()
+                           g_output.mix_buffers[0].DataFirst(),
+                           (int)g_output.mix_buffers[0].GetByteLength());
 
         // mix staging buffer into final buffer
         MixBuffer(g_output.mix_buffers[1], g_output.mix_buffers[0], Out_ASIO_GetFormat());
