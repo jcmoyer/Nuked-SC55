@@ -33,13 +33,19 @@
  */
 #pragma once
 
-#include "audio.h"
-#include "bounded_ordered_bitset.h"
-#include "mcu_interrupt.h"
-#include "rom.h"
-#include "mcu_opcodes.h"
 #include <atomic>
 #include <cstdint>
+
+#include "audio.h"
+#include "bounded_ordered_bitset.h"
+#include "config.h"
+#include "mcu_interrupt.h"
+#include "mcu_opcodes.h"
+#include "rom.h"
+
+#if NUKED_ENABLE_DECODER2
+#include "decoder2/cache.h"
+#endif
 
 struct submcu_t;
 struct pcm_t;
@@ -226,6 +232,19 @@ typedef void(*mcu_sample_callback)(void* userdata, const AudioFrame<int32_t>& fr
 
 void MCU_DefaultSampleCallback(void* userdata, const AudioFrame<int32_t>& frame);
 
+class CodeReader
+{
+public:
+    CodeReader() = default;
+
+    inline uint8_t  ReadU8(mcu_t& mcu);
+    inline uint16_t ReadU16(mcu_t& mcu);
+    inline uint16_t GetAddressInPage(const mcu_t& mcu) const;
+
+private:
+    uint8_t m_offset = 0;
+};
+
 struct mcu_t {
     uint16_t r[8]{};
     uint16_t pc = 0;
@@ -303,6 +322,12 @@ struct mcu_t {
 
     void* callback_userdata = nullptr;
     mcu_sample_callback sample_callback = MCU_DefaultSampleCallback;
+
+#if NUKED_ENABLE_DECODER2
+    // Decoder state
+    I_InstructionCache icache;
+    CodeReader         coder;
+#endif
 };
 
 void MCU_Init(mcu_t& mcu, submcu_t& sm, pcm_t& pcm, mcu_timer_t& timer, lcd_t& lcd);
@@ -326,9 +351,19 @@ inline uint8_t MCU_ReadCode(mcu_t& mcu) {
     return MCU_Read(mcu, MCU_GetAddress(mcu.cp, mcu.pc));
 }
 
+inline uint8_t MCU_ReadCodeOffset(mcu_t& mcu, uint8_t offset) {
+    return MCU_Read(mcu, MCU_GetAddress(mcu.cp, mcu.pc + offset));
+}
+
 inline uint8_t MCU_ReadCodeAdvance(mcu_t& mcu) {
     uint8_t ret = MCU_ReadCode(mcu);
     mcu.pc++;
+    return ret;
+}
+
+inline uint16_t MCU_ReadCodeAdvance16(mcu_t& mcu) {
+    uint16_t ret = MCU_ReadCodeAdvance(mcu);
+    ret = (uint16_t)((ret << 8) | MCU_ReadCodeAdvance(mcu));
     return ret;
 }
 
@@ -563,3 +598,22 @@ void MCU_PostSample(mcu_t& mcu, const AudioFrame<int32_t>& frame);
 void MCU_PostUART(mcu_t& mcu, uint8_t data);
 
 void MCU_SetRomset(mcu_t& mcu, Romset romset);
+
+inline uint8_t CodeReader::ReadU8(mcu_t& mcu)
+{
+    uint8_t result = MCU_ReadCodeOffset(mcu, m_offset);
+    ++m_offset;
+    return result;
+}
+
+inline uint16_t CodeReader::ReadU16(mcu_t& mcu)
+{
+    uint16_t result = ReadU8(mcu);
+    result          = static_cast<uint16_t>((result << 8) | ReadU8(mcu));
+    return result;
+}
+
+inline uint16_t CodeReader::GetAddressInPage(const mcu_t& mcu) const
+{
+    return static_cast<uint16_t>(mcu.pc + m_offset);
+}

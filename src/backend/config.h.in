@@ -1,6 +1,7 @@
 #pragma once
 
 #cmakedefine01 NUKED_ENABLE_ASIO
+#cmakedefine01 NUKED_ENABLE_DECODER2
 
 #define NUKED_VERSION "@CMAKE_PROJECT_VERSION@"
 #define NUKED_SOURCE  "@NUKED_SOURCE@"

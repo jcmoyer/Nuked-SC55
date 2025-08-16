@@ -33,6 +33,7 @@
  */
 #include "mcu.h"
 
+#include "decoder2/dispatch.h"
 #include "diagnostics.h"
 #include "lcd.h"
 #include "mcu_opcodes.h"
@@ -800,9 +801,12 @@ void MCU_Write16(mcu_t& mcu, uint32_t address, uint16_t value)
 
 void MCU_ReadInstruction(mcu_t& mcu)
 {
+#if NUKED_ENABLE_DECODER2
+    D_FetchDecodeExecuteNext(mcu);
+#else
     uint8_t operand = MCU_ReadCodeAdvance(mcu);
-
     MCU_Operand_Table[operand](mcu, operand);
+#endif
 
     if (mcu.sr & STATUS_T)
     {

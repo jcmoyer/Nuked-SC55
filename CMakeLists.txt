@@ -7,6 +7,7 @@ include(GNUInstallDirs)
 include(TargetWarnings)
 
 set(NUKED_SOURCE "unknown" CACHE STRING "Origin of this build")
+option(NUKED_ENABLE_DECODER2 "Enable new instruction decoder" OFF)
 
 #==============================================================================
 # Tests
@@ -106,6 +107,32 @@ target_sources(nuked-sc55-backend
     src/backend/string_vector.h
     src/backend/submcu.h
 )
+
+if(NUKED_ENABLE_DECODER2)
+    target_sources(nuked-sc55-backend
+        PRIVATE
+        src/backend/decoder2/address_modes.cpp
+        src/backend/decoder2/cache.cpp
+        src/backend/decoder2/decode_address.cpp
+        src/backend/decoder2/decode_imm16.cpp
+        src/backend/decoder2/decode_imm8.cpp
+        src/backend/decoder2/decode_rn.cpp
+        src/backend/decoder2/decode_short.cpp
+        src/backend/decoder2/decoder_handlers.cpp
+        src/backend/decoder2/disassemble.cpp
+        src/backend/decoder2/dispatch_aa.cpp
+        src/backend/decoder2/dispatch_arn.cpp
+        src/backend/decoder2/dispatch_d8d16_rn.cpp
+        src/backend/decoder2/dispatch_imm16.cpp
+        src/backend/decoder2/dispatch_postinc_rn.cpp
+        src/backend/decoder2/dispatch_predec_rn.cpp
+        src/backend/decoder2/dispatch_rn.cpp
+        src/backend/decoder2/dispatch_top.cpp
+        src/backend/decoder2/dispatch.cpp
+        src/backend/decoder2/instruction_handlers.cpp
+    )
+endif()
+
 target_include_directories(nuked-sc55-backend PUBLIC "src/backend" "${CMAKE_CURRENT_BINARY_DIR}/backend")
 target_compile_features(nuked-sc55-backend PRIVATE cxx_std_23)
 target_enable_warnings(nuked-sc55-backend)
