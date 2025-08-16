@@ -38,6 +38,7 @@
 #include "pcm.h"
 #include "submcu.h"
 #include <cstdio>
+#include "decoder2/dispatch.h"
 
 void MCU_ErrorTrap(mcu_t& mcu)
 {
@@ -799,9 +800,10 @@ void MCU_Write16(mcu_t& mcu, uint32_t address, uint16_t value)
 
 void MCU_ReadInstruction(mcu_t& mcu)
 {
-    uint8_t operand = MCU_ReadCodeAdvance(mcu);
+    // uint8_t operand = MCU_ReadCodeAdvance(mcu);
 
-    MCU_Operand_Table[operand](mcu, operand);
+    // MCU_Operand_Table[operand](mcu, operand);
+    D_FetchDecodeExecuteNext(mcu);
 
     if (mcu.sr & STATUS_T)
     {

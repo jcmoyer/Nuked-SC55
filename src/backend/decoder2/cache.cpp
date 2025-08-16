@@ -1,0 +1,34 @@
+#include "cache.h"
+
+#include "mcu.h"
+
+void I_InstructionCache::DoCache(mcu_t&                     mcu,
+                                 uint32_t                   instr_start,
+                                 I_Handler_Erased_Func      func,
+                                 const I_CachedInstruction& st)
+{
+    I_CACHE[instr_start] = {.F = func, .instr = st, .size = (uint8_t)(mcu.pc - instr_start)};
+    func(mcu, st);
+}
+
+void I_InstructionCache::DoCacheJump(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
+{
+    const uint16_t next_ip = mcu.pc;
+
+    I_CachedInstruction st;
+    st.br_true           = (uint16_t)(next_ip + disp);
+    st.br_false          = (uint16_t)(next_ip + disp);
+    I_CACHE[instr_start] = {.F = func, .instr = st, .size = 0};
+    func(mcu, st);
+}
+
+void I_InstructionCache::DoCacheBranch(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
+{
+    const uint16_t next_ip = mcu.pc;
+
+    I_CachedInstruction st;
+    st.br_true           = (uint16_t)(next_ip + disp);
+    st.br_false          = next_ip;
+    I_CACHE[instr_start] = {.F = func, .instr = st, .size = 0};
+    func(mcu, st);
+}

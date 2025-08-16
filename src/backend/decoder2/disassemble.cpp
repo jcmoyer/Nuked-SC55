@@ -1,0 +1,529 @@
+#include "disassemble.h"
+
+#include <utility>
+
+#include "decode_d8d16_rn.h"
+#include "decode_imm8.h"
+#include "decode_mrn.h"
+#include "decode_rn.h"
+#include "decode_rnp.h"
+#include "decode_short.h"
+#include "decoder_handlers.h"
+#include "instructions.h"
+
+const char* ToCString(I_AddressMode mode)
+{
+    switch (mode)
+    {
+    case I_AddressMode::Rn:
+        return "Rn";
+    case I_AddressMode::ARn:
+        return "ARn";
+    case I_AddressMode::Ad8_Rn:
+        return "Ad8_Rn";
+    case I_AddressMode::Ad16_Rn:
+        return "Ad16_Rn";
+    case I_AddressMode::AMRn:
+        return "AMRn";
+    case I_AddressMode::ARnP:
+        return "ARnP";
+    case I_AddressMode::Aaa8:
+        return "Aaa8";
+    case I_AddressMode::Aaa16:
+        return "Aaa16";
+    case I_AddressMode::imm8:
+        return "imm8";
+    case I_AddressMode::imm16:
+        return "imm16";
+    }
+    std::unreachable();
+}
+
+std::string I_RenderFormatSuffix(I_Format format)
+{
+    switch (format)
+    {
+    case I_Format::NotPresent:
+        return "";
+    case I_Format::G:
+        return ":G";
+    case I_Format::E:
+        return ":E";
+    case I_Format::I:
+        return ":I";
+    case I_Format::F:
+        return ":F";
+    case I_Format::L:
+        return ":L";
+    case I_Format::S:
+        return ":S";
+    case I_Format::Q:
+        return ":Q";
+    }
+    std::unreachable();
+}
+
+const char* HEX_DIGITS = "0123456789abcdef";
+
+void WriteHexU8(std::string& s, uint8_t val)
+{
+    uint8_t hi = val >> 4;
+    uint8_t lo = val & 0x0f;
+    s.push_back(HEX_DIGITS[hi]);
+    s.push_back(HEX_DIGITS[lo]);
+}
+
+void WriteHexU16(std::string& s, uint16_t val)
+{
+    WriteHexU8(s, val >> 8);
+    WriteHexU8(s, val & 0xff);
+}
+
+void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& result)
+{
+    result.clear();
+    switch (loc)
+    {
+    case NotPresent:
+        break;
+    case EA:
+        switch (instr.mode)
+        {
+        case I_AddressMode::Rn:
+            result  = "R";
+            result += std::to_string(instr.ea_reg);
+            break;
+        case I_AddressMode::ARn:
+            result  = "[R";
+            result += std::to_string(instr.ea_reg);
+            result += "]";
+            break;
+        case I_AddressMode::Ad8_Rn:
+        case I_AddressMode::Ad16_Rn:
+            result  = "[R";
+            result += std::to_string(instr.ea_reg);
+            result += "+";
+            WriteHexU16(result, instr.disp);
+            result += "]";
+            break;
+        case I_AddressMode::AMRn:
+            result  = "[--R";
+            result += std::to_string(instr.ea_reg);
+            result += "]";
+            break;
+        case I_AddressMode::ARnP:
+            result  = "[R";
+            result += std::to_string(instr.ea_reg);
+            result += "++]";
+            break;
+        case I_AddressMode::Aaa8:
+            result = "[";
+            WriteHexU8(result, instr.addr);
+            result += ":8]";
+            break;
+        case I_AddressMode::Aaa16:
+            result = "[";
+            WriteHexU16(result, instr.addr);
+            result += ":16]";
+            break;
+        case I_AddressMode::imm8:
+            result = "#";
+            WriteHexU8(result, instr.imm);
+            result += ":8";
+            break;
+        case I_AddressMode::imm16:
+            result = "#";
+            WriteHexU16(result, instr.imm);
+            result += ":16";
+            break;
+        }
+        break;
+    case R:
+        result  = "R";
+        result += std::to_string(instr.op_reg);
+        break;
+    case imm:
+        result  = "#";
+        result += std::to_string(instr.imm);
+        break;
+    case CR:
+        result  = "CR:";
+        result += std::to_string(instr.op_cr);
+        break;
+    }
+}
+
+std::string I_RenderSizeSuffix(I_Size size)
+{
+    switch (size)
+    {
+    case UNSIZED:
+        return "";
+    case BYTE:
+        return ".B";
+    case WORD:
+        return ".W";
+    }
+    return ".?";
+}
+
+bool I_DisassembleOpcode(I_Decoder& decoder, uint8_t opcode, I_DecodedInstruction& result)
+{
+    if (result.is_general)
+    {
+        switch (result.mode)
+        {
+        case I_AddressMode::Rn:
+            if (auto handler = GetDecoderRn(opcode); handler)
+            {
+                handler(decoder, opcode, result);
+            }
+            break;
+        case I_AddressMode::Ad8_Rn:
+        case I_AddressMode::Ad16_Rn:
+        // These three addressing modes use the same instructions as displacement modes
+        case I_AddressMode::Aaa16:
+        case I_AddressMode::Aaa8:
+        case I_AddressMode::ARn:
+            if (auto handler = GetDecoderd8d16Rn(opcode); handler)
+            {
+                handler(decoder, opcode, result);
+            }
+            break;
+        case I_AddressMode::AMRn:
+            if (auto handler = GetDecoderRnP(opcode); handler)
+            {
+                handler(decoder, opcode, result);
+            }
+            break;
+        case I_AddressMode::ARnP:
+            if (auto handler = GetDecoderMRn(opcode); handler)
+            {
+                handler(decoder, opcode, result);
+            }
+            break;
+        case I_AddressMode::imm8:
+        case I_AddressMode::imm16:
+            if (auto handler = GetDecoderimm8(opcode); handler)
+            {
+                handler(decoder, opcode, result);
+            }
+            break;
+        }
+    }
+    else
+    {
+        if (auto handler = GetDecoderShort(opcode); handler)
+        {
+            handler(decoder, opcode, result);
+        }
+    }
+
+    return true;
+}
+
+bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedInstruction& result)
+{
+    result = {};
+
+    I_Decoder decoder(bytes, position);
+
+    const size_t  instr_first = decoder.GetPosition();
+    const uint8_t byte        = decoder.ReadAdvance();
+
+    if ((byte & 0b11110000) == 0b10100000)
+    {
+        result.mode       = I_AddressMode::Rn;
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.is_general = true;
+        result.ea_reg     = byte & 0b111;
+    }
+    else if ((byte & 0b11110000) == 0b11010000)
+    {
+        result.mode       = I_AddressMode::ARn;
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.is_general = true;
+        result.ea_reg     = byte & 0b111;
+    }
+    else if ((byte & 0b11110000) == 0b11100000)
+    {
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.mode       = I_AddressMode::Ad8_Rn;
+        result.disp       = (int8_t)decoder.ReadAdvance();
+        result.is_general = true;
+        result.ea_reg     = byte & 0b111;
+    }
+    else if ((byte & 0b11110000) == 0b11110000)
+    {
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.mode       = I_AddressMode::Ad16_Rn;
+        result.disp       = decoder.ReadAdvance();
+        result.disp       = (uint16_t)((result.disp << 8) | decoder.ReadAdvance());
+        result.is_general = true;
+        result.ea_reg     = byte & 0b111;
+    }
+    else if ((byte & 0b11110000) == 0b10110000)
+    {
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.mode       = I_AddressMode::AMRn;
+        result.is_general = true;
+        result.ea_reg     = byte & 0b111;
+    }
+    else if ((byte & 0b11110000) == 0b11000000)
+    {
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.mode       = I_AddressMode::ARnP;
+        result.is_general = true;
+        result.ea_reg     = byte & 0b111;
+    }
+    else if ((byte & 0b11110111) == 0b00000101)
+    {
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.mode       = I_AddressMode::Aaa8;
+        result.addr       = decoder.ReadAdvance();
+        result.is_general = true;
+    }
+    else if ((byte & 0b11110111) == 0b00010101)
+    {
+        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.mode       = I_AddressMode::Aaa16;
+        result.addr       = decoder.ReadAdvance();
+        result.addr       = (result.addr << 8) | decoder.ReadAdvance();
+        result.is_general = true;
+    }
+    else if (byte == 0b00000100)
+    {
+        result.op_size    = BYTE;
+        result.mode       = I_AddressMode::imm8;
+        result.imm        = decoder.ReadAdvance();
+        result.is_general = true;
+    }
+    else if (byte == 0b00001100)
+    {
+        result.op_size    = WORD;
+        result.mode       = I_AddressMode::imm16;
+        result.imm        = decoder.ReadAdvance();
+        result.imm        = (result.imm << 8) | decoder.ReadAdvance();
+        result.is_general = true;
+    }
+    else
+    {
+        result.is_general = false;
+    }
+
+    bool success;
+    if (result.is_general)
+    {
+        success = I_DisassembleOpcode(decoder, decoder.ReadAdvance(), result);
+    }
+    else
+    {
+        success = I_DisassembleOpcode(decoder, byte, result);
+    }
+
+    const size_t instr_last = decoder.GetPosition();
+    result.instr_size       = instr_last - instr_first;
+
+    return success;
+}
+
+const char* ToCString(I_InstructionType instr)
+{
+    switch (instr)
+    {
+    case Unknown:
+        return "<unknown>";
+    case MOV:
+        return "MOV";
+    case LDM:
+        return "LDM";
+    case STM:
+        return "STM";
+    case XCH:
+        return "XCH";
+    case SWAP:
+        return "SWAP";
+    case MOVTPE:
+        return "MOVTPE";
+    case ADD:
+        return "ADD";
+    case ADDS:
+        return "ADDS";
+    case ADDX:
+        return "ADDX";
+    case DADD:
+        return "DADD";
+    case SUB:
+        return "SUB";
+    case SUBS:
+        return "SUBS";
+    case SUBX:
+        return "SUBX";
+    case DSUB:
+        return "DSUB";
+    case MULXU:
+        return "MULXU";
+    case DIVXU:
+        return "DIVXU";
+    case CMP:
+        return "CMP";
+    case EXTS:
+        return "EXTS";
+    case EXTU:
+        return "EXTU";
+    case TST:
+        return "TST";
+    case NEG:
+        return "NEG";
+    case CLR:
+        return "CLR";
+    case TAS:
+        return "TAS";
+    case SHAL:
+        return "SHAL";
+    case SHAR:
+        return "SHAR";
+    case SHLL:
+        return "SHLL";
+    case SHLR:
+        return "SHLR";
+    case ROTL:
+        return "ROTL";
+    case ROTR:
+        return "ROTR";
+    case ROTXL:
+        return "ROTXL";
+    case ROTXR:
+        return "ROTXR";
+    case AND:
+        return "AND";
+    case OR:
+        return "OR";
+    case XOR:
+        return "XOR";
+    case NOT:
+        return "NOT";
+    case BSET:
+        return "BSET";
+    case BCLR:
+        return "BCLR";
+    case BTST:
+        return "BTST";
+    case BNOT:
+        return "BNOT";
+    case LDC:
+        return "LDC";
+    case STC:
+        return "STC";
+    case ANDC:
+        return "ANDC";
+    case ORC:
+        return "ORC";
+    case XORC:
+        return "XORC";
+    case BRA:
+        return "BRA";
+    case BRN:
+        return "BRN";
+    case BHI:
+        return "BHI";
+    case BLS:
+        return "BLS";
+    case BCC:
+        return "BCC";
+    case BCS:
+        return "BCS";
+    case BNE:
+        return "BNE";
+    case BEQ:
+        return "BEQ";
+    case BVC:
+        return "BVC";
+    case BVS:
+        return "BVS";
+    case BPL:
+        return "BPL";
+    case BMI:
+        return "BMI";
+    case BGE:
+        return "BGE";
+    case BLT:
+        return "BLT";
+    case BGT:
+        return "BGT";
+    case BLE:
+        return "BLE";
+    case JMP:
+        return "JMP";
+    case BSR:
+        return "BSR";
+    case JSR:
+        return "JSR";
+    case RTS:
+        return "RTS";
+    case RTD:
+        return "RTD";
+    case SCB:
+        return "SCB";
+    case PJMP:
+        return "PJMP";
+    case PJSR:
+        return "PJSR";
+    case PRTS:
+        return "PRTS";
+    case PRTD:
+        return "PRTD";
+    case TRAPA:
+        return "TRAPA";
+    case TRAP_VS:
+        return "TRAP_VS";
+    case RTE:
+        return "RTE";
+    case LINK:
+        return "LINK";
+    case UNLK:
+        return "UNLK";
+    case SLEEP:
+        return "SLEEP";
+    case NOP:
+        return "NOP";
+    }
+    std::unreachable();
+}
+
+void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result)
+{
+    result.clear();
+    // if (instr.is_general)
+    // {
+    //     result += ToCString(instr.mode);
+    //     result += " ";
+    // }
+    // else
+    // {
+    //     result += "Sh ";
+    // }
+    result += ToCString(instr.instr);
+    result += I_RenderFormatSuffix(instr.format);
+    result += I_RenderSizeSuffix(instr.op_size);
+
+    std::string op_str;
+
+    if (instr.op_src != NotPresent)
+    {
+        result += " ";
+        OperandString(instr, instr.op_src, op_str);
+        result += op_str;
+    }
+
+    if (instr.op_dst != NotPresent)
+    {
+        if (instr.op_src != NotPresent)
+        {
+            result += ",";
+        }
+        result += " ";
+        OperandString(instr, instr.op_dst, op_str);
+        result += op_str;
+    }
+}

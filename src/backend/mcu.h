@@ -40,6 +40,7 @@
 #include "mcu_opcodes.h"
 #include <atomic>
 #include <cstdint>
+#include "decoder2/cache.h"
 
 struct submcu_t;
 struct pcm_t;
@@ -303,6 +304,11 @@ struct mcu_t {
 
     void* callback_userdata = nullptr;
     mcu_sample_callback sample_callback = MCU_DefaultSampleCallback;
+
+    // Decoder state
+    uint16_t           restore_pc;
+    uint8_t            restore_cp;
+    I_InstructionCache icache;
 };
 
 void MCU_Init(mcu_t& mcu, submcu_t& sm, pcm_t& pcm, mcu_timer_t& timer, lcd_t& lcd);
@@ -329,6 +335,12 @@ inline uint8_t MCU_ReadCode(mcu_t& mcu) {
 inline uint8_t MCU_ReadCodeAdvance(mcu_t& mcu) {
     uint8_t ret = MCU_ReadCode(mcu);
     mcu.pc++;
+    return ret;
+}
+
+inline uint16_t MCU_ReadCodeAdvance16(mcu_t& mcu) {
+    uint16_t ret = MCU_ReadCodeAdvance(mcu);
+    ret = (ret << 8) | MCU_ReadCodeAdvance(mcu);
     return ret;
 }
 

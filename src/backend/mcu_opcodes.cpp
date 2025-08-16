@@ -1887,4 +1887,3 @@ void (*MCU_Opcode_Table[32])(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg) = {
     MCU_Opcode_BTSTI, // 1E
     MCU_Opcode_BTSTI, // 1F
 };
-
