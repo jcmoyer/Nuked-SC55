@@ -675,7 +675,7 @@ void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
                         LCD_Enable(*mcu.lcd, (value & 1) == 0);
                     }
                     else if (address == (base | 0x402u))
-                        mcu.ga_int_enable = (value << 1);
+                        mcu.ga_int_enable = (uint8_t)(value << 1);
                     else
                         fprintf(stderr, "Unknown write %x %x\n", address, value);
                     //
