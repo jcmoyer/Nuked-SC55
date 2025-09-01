@@ -1,5 +1,8 @@
 # Version 0.7.0 (TBD)
 
+- Optimized interrupt handling for a 10-16% overall performance improvement
+  depending on compiler.
+
 # Version 0.6.1 (2025-07-30)
 
 ## Enhancements
