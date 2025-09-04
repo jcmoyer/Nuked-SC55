@@ -38,8 +38,7 @@ void Dis_MOV_G_imm16_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction&
     instr.instr   = MOV;
     instr.op_src  = imm;
     instr.op_dst  = EA;
-    instr.op_data = decoder.ReadAdvance();
-    instr.op_data = (instr.op_data << 8) | decoder.ReadAdvance();
+    instr.op_data = decoder.ReadU16();
     instr.format  = I_Format::G;
 }
 
@@ -247,8 +246,7 @@ void Dis_CMP_G_imm16_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction&
     instr.instr  = CMP;
     instr.op_src = imm;
     instr.op_dst = EA;
-    instr.imm    = decoder.ReadAdvance();
-    instr.imm    = (instr.imm << 8) | decoder.ReadAdvance();
+    instr.imm    = decoder.ReadU16();
     instr.format = I_Format::G;
 }
 

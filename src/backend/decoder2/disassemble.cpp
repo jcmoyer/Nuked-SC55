@@ -257,8 +257,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.mode       = I_AddressMode::Ad16_Rn;
-        result.disp       = decoder.ReadAdvance();
-        result.disp       = (uint16_t)((result.disp << 8) | decoder.ReadAdvance());
+        result.disp       = (int16_t)decoder.ReadU16();
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
@@ -287,8 +286,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.mode       = I_AddressMode::Aaa16;
-        result.addr       = decoder.ReadAdvance();
-        result.addr       = (result.addr << 8) | decoder.ReadAdvance();
+        result.addr       = decoder.ReadU16();
         result.is_general = true;
     }
     else if (byte == 0b00000100)
@@ -302,8 +300,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     {
         result.op_size    = WORD;
         result.mode       = I_AddressMode::imm16;
-        result.imm        = decoder.ReadAdvance();
-        result.imm        = (result.imm << 8) | decoder.ReadAdvance();
+        result.imm        = decoder.ReadU16();
         result.is_general = true;
     }
     else
