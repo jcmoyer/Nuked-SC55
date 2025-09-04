@@ -17,7 +17,7 @@
 // This function creates a table that implements all of these instructions for
 // a specific mode and size.
 
-template <MCU_Operand_Size Sz, typename Mode> // TODO: bake EAReg into mode
+template <MCU_Operand_Size Sz, typename Mode>
 constexpr std::array<D_OpcodeHandler, 256> DefineGenericTable()
 {
     std::array<D_OpcodeHandler, 256> t{};

@@ -15,6 +15,8 @@
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -29,6 +31,8 @@ void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -43,6 +47,8 @@ void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, typename Mode>
 void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = MCU_ReadCodeAdvance(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -57,6 +63,8 @@ void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIn
 template <MCU_Operand_Size Sz, typename Mode>
 void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = MCU_ReadCodeAdvance16(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -71,6 +79,8 @@ void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 template <MCU_Operand_Size Sz, typename Mode>
 void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = MCU_ReadCodeAdvance(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -85,6 +95,8 @@ void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIn
 template <MCU_Operand_Size Sz, typename Mode>
 void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = MCU_ReadCodeAdvance16(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -99,6 +111,8 @@ void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 template <MCU_Operand_Size Sz, typename Mode, int8_t N>
 void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADD_Q_B_n<Mode, N>, instr);
@@ -112,12 +126,16 @@ void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <typename Mode>
 void D_SWAP_B(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     mcu.icache.DoCache(mcu, instr_start, I_SWAP_B<Mode>, instr);
 }
 
 template <uint8_t OpReg, typename Mode>
 void D_XCH_W_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     mcu.icache.DoCache(mcu, instr_start, I_XCH_W_Rs_Rd<Mode>, instr);
 }
@@ -125,6 +143,8 @@ void D_XCH_W_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -139,6 +159,8 @@ void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -153,6 +175,8 @@ void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -167,6 +191,8 @@ void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -181,6 +207,8 @@ void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, typename Mode>
 void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHLL_B_EAd<Mode>, instr);
@@ -194,6 +222,8 @@ void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 template <MCU_Operand_Size Sz, typename Mode>
 void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHLR_B_EAd<Mode>, instr);
@@ -207,6 +237,8 @@ void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 template <MCU_Operand_Size Sz, typename Mode>
 void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_NEG_B_EAd<Mode>, instr);
@@ -220,6 +252,8 @@ void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 template <MCU_Operand_Size Sz, typename Mode>
 void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CLR_B_EAd<Mode>, instr);
@@ -233,6 +267,8 @@ void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 template <MCU_Operand_Size Sz, typename Mode>
 void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_TST_B_EAd<Mode>, instr);
@@ -246,6 +282,8 @@ void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -260,6 +298,8 @@ void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -274,6 +314,8 @@ void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -288,6 +330,8 @@ void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <typename Mode>
 void D_EXTS_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     static_assert(std::is_same_v<Mode, I_Rn_State>);
     mcu.icache.DoCache(mcu, instr_start, I_EXTS_B_Rd<Mode>, instr);
 }
@@ -295,6 +339,8 @@ void D_EXTS_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 template <typename Mode>
 void D_EXTU_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     static_assert(std::is_same_v<Mode, I_Rn_State>);
     mcu.icache.DoCache(mcu, instr_start, I_EXTU_B_Rd<Mode>, instr);
 }
@@ -302,6 +348,8 @@ void D_EXTU_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 template <MCU_Operand_Size Sz, typename Mode>
 void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_NOT_B_EAd<Mode>, instr);
@@ -315,6 +363,8 @@ void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -329,6 +379,8 @@ void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -343,6 +395,8 @@ void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
 void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = Imm4 & 0b1111;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -357,6 +411,8 @@ void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
 void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = Imm4 & 0b1111;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -371,6 +427,8 @@ void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 template <MCU_Operand_Size Sz, typename Mode>
 void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTL_B_EAd<Mode>, instr);
@@ -384,6 +442,8 @@ void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 template <MCU_Operand_Size Sz, typename Mode>
 void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTR_B_EAd<Mode>, instr);
@@ -397,6 +457,8 @@ void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
 void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = Imm4 & 0b1111;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -411,6 +473,8 @@ void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
 void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_data = Imm4 & 0b1111;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -425,6 +489,8 @@ void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -439,6 +505,8 @@ void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
 void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_c = CR;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -453,6 +521,8 @@ void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
 void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_c = CR;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -467,6 +537,8 @@ void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -481,6 +553,8 @@ void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -495,6 +569,8 @@ void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
 void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_reg = OpReg;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -509,6 +585,8 @@ void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
 void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_c = CR;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
@@ -523,6 +601,8 @@ void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
 void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)byte;
+
     instr.op_c = CR;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {

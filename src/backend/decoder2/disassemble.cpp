@@ -75,8 +75,8 @@ void WriteHexU8(std::string& s, uint8_t val)
 
 void WriteHexU16(std::string& s, uint16_t val)
 {
-    WriteHexU8(s, val >> 8);
-    WriteHexU8(s, val & 0xff);
+    WriteHexU8(s, (uint8_t)(val >> 8));
+    WriteHexU8(s, (uint8_t)val);
 }
 
 void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& result)
@@ -118,7 +118,7 @@ void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& re
             break;
         case I_AddressMode::Aaa8:
             result = "[";
-            WriteHexU8(result, instr.addr);
+            WriteHexU8(result, (uint8_t)instr.addr);
             result += ":8]";
             break;
         case I_AddressMode::Aaa16:
@@ -128,7 +128,7 @@ void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& re
             break;
         case I_AddressMode::imm8:
             result = "#";
-            WriteHexU8(result, instr.imm);
+            WriteHexU8(result, (uint8_t)instr.imm);
             result += ":8";
             break;
         case I_AddressMode::imm16:
@@ -322,7 +322,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     }
 
     const size_t instr_last = decoder.GetPosition();
-    result.instr_size       = instr_last - instr_first;
+    result.instr_size       = (uint8_t)(instr_last - instr_first);
 
     return success;
 }

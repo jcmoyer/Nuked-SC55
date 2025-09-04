@@ -86,16 +86,19 @@ constexpr uint8_t I_GetIndirectPage(const mcu_t& mcu, uint8_t Rn)
 
 constexpr uint32_t GetEA(mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr, I_ARnP_State)
 {
+    (void)instr;
     return (uint32_t)((I_GetIndirectPage(mcu, Rn) << 16) | (uint16_t)mcu.r[Rn]);
 }
 
 constexpr uint32_t GetEA(mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr, I_Rn_State)
 {
+    (void)instr;
     return mcu.r[Rn];
 }
 
 constexpr uint32_t GetEA(mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr, I_ARn_State)
 {
+    (void)instr;
     return (uint32_t)((I_GetIndirectPage(mcu, Rn) << 16) | (uint16_t)mcu.r[Rn]);
 }
 
@@ -113,6 +116,7 @@ constexpr uint32_t GetEA(const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction
 
 constexpr uint32_t GetEA(mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr, I_AMRn_State)
 {
+    (void)instr;
     return (uint32_t)((I_GetIndirectPage(mcu, Rn) << 16) | (uint16_t)mcu.r[Rn]);
 }
 
@@ -160,11 +164,10 @@ typename MCU_Operand_Size_Int<Sz>::Type I_ReadEA(Tag, mcu_t& mcu, const I_Cached
 
 // Performs a load from EA. This may be from a register or a memory location,
 // but this function abstracts over the exact method.
-template <MCU_Operand_Size Sz, typename Tag>
+template <MCU_Operand_Size Sz, typename Mode>
 auto LoadFromEA()
 {
 }
-
 
 template <MCU_Operand_Size Sz>
 void I_WriteEA(I_Rn_State, mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Operand_Size_Int<Sz>::Type value)
@@ -706,8 +709,8 @@ static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
         return;
     }
 
-    const uint16_t q = op_value / d;
-    const uint16_t r = op_value % d;
+    const uint32_t q = (op_value / d);
+    const uint32_t r = (op_value % d);
 
     if (q > UINT16_MAX)
     {
@@ -718,8 +721,8 @@ static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
         return;
     }
 
-    mcu.r[st.op_reg + 0] = r;
-    mcu.r[st.op_reg + 1] = q;
+    mcu.r[st.op_reg + 0] = (uint16_t)r;
+    mcu.r[st.op_reg + 1] = (uint16_t)q;
 
     MCU_SetStatus(mcu, q & 0x8000, STATUS_N);
     MCU_SetStatus(mcu, q == 0, STATUS_Z);
@@ -912,8 +915,8 @@ static void I_ADDX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     const uint8_t data    = I_ReadEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t operand = I_ReadOperandReg<MCU_Operand_Size::BYTE>(mcu, st);
 
-    const uint16_t add_u = operand + data + old_C;
-    const int16_t  add_s = (int8_t)operand + (int8_t)data + old_C;
+    const uint16_t add_u = (uint16_t)(operand + data + old_C);
+    const int16_t  add_s = (int16_t)((int8_t)operand + (int8_t)data + old_C);
 
     I_WriteOperandReg<MCU_Operand_Size::BYTE>(mcu, st, (uint8_t)add_u);
     MCU_SetStatus(mcu, add_u & 0x80, STATUS_N);
@@ -996,8 +999,8 @@ static void I_SUBX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     const uint8_t EAs   = I_ReadEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t Rd    = I_ReadOperandReg<MCU_Operand_Size::BYTE>(mcu, st);
 
-    const uint16_t sub_u = Rd - EAs - sub_C;
-    const int16_t  sub_s = (int8_t)Rd - (int8_t)EAs - (int8_t)sub_C;
+    const uint16_t sub_u = (uint16_t)(Rd - EAs - sub_C);
+    const int16_t  sub_s = (int16_t)((int8_t)Rd - (int8_t)EAs - (int8_t)sub_C);
     I_WriteOperandReg<MCU_Operand_Size::BYTE>(mcu, st, (uint8_t)sub_u);
 
     const bool N = sub_u & 0x80;
@@ -1043,7 +1046,6 @@ static void I_SUBS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     const uint16_t Rd = I_ReadOperandReg<MCU_Operand_Size::WORD>(mcu, st);
 
     const uint16_t sub_u = Rd - EAs;
-    const int16_t  sub_s = (int8_t)Rd - (int8_t)EAs;
     I_WriteOperandReg<MCU_Operand_Size::WORD>(mcu, st, sub_u);
 }
 
@@ -1056,7 +1058,6 @@ static void I_SUBS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     const uint16_t Rd  = I_ReadOperandReg<MCU_Operand_Size::WORD>(mcu, st);
 
     const uint32_t sub_u = Rd - EAs;
-    const int32_t  sub_s = (int16_t)Rd - (int16_t)EAs;
     I_WriteOperandReg<MCU_Operand_Size::WORD>(mcu, st, (uint16_t)sub_u);
 }
 
@@ -1282,7 +1283,7 @@ static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 template <uint8_t CR>
 static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    const uint8_t result = I_ReadControlRegisterB(mcu, CR) | st.ea_data;
+    const uint8_t result = (uint8_t)(I_ReadControlRegisterB(mcu, CR) | st.ea_data);
     I_WriteControlRegisterB(mcu, CR, result);
     mcu.ex_ignore = 1;
 
@@ -1319,7 +1320,7 @@ template <uint8_t R>
 static void I_CMP_E_imm8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const uint8_t R_lo = (uint8_t)mcu.r[R];
-    const uint8_t data = st.op_data;
+    const uint8_t data = (uint8_t)st.op_data;
 
     const uint16_t result_u = R_lo - data;
     const int16_t  result_s = (int8_t)R_lo - (int8_t)data;

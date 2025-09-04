@@ -226,11 +226,14 @@ void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
+    I_CachedInstruction instr{};
+    instr.ea_reg = Rn;
+
     const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
     D_OpcodeHandler handler = GetDispatcherRn(opcode, Sz);
     if (handler)
     {
-        handler(mcu, instr_start, byte, {.ea_reg = Rn});
+        handler(mcu, instr_start, byte, instr);
     }
     else
     {
@@ -243,11 +246,14 @@ void D_General_PreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
+    I_CachedInstruction instr{};
+    instr.ea_reg = Rn;
+
     const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
     D_OpcodeHandler handler = GetDispatcherPreDecRn(opcode, Sz);
     if (handler)
     {
-        handler(mcu, instr_start, byte, {.ea_reg = Rn});
+        handler(mcu, instr_start, byte, instr);
     }
     else
     {
@@ -260,11 +266,14 @@ void D_General_PostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
+    I_CachedInstruction instr{};
+    instr.ea_reg = Rn;
+
     const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
     D_OpcodeHandler handler = GetDispatcherPostIncRn(opcode, Sz);
     if (handler)
     {
-        handler(mcu, instr_start, byte, {.ea_reg = Rn});
+        handler(mcu, instr_start, byte, instr);
     }
     else
     {
@@ -277,11 +286,14 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
+    I_CachedInstruction instr{};
+    instr.ea_reg = Rn;
+
     const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
     D_OpcodeHandler handler = GetDispatcherARn(opcode, Sz);
     if (handler)
     {
-        handler(mcu, instr_start, byte, {.ea_reg = Rn});
+        handler(mcu, instr_start, byte, instr);
     }
     else
     {
@@ -845,12 +857,19 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
 
 void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
+    (void)instr_start;
+    (void)byte;
+
     fprintf(stderr, "Decoder: invalid instruction at %d:%x\n", mcu.cp, mcu.pc);
     D_Fallback(mcu);
 }
 
 void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
+    (void)instr_start;
+    (void)byte;
+    (void)instr;
+
     const uint32_t base_addr = MCU_GetAddress(mcu.restore_cp, mcu.restore_pc);
 
     const uint8_t bytes[6]{
