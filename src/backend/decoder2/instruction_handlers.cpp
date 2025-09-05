@@ -1,6 +1,5 @@
 #include "instruction_handlers.h"
 
-#include "instructions.h"
 #include "mcu.h"
 
 void I_NOP(mcu_t&, const I_CachedInstruction&)

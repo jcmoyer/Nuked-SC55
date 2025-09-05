@@ -1,12 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
-constexpr uint16_t SX(uint8_t byte)
-{
-    return (uint16_t)(int8_t)byte;
-}
-
 enum class I_AddressMode
 {
     Rn,

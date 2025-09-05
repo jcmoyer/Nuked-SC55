@@ -1,5 +1,6 @@
 #include "dispatch.h"
 
+#include "address_modes.h"
 #include "dispatch_aa.h"
 #include "dispatch_arn.h"
 #include "dispatch_d8d16_rn.h"
@@ -8,7 +9,6 @@
 #include "dispatch_predec_rn.h"
 #include "dispatch_rn.h"
 #include "instruction_handlers.h"
-#include "instructions.h"
 #include "mcu.h"
 
 ///////////////////////////////////////////////////////////////////////////////

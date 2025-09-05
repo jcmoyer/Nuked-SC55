@@ -1,11 +1,17 @@
 #pragma once
 
+#include <cstdint>
 #include <type_traits>
 #include <utility>
 
-#include "instructions.h"
+#include "address_modes.h"
 #include "mcu.h"
 #include "mcu_opcodes.h"
+
+constexpr uint16_t SX(uint8_t byte)
+{
+    return (uint16_t)(int8_t)byte;
+}
 
 template <MCU_Operand_Size Sz>
 struct MCU_Operand_Size_Int

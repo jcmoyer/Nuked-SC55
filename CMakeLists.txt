@@ -69,6 +69,7 @@ target_sources(nuked-sc55-backend
     src/backend/sha/sha.h
     src/backend/sha/sha224-256.c
 
+    src/backend/decoder2/address_modes.cpp
     src/backend/decoder2/cache.cpp
     src/backend/decoder2/decode_d8d16_rn.cpp
     src/backend/decoder2/decode_imm16.cpp

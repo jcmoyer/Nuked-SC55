@@ -8,6 +8,8 @@
 #include <span>
 #include <string>
 
+#include "address_modes.h"
+
 enum I_InstructionType
 {
     Unknown,
@@ -98,8 +100,6 @@ enum I_Size
     BYTE,
     WORD,
 };
-
-#include "instructions.h"
 
 using I_RegId        = uint8_t; // range 0..7
 using I_ControlRegId = uint8_t; // range 0..7
