@@ -127,7 +127,7 @@ void Dis_ADD_Q_M1_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& in
     instr.instr  = ADD;
     instr.op_src = imm;
     instr.op_dst = EA;
-    instr.imm    = -1;
+    instr.imm    = static_cast<uint16_t>(-1);
     instr.format = I_Format::Q;
 }
 
@@ -138,7 +138,7 @@ void Dis_ADD_Q_M2_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& in
     instr.instr  = ADD;
     instr.op_src = imm;
     instr.op_dst = EA;
-    instr.imm    = -2;
+    instr.imm    = static_cast<uint16_t>(-2);
     instr.format = I_Format::Q;
 }
 

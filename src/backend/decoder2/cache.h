@@ -33,7 +33,7 @@ using I_Handler_Erased_Func = void (*)(mcu_t&, const I_CachedInstruction&);
 
 struct I_Handler
 {
-    I_Handler_Erased_Func F;
+    I_Handler_Erased_Func F = nullptr;
     I_CachedInstruction   instr;
     uint8_t               size;
 };
@@ -57,5 +57,5 @@ public:
 
 private:
     // 16 pages of 64K, TODO determine upper bound (not all pages contain code)
-    I_Handler I_CACHE[16 * 0x10000]{};
+    I_Handler I_CACHE[16 * 0x10000];
 };

@@ -210,7 +210,7 @@ public:
     {
         const uint8_t hi = ReadAdvance();
         const uint8_t lo = ReadAdvance();
-        return (hi << 8) | lo;
+        return static_cast<uint16_t>((hi << 8) | lo);
     }
 
     I_DecoderError GetError() const

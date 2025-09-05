@@ -695,7 +695,7 @@ static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     I_InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
 
-    const uint32_t op_value = (mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1];
+    const uint32_t op_value = static_cast<uint32_t>((mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1]);
 
     const uint16_t d = I_ReadEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
 
@@ -709,8 +709,8 @@ static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
         return;
     }
 
-    const uint32_t q = (op_value / d);
-    const uint32_t r = (op_value % d);
+    const uint32_t q = op_value / d;
+    const uint32_t r = op_value % d;
 
     if (q > UINT16_MAX)
     {
@@ -1357,7 +1357,7 @@ static void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     I_InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
 
-    mcu.r[st.ea_reg] = (int8_t)mcu.r[st.ea_reg];
+    mcu.r[st.ea_reg] = SX(static_cast<uint8_t>(mcu.r[st.ea_reg]));
     MCU_SetStatus(mcu, mcu.r[st.ea_reg] & 0x8000, STATUS_N);
     MCU_SetStatus(mcu, mcu.r[st.ea_reg] == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
@@ -1427,7 +1427,7 @@ static void I_ROTL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
     const uint8_t input  = I_ReadEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const bool    msb    = input & 0x80;
-    const uint8_t result = (uint8_t)(input << 1) | (uint16_t)msb;
+    const uint8_t result = static_cast<uint8_t>((input << 1) | static_cast<uint8_t>(msb));
     I_WriteEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, result & 0x80, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
@@ -1457,7 +1457,7 @@ static void I_ROTR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
     const uint8_t input  = I_ReadEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const bool    lsb    = input & 1;
-    const uint8_t result = (uint8_t)(input >> 1) | (lsb << 7);
+    const uint8_t result = static_cast<uint8_t>((input >> 1) | (lsb << 7));
     I_WriteEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, result & 0x80, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
@@ -1472,7 +1472,7 @@ static void I_ROTR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
     const uint16_t input  = I_ReadEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const bool     lsb    = input & 1;
-    const uint16_t result = (uint16_t)(input << 1) | (lsb << 7);
+    const uint16_t result = static_cast<uint16_t>((input << 1) | (lsb << 7));
     I_WriteEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);

@@ -103,7 +103,7 @@ void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& re
             result  = "[R";
             result += std::to_string(instr.ea_reg);
             result += "+";
-            WriteHexU16(result, instr.disp);
+            WriteHexU16(result, static_cast<uint16_t>(instr.disp));
             result += "]";
             break;
         case I_AddressMode::AMRn:

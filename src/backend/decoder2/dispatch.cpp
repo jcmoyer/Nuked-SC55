@@ -376,7 +376,7 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint8_t  imm_hi = MCU_ReadCodeAdvance(mcu);
     const uint8_t  imm_lo = MCU_ReadCodeAdvance(mcu);
-    const uint16_t imm    = (int16_t)((imm_hi << 8) | imm_lo);
+    const uint16_t imm    = static_cast<uint16_t>((imm_hi << 8) | imm_lo);
 
     I_CachedInstruction instr{};
     instr.ea_data = imm;
@@ -422,7 +422,7 @@ void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint8_t  imm_hi = MCU_ReadCodeAdvance(mcu);
     const uint8_t  imm_lo = MCU_ReadCodeAdvance(mcu);
-    const uint16_t imm    = (int16_t)((imm_hi << 8) | imm_lo);
+    const uint16_t imm    = (uint16_t)((imm_hi << 8) | imm_lo);
 
     I_CachedInstruction instr{};
     instr.ea_data = imm;

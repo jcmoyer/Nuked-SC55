@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-struct I_Decoder;
+class I_Decoder;
 struct I_DecodedInstruction;
 
 // Data transfer instructions

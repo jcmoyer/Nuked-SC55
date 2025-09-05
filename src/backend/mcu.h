@@ -340,7 +340,7 @@ inline uint8_t MCU_ReadCodeAdvance(mcu_t& mcu) {
 
 inline uint16_t MCU_ReadCodeAdvance16(mcu_t& mcu) {
     uint16_t ret = MCU_ReadCodeAdvance(mcu);
-    ret = (ret << 8) | MCU_ReadCodeAdvance(mcu);
+    ret = (uint16_t)((ret << 8) | MCU_ReadCodeAdvance(mcu));
     return ret;
 }
 
