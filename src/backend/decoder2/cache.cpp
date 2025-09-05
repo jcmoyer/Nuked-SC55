@@ -2,6 +2,12 @@
 
 #include "mcu.h"
 
+I_InstructionCache::I_InstructionCache()
+{
+    m_cache = std::make_unique<ArrayType>();
+    m_cache->fill({});
+}
+
 void I_InstructionCache::DoCache(mcu_t&                     mcu,
                                  uint32_t                   instr_start,
                                  I_Handler_Erased_Func      func,

@@ -44,11 +44,7 @@ private:
     using ArrayType = std::array<I_Handler, static_cast<size_t>(16 * 0x10000)>;
 
 public:
-    I_InstructionCache()
-    {
-        m_cache = std::make_unique<ArrayType>();
-        m_cache->fill({});
-    }
+    I_InstructionCache();
 
     const I_Handler& Lookup(uint32_t addr) const
     {
