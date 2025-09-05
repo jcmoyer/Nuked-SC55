@@ -810,10 +810,6 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     {
         handler.F(mcu, handler.instr);
         mcu.pc += handler.size;
-        if (mcu.sr & STATUS_T)
-        {
-            MCU_Interrupt_Exception(mcu, EXCEPTION_SOURCE_TRACE);
-        }
         return;
     }
 
@@ -831,11 +827,6 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     else
     {
         D_Fallback(mcu);
-    }
-
-    if (mcu.sr & STATUS_T)
-    {
-        MCU_Interrupt_Exception(mcu, EXCEPTION_SOURCE_TRACE);
     }
 
 #if INSTRUCTION_HIT_TRACING
