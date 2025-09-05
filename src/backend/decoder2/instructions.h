@@ -7,18 +7,6 @@ constexpr uint16_t SX(uint8_t byte)
     return (uint16_t)(int8_t)byte;
 }
 
-// Match Upper 5 bits
-constexpr bool MU5(uint8_t pattern, uint8_t byte)
-{
-    return (byte & 0b11111000) == pattern;
-}
-
-// Match Upper 4 bits
-constexpr bool MU4(uint8_t pattern, uint8_t byte)
-{
-    return (byte & 0b11110000) == pattern;
-}
-
 enum class I_AddressMode
 {
     Rn,
@@ -64,11 +52,9 @@ constexpr bool I_HasImmediate(I_AddressMode mode)
     }
 }
 
-// These types serve dual purposes;
-// 1. Tag dispatch - types are used to find the correct functions to call in
-//    generic contexts. Specifically, instruction handlers are parameterized by
-//    mode.
-// 2. Modes referring to a register encode the register as part of their type.
+// These types represent individual addressing modes. Each instruction handler
+// is parameterized by one of these types and uses it to select the correct
+// overloads of functions that read/write instruction operands.
 
 // clang-format off
 // Register direct (Rn)
