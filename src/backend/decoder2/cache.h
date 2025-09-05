@@ -1,9 +1,8 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <vector>
+#include <memory>
 
 struct mcu_t;
 
@@ -33,7 +32,7 @@ using I_Handler_Erased_Func = void (*)(mcu_t&, const I_CachedInstruction&);
 
 struct I_Handler
 {
-    I_Handler_Erased_Func F = nullptr;
+    I_Handler_Erased_Func F;
     I_CachedInstruction   instr;
     uint8_t               size;
 };
@@ -43,10 +42,20 @@ using I_Func_Index = uint16_t;
 
 class I_InstructionCache
 {
+private:
+    // 16 pages of 64K, TODO determine upper bound (not all pages contain code)
+    using ArrayType = std::array<I_Handler, static_cast<size_t>(16 * 0x10000)>;
+
 public:
+    I_InstructionCache()
+    {
+        m_cache = std::make_unique<ArrayType>();
+        m_cache->fill({});
+    }
+
     const I_Handler& Lookup(uint32_t addr) const
     {
-        return I_CACHE[addr];
+        return (*m_cache)[addr];
     }
 
     void DoCache(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, const I_CachedInstruction& st);
@@ -56,6 +65,5 @@ public:
     void DoCacheBranch(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
 
 private:
-    // 16 pages of 64K, TODO determine upper bound (not all pages contain code)
-    I_Handler I_CACHE[16 * 0x10000];
+    std::unique_ptr<ArrayType> m_cache;
 };
