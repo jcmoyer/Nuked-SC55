@@ -37,9 +37,6 @@ struct I_Handler
     uint8_t               size;
 };
 
-// index into I_FUNCS
-using I_Func_Index = uint16_t;
-
 class I_InstructionCache
 {
 private:
