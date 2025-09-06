@@ -373,7 +373,7 @@ void Dis_AND_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& inst
     instr.op_reg = byte & 0b111;
 }
 
-void Dis_OR_B_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+void Dis_OR_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;
     instr.instr  = OR;

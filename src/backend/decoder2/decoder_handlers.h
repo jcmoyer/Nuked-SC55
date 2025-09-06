@@ -55,7 +55,7 @@ void Dis_ROTXR_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr
 
 // Logic operation instructions
 void Dis_AND_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
-void Dis_OR_B_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_OR_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_XOR_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_NOT_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 

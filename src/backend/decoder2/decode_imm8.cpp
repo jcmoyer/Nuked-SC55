@@ -67,14 +67,14 @@ constexpr Decoder_Handler DIS_GENERAL_IMM8[256] = {
     Dis_SUBS_EAs_Rd,        // 00111101
     Dis_SUBS_EAs_Rd,        // 00111110
     Dis_SUBS_EAs_Rd,        // 00111111
-    Dis_OR_B_EAs_Rd,        // 01000000
-    Dis_OR_B_EAs_Rd,        // 01000001
-    Dis_OR_B_EAs_Rd,        // 01000010
-    Dis_OR_B_EAs_Rd,        // 01000011
-    Dis_OR_B_EAs_Rd,        // 01000100
-    Dis_OR_B_EAs_Rd,        // 01000101
-    Dis_OR_B_EAs_Rd,        // 01000110
-    Dis_OR_B_EAs_Rd,        // 01000111
+    Dis_OR_EAs_Rd,          // 01000000
+    Dis_OR_EAs_Rd,          // 01000001
+    Dis_OR_EAs_Rd,          // 01000010
+    Dis_OR_EAs_Rd,          // 01000011
+    Dis_OR_EAs_Rd,          // 01000100
+    Dis_OR_EAs_Rd,          // 01000101
+    Dis_OR_EAs_Rd,          // 01000110
+    Dis_OR_EAs_Rd,          // 01000111
     Dis_ORC_imm_CR,         // 01001000
     Dis_ORC_imm_CR,         // 01001001
     Dis_ORC_imm_CR,         // 01001010
