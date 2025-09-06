@@ -127,7 +127,7 @@ enum class I_Format : uint8_t
 
 struct I_DecodedInstruction
 {
-    I_AddressMode     mode; // only valid when is_general == true
+    AddressMode     mode; // only valid when is_general == true
     I_Format          format;
     I_Size            op_size;
     I_InstructionType instr = Unknown;

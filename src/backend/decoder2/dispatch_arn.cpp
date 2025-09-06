@@ -4,8 +4,8 @@
 #include "dispatch_address.h"
 
 constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> POSTINC_DECODE_TABLES{{
-    DefineGenericTable<MCU_Operand_Size::BYTE, I_ARn_State>(),
-    DefineGenericTable<MCU_Operand_Size::WORD, I_ARn_State>(),
+    DefineGenericTable<MCU_Operand_Size::BYTE, Mode_ARn>(),
+    DefineGenericTable<MCU_Operand_Size::WORD, Mode_ARn>(),
 }};
 
 D_OpcodeHandler GetDispatcherARn(uint8_t opcode, MCU_Operand_Size size)

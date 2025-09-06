@@ -11,13 +11,13 @@ struct Size_To_Mode
 template <>
 struct Size_To_Mode<MCU_Operand_Size::BYTE>
 {
-    using Type = I_imm8_State;
+    using Type = Mode_Imm8;
 };
 
 template <>
 struct Size_To_Mode<MCU_Operand_Size::WORD>
 {
-    using Type = I_imm16_State;
+    using Type = Mode_Imm16;
 };
 
 // In comparison to other addressing modes, the instructions valid for

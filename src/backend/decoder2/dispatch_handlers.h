@@ -332,7 +332,7 @@ void D_EXTS_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 {
     (void)byte;
 
-    static_assert(std::is_same_v<Mode, I_Rn_State>);
+    static_assert(std::is_same_v<Mode, Mode_Rn>);
     mcu.icache.DoCache(mcu, instr_start, I_EXTS_B_Rd<Mode>, instr);
 }
 
@@ -341,7 +341,7 @@ void D_EXTU_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 {
     (void)byte;
 
-    static_assert(std::is_same_v<Mode, I_Rn_State>);
+    static_assert(std::is_same_v<Mode, Mode_Rn>);
     mcu.icache.DoCache(mcu, instr_start, I_EXTU_B_Rd<Mode>, instr);
 }
 

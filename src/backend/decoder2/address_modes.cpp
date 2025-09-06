@@ -2,29 +2,29 @@
 
 #include <utility>
 
-const char* ToCString(I_AddressMode mode)
+const char* ToCString(AddressMode mode)
 {
     switch (mode)
     {
-    case I_AddressMode::Rn:
+    case AddressMode::Rn:
         return "Rn";
-    case I_AddressMode::ARn:
+    case AddressMode::ARn:
         return "ARn";
-    case I_AddressMode::Ad8_Rn:
+    case AddressMode::Ad8_Rn:
         return "Ad8_Rn";
-    case I_AddressMode::Ad16_Rn:
+    case AddressMode::Ad16_Rn:
         return "Ad16_Rn";
-    case I_AddressMode::AMRn:
-        return "AMRn";
-    case I_AddressMode::ARnP:
-        return "ARnP";
-    case I_AddressMode::Aaa8:
+    case AddressMode::APreDecRn:
+        return "APreDecRn";
+    case AddressMode::APostIncRn:
+        return "APostIncRn";
+    case AddressMode::Aaa8:
         return "Aaa8";
-    case I_AddressMode::Aaa16:
+    case AddressMode::Aaa16:
         return "Aaa16";
-    case I_AddressMode::imm8:
+    case AddressMode::imm8:
         return "imm8";
-    case I_AddressMode::imm16:
+    case AddressMode::imm16:
         return "imm16";
     }
     std::unreachable();

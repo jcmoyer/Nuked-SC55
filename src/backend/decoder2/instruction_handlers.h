@@ -39,7 +39,7 @@ public:
         : m_mcu(mcu),
           m_instr(instr)
     {
-        if constexpr (std::is_same_v<State, I_AMRn_State>)
+        if constexpr (std::is_same_v<State, Mode_PreDecRn>)
         {
             m_mcu.r[m_instr.ea_reg] -= GetAdjust();
         }
@@ -47,7 +47,7 @@ public:
 
     ~InstructionScope()
     {
-        if constexpr (std::is_same_v<State, I_ARnP_State>)
+        if constexpr (std::is_same_v<State, Mode_PostIncRn>)
         {
             m_mcu.r[m_instr.ea_reg] += GetAdjust();
         }
@@ -91,42 +91,62 @@ constexpr uint8_t GetPageForRegister(const mcu_t& mcu, uint8_t Rn)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Implements sized stores/loads to/from mcu registers.
+template <MCU_Operand_Size Sz>
+void StoreToReg(mcu_t& mcu, uint8_t reg, typename MCU_Operand_Size_Int<Sz>::Type value)
+{
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+        mcu.r[reg] = (mcu.r[reg] & 0xff00) | value;
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+        mcu.r[reg] = value;
+}
+
+template <MCU_Operand_Size Sz>
+typename MCU_Operand_Size_Int<Sz>::Type LoadFromReg(mcu_t& mcu, uint8_t reg)
+{
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+        return (uint8_t)mcu.r[reg];
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+        return mcu.r[reg];
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Computes the EA pointer for a given addressing mode. This operation is only
 // valid for modes that refer to an address in memory - the address of a
 // register or immediate cannot be taken.
-constexpr uint32_t LoadEA(I_ARnP_State, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_d8d16_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+{
+    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
+}
+
+constexpr uint32_t LoadEA(Mode_PreDecRn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)instr;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(I_ARn_State, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_PostIncRn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)instr;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(I_aa8_State, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_ARn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+{
+    (void)instr;
+    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
+}
+
+constexpr uint32_t LoadEA(Mode_Aa8, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)Rn;
     return (uint32_t)(mcu.br << 8) | instr.ea_data;
 }
 
-constexpr uint32_t LoadEA(I_aa16_State, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_Aa16, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)Rn;
     return (uint32_t)(mcu.dp << 16) | instr.ea_data;
-}
-
-constexpr uint32_t LoadEA(I_AMRn_State, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
-{
-    (void)instr;
-    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
-}
-
-constexpr uint32_t LoadEA(I_d8d16_Rn_State, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
-{
-    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,23 +154,22 @@ constexpr uint32_t LoadEA(I_d8d16_Rn_State, mcu_t& mcu, uint8_t Rn, const I_Cach
 // from a register or a memory location, but this function abstracts over the
 // exact method. To obtain the pointer itself, use LoadEA instead.
 template <MCU_Operand_Size Sz>
-auto LoadFromEA(I_Rn_State, mcu_t& mcu, const I_CachedInstruction& instr)
+auto LoadFromEA(Mode_Rn, mcu_t& mcu, const I_CachedInstruction& instr)
 {
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
-        return (uint8_t)mcu.r[instr.ea_reg];
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
-        return mcu.r[instr.ea_reg];
+    return LoadFromReg<Sz>(mcu, instr.ea_reg);
 }
 
 template <MCU_Operand_Size Sz>
-uint8_t LoadFromEA(I_imm8_State, mcu_t& mcu, const I_CachedInstruction& instr)
+    requires(Sz == MCU_Operand_Size::BYTE)
+uint8_t LoadFromEA(Mode_Imm8, mcu_t& mcu, const I_CachedInstruction& instr)
 {
     (void)mcu;
     return (uint8_t)instr.ea_data;
 }
 
 template <MCU_Operand_Size Sz>
-uint16_t LoadFromEA(I_imm16_State, mcu_t& mcu, const I_CachedInstruction& instr)
+    requires(Sz == MCU_Operand_Size::WORD)
+uint16_t LoadFromEA(Mode_Imm16, mcu_t& mcu, const I_CachedInstruction& instr)
 {
     (void)mcu;
     return instr.ea_data;
@@ -172,22 +191,13 @@ typename MCU_Operand_Size_Int<Sz>::Type LoadFromEA(Mode, mcu_t& mcu, const I_Cac
 // to a register or a memory location, but this function abstracts over the
 // exact method. To obtain the pointer used for the store, use LoadEA.
 template <MCU_Operand_Size Sz>
-void StoreToEA(I_Rn_State, mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Operand_Size_Int<Sz>::Type value)
+void StoreToEA(Mode_Rn, mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Operand_Size_Int<Sz>::Type value)
 {
-    (void)st;
-    switch (Sz)
-    {
-    case MCU_Operand_Size::BYTE:
-        mcu.r[st.ea_reg] = (mcu.r[st.ea_reg] & 0xff00) | value;
-        break;
-    case MCU_Operand_Size::WORD:
-        mcu.r[st.ea_reg] = value;
-        break;
-    }
+    StoreToReg<Sz>(mcu, st.ea_reg, value);
 }
 
 template <MCU_Operand_Size Sz, typename Mode>
-    requires(!std::is_same_v<Mode, I_Rn_State>)
+    requires(!std::is_same_v<Mode, Mode_Rn>)
 void StoreToEA(Mode, mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Operand_Size_Int<Sz>::Type value)
 {
     const uint32_t addr = LoadEA(Mode{}, mcu, st.ea_reg, st);
@@ -197,7 +207,7 @@ void StoreToEA(Mode, mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Ope
         MCU_Write16(mcu, addr, value);
 }
 
-inline uint8_t ReadControlRegisterB(mcu_t& mcu, uint8_t cr)
+inline uint8_t LoadFromCR_B(mcu_t& mcu, uint8_t cr)
 {
     switch (cr)
     {
@@ -221,7 +231,7 @@ inline uint8_t ReadControlRegisterB(mcu_t& mcu, uint8_t cr)
     return 0;
 }
 
-inline uint16_t ReadControlRegisterW(mcu_t& mcu, uint8_t cr)
+inline uint16_t LoadFromCR_W(mcu_t& mcu, uint8_t cr)
 {
     switch (cr)
     {
@@ -232,11 +242,11 @@ inline uint16_t ReadControlRegisterW(mcu_t& mcu, uint8_t cr)
     case 2:
         break;
     case 3: // CR other than 0 "not allowed" but roms contain code that try to do this
-        return (uint16_t)((ReadControlRegisterB(mcu, cr) << 8) | ReadControlRegisterB(mcu, cr));
+        return (uint16_t)((LoadFromCR_B(mcu, cr) << 8) | LoadFromCR_B(mcu, cr));
     case 4:
-        return (uint16_t)((ReadControlRegisterB(mcu, cr) << 8) | ReadControlRegisterB(mcu, cr));
+        return (uint16_t)((LoadFromCR_B(mcu, cr) << 8) | LoadFromCR_B(mcu, cr));
     case 5:
-        return (uint16_t)((ReadControlRegisterB(mcu, cr) << 8) | ReadControlRegisterB(mcu, cr));
+        return (uint16_t)((LoadFromCR_B(mcu, cr) << 8) | LoadFromCR_B(mcu, cr));
     case 6:
         break;
     case 7:
@@ -245,7 +255,7 @@ inline uint16_t ReadControlRegisterW(mcu_t& mcu, uint8_t cr)
     return 0;
 }
 
-inline void WriteControlRegisterB(mcu_t& mcu, uint8_t cr, uint8_t value)
+inline void StoreToCR_B(mcu_t& mcu, uint8_t cr, uint8_t value)
 {
     switch (cr)
     {
@@ -273,7 +283,7 @@ inline void WriteControlRegisterB(mcu_t& mcu, uint8_t cr, uint8_t value)
     }
 }
 
-inline void WriteControlRegisterW(mcu_t& mcu, uint8_t cr, uint16_t value)
+inline void StoreToCR_W(mcu_t& mcu, uint8_t cr, uint16_t value)
 {
     switch (cr)
     {
@@ -286,13 +296,31 @@ inline void WriteControlRegisterW(mcu_t& mcu, uint8_t cr, uint16_t value)
     case 4:
         break;
     case 5: // "not allowed" but roms contain code that try to do this
-        WriteControlRegisterB(mcu, cr, (uint8_t)value);
+        StoreToCR_B(mcu, cr, (uint8_t)value);
         return;
     case 6:
     case 7:
         break;
     }
     fprintf(stderr, "I_WriteControlRegisterW: id (%d) not handled\n", cr);
+}
+
+template <MCU_Operand_Size Sz>
+inline void StoreToCR(mcu_t& mcu, uint8_t cr, typename MCU_Operand_Size_Int<Sz>::Type value)
+{
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+        StoreToCR_B(mcu, cr, value);
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+        StoreToCR_W(mcu, cr, value);
+}
+
+template <MCU_Operand_Size Sz>
+inline typename MCU_Operand_Size_Int<Sz>::Type LoadFromCR(mcu_t& mcu, uint8_t cr)
+{
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+        return LoadFromCR_B(mcu, cr);
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+        return LoadFromCR_W(mcu, cr);
 }
 
 template <MCU_Operand_Size Sz, typename State>
@@ -308,19 +336,13 @@ typename MCU_Operand_Size_Int<Sz>::Type LoadFromOpData(mcu_t& mcu, const State& 
 template <MCU_Operand_Size Sz>
 void StoreToOpReg(mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Operand_Size_Int<Sz>::Type value)
 {
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
-        mcu.r[st.op_reg] = (mcu.r[st.op_reg] & 0xff00) | value;
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
-        mcu.r[st.op_reg] = value;
+    StoreToReg<Sz>(mcu, st.op_reg, value);
 }
 
 template <MCU_Operand_Size Sz>
 typename MCU_Operand_Size_Int<Sz>::Type LoadFromOpReg(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
-        return (uint8_t)mcu.r[st.op_reg];
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
-        return mcu.r[st.op_reg];
+    return LoadFromReg<Sz>(mcu, st.op_reg);
 }
 
 // CMP:G.B <EAs>, Rd
@@ -1214,7 +1236,7 @@ static void I_LDC_B_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
     const uint8_t byte = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
 
-    WriteControlRegisterB(mcu, st.op_c, byte);
+    StoreToCR_B(mcu, st.op_c, byte);
     mcu.ex_ignore = 1;
 }
 
@@ -1226,7 +1248,7 @@ static void I_LDC_W_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
     const uint16_t word = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
 
-    WriteControlRegisterW(mcu, st.op_c, word);
+    StoreToCR_W(mcu, st.op_c, word);
     mcu.ex_ignore = 1;
 }
 
@@ -1236,7 +1258,7 @@ void I_STC_B_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
 
-    const uint8_t value = ReadControlRegisterB(mcu, st.op_c);
+    const uint8_t value = LoadFromCR_B(mcu, st.op_c);
     StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, value);
 }
 
@@ -1246,7 +1268,7 @@ void I_STC_W_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
 
-    const uint16_t value = ReadControlRegisterW(mcu, st.op_c);
+    const uint16_t value = LoadFromCR_W(mcu, st.op_c);
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, value);
 }
 
@@ -1254,8 +1276,8 @@ void I_STC_W_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <uint8_t CR>
 static void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    const uint8_t result = ReadControlRegisterB(mcu, CR) & (uint8_t)st.ea_data;
-    WriteControlRegisterB(mcu, CR, result);
+    const uint8_t result = LoadFromCR_B(mcu, CR) & (uint8_t)st.ea_data;
+    StoreToCR_B(mcu, CR, result);
     mcu.ex_ignore = 1;
 
     const bool N = result & 0x80;
@@ -1270,8 +1292,8 @@ static void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 template <uint8_t CR>
 static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    const uint16_t result = ReadControlRegisterW(mcu, CR) & st.ea_data;
-    WriteControlRegisterW(mcu, CR, result);
+    const uint16_t result = LoadFromCR_W(mcu, CR) & st.ea_data;
+    StoreToCR_W(mcu, CR, result);
     mcu.ex_ignore = 1;
 
     const bool N = result & 0x8000;
@@ -1286,8 +1308,8 @@ static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 template <uint8_t CR>
 static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    const uint8_t result = (uint8_t)(ReadControlRegisterB(mcu, CR) | st.ea_data);
-    WriteControlRegisterB(mcu, CR, result);
+    const uint8_t result = (uint8_t)(LoadFromCR_B(mcu, CR) | st.ea_data);
+    StoreToCR_B(mcu, CR, result);
     mcu.ex_ignore = 1;
 
     const bool N = result & 0x80;
@@ -1302,8 +1324,8 @@ static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 template <uint8_t CR>
 static void I_ORC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    const uint16_t result = ReadControlRegisterW(mcu, CR) | st.ea_data;
-    WriteControlRegisterW(mcu, CR, result);
+    const uint16_t result = LoadFromCR_W(mcu, CR) | st.ea_data;
+    StoreToCR_W(mcu, CR, result);
     mcu.ex_ignore = 1;
 
     const bool N = result & 0x8000;
@@ -1577,12 +1599,12 @@ template <uint8_t Rn>
 static void I_CMP_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as register-direct CMP:G.W #xx:16,EAd
-    I_CMP_G_W_imm16_EAd<I_Rn_State>(mcu, st);
+    I_CMP_G_W_imm16_EAd<Mode_Rn>(mcu, st);
 }
 
 template <uint8_t Rn>
 static void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as register-direct MOV:G.W #xx:16,EAd
-    I_MOV_G_W_imm16_EAd<I_Rn_State>(mcu, st);
+    I_MOV_G_W_imm16_EAd<Mode_Rn>(mcu, st);
 }

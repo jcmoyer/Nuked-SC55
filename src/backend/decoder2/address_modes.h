@@ -1,71 +1,57 @@
 #pragma once
 
-enum class I_AddressMode
+enum class AddressMode
 {
+    // Register direct (Rn)
     Rn,
+    // Register indirect (@Rn)
     ARn,
+    // Register indirect with displacement (@(d:8, Rn), @(d:16, Rn))
     Ad8_Rn,
     Ad16_Rn,
-    AMRn,
-    ARnP,
+    // Register indirect with pre-decrement or post-increment (@-Rn, @Rn+)
+    APreDecRn,
+    APostIncRn,
+    // Absolute address (@aa:8, @aa:16)
     Aaa8,
     Aaa16,
+    // Immediate (#xx:8, #xx:16)
     imm8,
     imm16,
 };
 
-const char* ToCString(I_AddressMode mode);
+const char* ToCString(AddressMode mode);
 
-constexpr bool I_RefsAddress(I_AddressMode mode)
-{
-    switch (mode)
-    {
-    case I_AddressMode::ARn:
-    case I_AddressMode::Ad8_Rn:
-    case I_AddressMode::Ad16_Rn:
-    case I_AddressMode::AMRn:
-    case I_AddressMode::ARnP:
-    case I_AddressMode::Aaa8:
-    case I_AddressMode::Aaa16:
-        return true;
-    default:
-        return false;
-    }
-}
-
-constexpr bool I_HasImmediate(I_AddressMode mode)
-{
-    switch (mode)
-    {
-    case I_AddressMode::imm8:
-    case I_AddressMode::imm16:
-        return true;
-    default:
-        return false;
-    }
-}
-
-// These types represent individual addressing modes. Each instruction handler
-// is parameterized by one of these types and uses it to select the correct
-// overloads of functions that read/write instruction operands.
+// These types represent individual addressing modes in compile-time known
+// contexts. Each instruction handler is parameterized by one of these types
+// and uses it to generically select the correct functions to read/write
+// instruction operands.
 
 // clang-format off
+
 // Register direct (Rn)
-struct I_Rn_State{};
+struct Mode_Rn{};
+
 // Register indirect (@Rn)
-struct I_ARn_State{};
+struct Mode_ARn{};
+
 // Register indirect with displacement (@(d:8, Rn), @(d:16, Rn))
+//
 // This type combines both modes since they share the same instructions and the
-// code to handle each displacement is identical.
-struct I_d8d16_Rn_State{};
-// Register indirect with pre-decrement or post-increment (@-Rn, @+Rn)
-struct I_AMRn_State{};
-struct I_ARnP_State{};
+// code to handle displacements is identical.
+struct Mode_d8d16_Rn{};
+
+// Register indirect with pre-decrement (@-Rn)
+struct Mode_PreDecRn{};
+// Register indirect with post-increment (@Rn+)
+struct Mode_PostIncRn{};
+
 // Immediate (#xx:8, #xx:16)
-struct I_imm8_State{};
-struct I_imm16_State{};
+struct Mode_Imm8{};
+struct Mode_Imm16{};
+
 // Absolute (@aa:8, @aa:16)
-struct I_aa8_State{};
-struct I_aa16_State{};
+struct Mode_Aa8{};
+struct Mode_Aa16{};
 
 // clang-format on

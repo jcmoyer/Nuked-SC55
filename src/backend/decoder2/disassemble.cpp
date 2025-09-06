@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "address_modes.h"
 #include "decode_d8d16_rn.h"
 #include "decode_imm8.h"
 #include "decode_mrn.h"
@@ -9,7 +10,6 @@
 #include "decode_rnp.h"
 #include "decode_short.h"
 #include "decoder_handlers.h"
-#include "address_modes.h"
 
 std::string I_RenderFormatSuffix(I_Format format)
 {
@@ -61,49 +61,49 @@ void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& re
     case EA:
         switch (instr.mode)
         {
-        case I_AddressMode::Rn:
+        case AddressMode::Rn:
             result  = "R";
             result += std::to_string(instr.ea_reg);
             break;
-        case I_AddressMode::ARn:
+        case AddressMode::ARn:
             result  = "[R";
             result += std::to_string(instr.ea_reg);
             result += "]";
             break;
-        case I_AddressMode::Ad8_Rn:
-        case I_AddressMode::Ad16_Rn:
+        case AddressMode::Ad8_Rn:
+        case AddressMode::Ad16_Rn:
             result  = "[R";
             result += std::to_string(instr.ea_reg);
             result += "+";
             WriteHexU16(result, static_cast<uint16_t>(instr.disp));
             result += "]";
             break;
-        case I_AddressMode::AMRn:
+        case AddressMode::APreDecRn:
             result  = "[--R";
             result += std::to_string(instr.ea_reg);
             result += "]";
             break;
-        case I_AddressMode::ARnP:
+        case AddressMode::APostIncRn:
             result  = "[R";
             result += std::to_string(instr.ea_reg);
             result += "++]";
             break;
-        case I_AddressMode::Aaa8:
+        case AddressMode::Aaa8:
             result = "[";
             WriteHexU8(result, (uint8_t)instr.addr);
             result += ":8]";
             break;
-        case I_AddressMode::Aaa16:
+        case AddressMode::Aaa16:
             result = "[";
             WriteHexU16(result, instr.addr);
             result += ":16]";
             break;
-        case I_AddressMode::imm8:
+        case AddressMode::imm8:
             result = "#";
             WriteHexU8(result, (uint8_t)instr.imm);
             result += ":8";
             break;
-        case I_AddressMode::imm16:
+        case AddressMode::imm16:
             result = "#";
             WriteHexU16(result, instr.imm);
             result += ":16";
@@ -145,37 +145,37 @@ bool I_DisassembleOpcode(I_Decoder& decoder, uint8_t opcode, I_DecodedInstructio
     {
         switch (result.mode)
         {
-        case I_AddressMode::Rn:
+        case AddressMode::Rn:
             if (auto handler = GetDecoderRn(opcode); handler)
             {
                 handler(decoder, opcode, result);
             }
             break;
-        case I_AddressMode::Ad8_Rn:
-        case I_AddressMode::Ad16_Rn:
+        case AddressMode::Ad8_Rn:
+        case AddressMode::Ad16_Rn:
         // These three addressing modes use the same instructions as displacement modes
-        case I_AddressMode::Aaa16:
-        case I_AddressMode::Aaa8:
-        case I_AddressMode::ARn:
+        case AddressMode::Aaa16:
+        case AddressMode::Aaa8:
+        case AddressMode::ARn:
             if (auto handler = GetDecoderd8d16Rn(opcode); handler)
             {
                 handler(decoder, opcode, result);
             }
             break;
-        case I_AddressMode::AMRn:
+        case AddressMode::APreDecRn:
             if (auto handler = GetDecoderRnP(opcode); handler)
             {
                 handler(decoder, opcode, result);
             }
             break;
-        case I_AddressMode::ARnP:
+        case AddressMode::APostIncRn:
             if (auto handler = GetDecoderMRn(opcode); handler)
             {
                 handler(decoder, opcode, result);
             }
             break;
-        case I_AddressMode::imm8:
-        case I_AddressMode::imm16:
+        case AddressMode::imm8:
+        case AddressMode::imm16:
             if (auto handler = GetDecoderimm8(opcode); handler)
             {
                 handler(decoder, opcode, result);
@@ -205,14 +205,14 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
 
     if ((byte & 0b11110000) == 0b10100000)
     {
-        result.mode       = I_AddressMode::Rn;
+        result.mode       = AddressMode::Rn;
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110000) == 0b11010000)
     {
-        result.mode       = I_AddressMode::ARn;
+        result.mode       = AddressMode::ARn;
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
@@ -220,7 +220,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     else if ((byte & 0b11110000) == 0b11100000)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
-        result.mode       = I_AddressMode::Ad8_Rn;
+        result.mode       = AddressMode::Ad8_Rn;
         result.disp       = (int8_t)decoder.ReadAdvance();
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
@@ -228,7 +228,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     else if ((byte & 0b11110000) == 0b11110000)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
-        result.mode       = I_AddressMode::Ad16_Rn;
+        result.mode       = AddressMode::Ad16_Rn;
         result.disp       = (int16_t)decoder.ReadU16();
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
@@ -236,42 +236,42 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     else if ((byte & 0b11110000) == 0b10110000)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
-        result.mode       = I_AddressMode::AMRn;
+        result.mode       = AddressMode::APreDecRn;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110000) == 0b11000000)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
-        result.mode       = I_AddressMode::ARnP;
+        result.mode       = AddressMode::APostIncRn;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110111) == 0b00000101)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
-        result.mode       = I_AddressMode::Aaa8;
+        result.mode       = AddressMode::Aaa8;
         result.addr       = decoder.ReadAdvance();
         result.is_general = true;
     }
     else if ((byte & 0b11110111) == 0b00010101)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
-        result.mode       = I_AddressMode::Aaa16;
+        result.mode       = AddressMode::Aaa16;
         result.addr       = decoder.ReadU16();
         result.is_general = true;
     }
     else if (byte == 0b00000100)
     {
         result.op_size    = BYTE;
-        result.mode       = I_AddressMode::imm8;
+        result.mode       = AddressMode::imm8;
         result.imm        = decoder.ReadAdvance();
         result.is_general = true;
     }
     else if (byte == 0b00001100)
     {
         result.op_size    = WORD;
-        result.mode       = I_AddressMode::imm16;
+        result.mode       = AddressMode::imm16;
         result.imm        = decoder.ReadU16();
         result.is_general = true;
     }
