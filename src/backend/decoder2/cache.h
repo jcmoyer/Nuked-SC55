@@ -57,6 +57,8 @@ public:
 
     void DoCacheBranch(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
 
+    size_t CountCached() const;
+
 private:
     std::unique_ptr<ArrayType> m_cache;
 };

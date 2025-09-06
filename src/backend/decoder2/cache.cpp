@@ -38,3 +38,16 @@ void I_InstructionCache::DoCacheBranch(mcu_t& mcu, uint32_t instr_start, I_Handl
     (*m_cache)[instr_start] = {.F = func, .instr = st, .size = 0};
     func(mcu, st);
 }
+
+size_t I_InstructionCache::CountCached() const
+{
+    size_t count = 0;
+    for (const auto& i : *m_cache)
+    {
+        if (i.F)
+        {
+            ++count;
+        }
+    }
+    return count;
+}

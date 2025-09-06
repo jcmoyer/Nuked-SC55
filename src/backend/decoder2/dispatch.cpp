@@ -18,6 +18,12 @@
 
 #include "disassemble.h"
 
+#define INSTRUCTION_HIT_TRACING 1
+
+#if INSTRUCTION_HIT_TRACING
+#include <vector>
+#endif
+
 struct hit
 {
     uint8_t _instr_bytes[6]{};
@@ -797,8 +803,6 @@ D_Handler DECODE_TABLE_0[256] = {
     D_General_d16_Rn<MCU_Operand_Size::WORD, 7>,    // 11111111
 };
 
-#define INSTRUCTION_HIT_TRACING 0
-
 void D_FetchDecodeExecuteNext(mcu_t& mcu)
 {
     mcu.restore_pc = mcu.pc;
@@ -840,7 +844,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
             PrintHitCount(kvp.first, kvp.second);
         }
 
-        fprintf(stderr, "total cached: %lld\n", mcu.icache.I_FUNCS.size());
+        fprintf(stderr, "total cached: %zu\n", mcu.icache.CountCached());
         exit(0);
     }
 #endif
