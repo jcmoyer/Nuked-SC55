@@ -1,8 +1,8 @@
-#include "decode_d8d16_rn.h"
+#include "decode_address.h"
 
 #include "decoder_handlers.h"
 
-constexpr Decoder_Handler DIS_GENERAL_D8D16RN[256] = {
+constexpr Decoder_Handler GENERIC_TABLE[256] = {
     nullptr,                // 00000000 TODO
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
@@ -19,9 +19,9 @@ constexpr Decoder_Handler DIS_GENERAL_D8D16RN[256] = {
     Dis_ADD_Q_M2_EAd,       // 00001101
     Dis_InvalidInstruction, // 00001110
     Dis_InvalidInstruction, // 00001111
-    nullptr,                // 00010000
-    nullptr,                // 00010001
-    nullptr,                // 00010010
+    Dis_InvalidInstruction, // 00010000
+    Dis_InvalidInstruction, // 00010001
+    Dis_InvalidInstruction, // 00010010
     Dis_CLR_EAd,            // 00010011
     Dis_NEG_EAd,            // 00010100
     Dis_NOT_EAd,            // 00010101
@@ -261,7 +261,7 @@ constexpr Decoder_Handler DIS_GENERAL_D8D16RN[256] = {
     Dis_BTST_imm4_EAd,      // 11111111
 };
 
-Decoder_Handler GetDecoderd8d16Rn(uint8_t byte)
+Decoder_Handler GetDecoderGeneric(uint8_t byte)
 {
-    return DIS_GENERAL_D8D16RN[byte];
+    return GENERIC_TABLE[byte];
 }

@@ -3,11 +3,9 @@
 #include <utility>
 
 #include "address_modes.h"
-#include "decode_d8d16_rn.h"
+#include "decode_address.h"
 #include "decode_imm8.h"
-#include "decode_mrn.h"
 #include "decode_rn.h"
-#include "decode_rnp.h"
 #include "decode_short.h"
 #include "decoder_handlers.h"
 
@@ -151,29 +149,20 @@ bool I_DisassembleOpcode(I_Decoder& decoder, uint8_t opcode, I_DecodedInstructio
                 handler(decoder, opcode, result);
             }
             break;
+        // These addressing modes all share the same instructions
         case AddressMode::Ad8_Rn:
         case AddressMode::Ad16_Rn:
-        // These three addressing modes use the same instructions as displacement modes
         case AddressMode::Aaa16:
         case AddressMode::Aaa8:
         case AddressMode::ARn:
-            if (auto handler = GetDecoderd8d16Rn(opcode); handler)
-            {
-                handler(decoder, opcode, result);
-            }
-            break;
         case AddressMode::APreDecRn:
-            if (auto handler = GetDecoderRnP(opcode); handler)
-            {
-                handler(decoder, opcode, result);
-            }
-            break;
         case AddressMode::APostIncRn:
-            if (auto handler = GetDecoderMRn(opcode); handler)
+            if (auto handler = GetDecoderGeneric(opcode); handler)
             {
                 handler(decoder, opcode, result);
             }
             break;
+        // Immediate modes share instructions
         case AddressMode::imm8:
         case AddressMode::imm16:
             if (auto handler = GetDecoderimm8(opcode); handler)

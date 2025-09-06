@@ -7,9 +7,9 @@ constexpr Decoder_Handler DIS_GENERAL_IMM8[256] = {
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
     Dis_InvalidInstruction, // 00000011
-    Dis_InvalidInstruction, // 00000100
+    Dis_CMP_G_imm8_EAd,     // 00000100
     Dis_InvalidInstruction, // 00000101
-    Dis_InvalidInstruction, // 00000110
+    Dis_MOV_G_imm8_EAd,     // 00000110
     Dis_InvalidInstruction, // 00000111
     Dis_InvalidInstruction, // 00001000
     Dis_InvalidInstruction, // 00001001

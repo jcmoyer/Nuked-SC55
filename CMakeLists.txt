@@ -71,12 +71,10 @@ target_sources(nuked-sc55-backend
 
     src/backend/decoder2/address_modes.cpp
     src/backend/decoder2/cache.cpp
-    src/backend/decoder2/decode_d8d16_rn.cpp
+    src/backend/decoder2/decode_address.cpp
     src/backend/decoder2/decode_imm16.cpp
     src/backend/decoder2/decode_imm8.cpp
-    src/backend/decoder2/decode_mrn.cpp
     src/backend/decoder2/decode_rn.cpp
-    src/backend/decoder2/decode_rnp.cpp
     src/backend/decoder2/decode_short.cpp
     src/backend/decoder2/decoder_handlers.cpp
     src/backend/decoder2/disassemble.cpp
