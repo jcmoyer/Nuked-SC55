@@ -80,7 +80,9 @@ enum I_InstructionType
     JSR,
     RTS,
     RTD,
-    SCB,
+    SCB_F,
+    SCB_NE,
+    SCB_EQ,
     PJMP,
     PJSR,
     PRTS,
@@ -154,6 +156,7 @@ enum class I_DecoderErrorCode : uint8_t
     NoMoreBytes = 1,
     InvalidStartingPosition,
     InvalidGenericJump,
+    InvalidInstructionFormat,
 };
 
 struct I_DecoderError

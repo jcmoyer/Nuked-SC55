@@ -4,14 +4,14 @@
 
 constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_NOP,              // 00000000
-    nullptr,              // 00000001
+    Dis_SCB_F,            // 00000001
     Dis_LDM_SP_Reglist,   // 00000010
     nullptr,              // 00000011
     nullptr,              // 00000100
     nullptr,              // 00000101
-    nullptr,              // 00000110
-    nullptr,              // 00000111
-    nullptr,              // 00001000
+    Dis_SCB_NE,           // 00000110
+    Dis_SCB_EQ,           // 00000111
+    Dis_TRAPA_imm4,       // 00001000
     nullptr,              // 00001001
     nullptr,              // 00001010
     nullptr,              // 00001011
@@ -83,14 +83,14 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_CMP_I_W_imm16_Rd, // 01001101
     Dis_CMP_I_W_imm16_Rd, // 01001110
     Dis_CMP_I_W_imm16_Rd, // 01001111
-    nullptr,              // 01010000
-    nullptr,              // 01010001
-    nullptr,              // 01010010
-    nullptr,              // 01010011
-    nullptr,              // 01010100
-    nullptr,              // 01010101
-    nullptr,              // 01010110
-    nullptr,              // 01010111
+    Dis_MOV_E_imm8_Rd,    // 01010000
+    Dis_MOV_E_imm8_Rd,    // 01010001
+    Dis_MOV_E_imm8_Rd,    // 01010010
+    Dis_MOV_E_imm8_Rd,    // 01010011
+    Dis_MOV_E_imm8_Rd,    // 01010100
+    Dis_MOV_E_imm8_Rd,    // 01010101
+    Dis_MOV_E_imm8_Rd,    // 01010110
+    Dis_MOV_E_imm8_Rd,    // 01010111
     Dis_MOV_I_W_imm16_Rd, // 01011000
     Dis_MOV_I_W_imm16_Rd, // 01011001
     Dis_MOV_I_W_imm16_Rd, // 01011010
@@ -99,38 +99,38 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_MOV_I_W_imm16_Rd, // 01011101
     Dis_MOV_I_W_imm16_Rd, // 01011110
     Dis_MOV_I_W_imm16_Rd, // 01011111
-    nullptr,              // 01100000
-    nullptr,              // 01100001
-    nullptr,              // 01100010
-    nullptr,              // 01100011
-    nullptr,              // 01100100
-    nullptr,              // 01100101
-    nullptr,              // 01100110
-    nullptr,              // 01100111
-    nullptr,              // 01101000
-    nullptr,              // 01101001
-    nullptr,              // 01101010
-    nullptr,              // 01101011
-    nullptr,              // 01101100
-    nullptr,              // 01101101
-    nullptr,              // 01101110
-    nullptr,              // 01101111
-    nullptr,              // 01110000
-    nullptr,              // 01110001
-    nullptr,              // 01110010
-    nullptr,              // 01110011
-    nullptr,              // 01110100
-    nullptr,              // 01110101
-    nullptr,              // 01110110
-    nullptr,              // 01110111
-    nullptr,              // 01111000
-    nullptr,              // 01111001
-    nullptr,              // 01111010
-    nullptr,              // 01111011
-    nullptr,              // 01111100
-    nullptr,              // 01111101
-    nullptr,              // 01111110
-    nullptr,              // 01111111
+    Dis_MOV_L_B_aa8_Rd,   // 01100000
+    Dis_MOV_L_B_aa8_Rd,   // 01100001
+    Dis_MOV_L_B_aa8_Rd,   // 01100010
+    Dis_MOV_L_B_aa8_Rd,   // 01100011
+    Dis_MOV_L_B_aa8_Rd,   // 01100100
+    Dis_MOV_L_B_aa8_Rd,   // 01100101
+    Dis_MOV_L_B_aa8_Rd,   // 01100110
+    Dis_MOV_L_B_aa8_Rd,   // 01100111
+    Dis_MOV_L_W_aa8_Rd,   // 01101000
+    Dis_MOV_L_W_aa8_Rd,   // 01101001
+    Dis_MOV_L_W_aa8_Rd,   // 01101010
+    Dis_MOV_L_W_aa8_Rd,   // 01101011
+    Dis_MOV_L_W_aa8_Rd,   // 01101100
+    Dis_MOV_L_W_aa8_Rd,   // 01101101
+    Dis_MOV_L_W_aa8_Rd,   // 01101110
+    Dis_MOV_L_W_aa8_Rd,   // 01101111
+    Dis_MOV_S_B_Rs_aa8,   // 01110000
+    Dis_MOV_S_B_Rs_aa8,   // 01110001
+    Dis_MOV_S_B_Rs_aa8,   // 01110010
+    Dis_MOV_S_B_Rs_aa8,   // 01110011
+    Dis_MOV_S_B_Rs_aa8,   // 01110100
+    Dis_MOV_S_B_Rs_aa8,   // 01110101
+    Dis_MOV_S_B_Rs_aa8,   // 01110110
+    Dis_MOV_S_B_Rs_aa8,   // 01110111
+    Dis_MOV_S_W_Rs_aa8,   // 01111000
+    Dis_MOV_S_W_Rs_aa8,   // 01111001
+    Dis_MOV_S_W_Rs_aa8,   // 01111010
+    Dis_MOV_S_W_Rs_aa8,   // 01111011
+    Dis_MOV_S_W_Rs_aa8,   // 01111100
+    Dis_MOV_S_W_Rs_aa8,   // 01111101
+    Dis_MOV_S_W_Rs_aa8,   // 01111110
+    Dis_MOV_S_W_Rs_aa8,   // 01111111
     Dis_MOV_F_B_d8_R6_Rd, // 10000000
     Dis_MOV_F_B_d8_R6_Rd, // 10000010
     Dis_MOV_F_B_d8_R6_Rd, // 10000001

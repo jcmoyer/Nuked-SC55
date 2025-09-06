@@ -421,8 +421,12 @@ const char* ToCString(I_InstructionType instr)
         return "RTS";
     case RTD:
         return "RTD";
-    case SCB:
-        return "SCB";
+    case SCB_F:
+        return "SCB/F";
+    case SCB_NE:
+        return "SCB/NE";
+    case SCB_EQ:
+        return "SCB/EQ";
     case PJMP:
         return "PJMP";
     case PJSR:

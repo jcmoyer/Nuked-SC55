@@ -1037,3 +1037,161 @@ void Dis_InvalidInstruction(I_Decoder& decoder, uint8_t byte, I_DecodedInstructi
     (void)instr;
     throw "Instruction invalid";
 }
+
+void Dis_SCB_F(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    (void)byte;
+
+    const uint8_t reg_byte = decoder.ReadAdvance();
+
+    if ((reg_byte & 0b11111000) != 0b10111000)
+    {
+        decoder.SetError({
+            .code     = I_DecoderErrorCode::InvalidInstructionFormat,
+            .position = decoder.GetPosition(),
+            .message  = "SCB/F: second byte is not 10111rrr",
+        });
+        return;
+    }
+
+    uint8_t disp = decoder.ReadAdvance();
+    instr.instr  = SCB_F;
+    instr.op_src = R;
+    instr.op_reg = reg_byte & 0b111;
+    instr.op_dst = imm;
+    instr.imm    = disp;
+}
+
+void Dis_SCB_NE(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    (void)byte;
+
+    const uint8_t reg_byte = decoder.ReadAdvance();
+
+    if ((reg_byte & 0b11111000) != 0b10111000)
+    {
+        decoder.SetError({
+            .code     = I_DecoderErrorCode::InvalidInstructionFormat,
+            .position = decoder.GetPosition(),
+            .message  = "SCB/NE: second byte is not 10111rrr",
+        });
+        return;
+    }
+
+    uint8_t disp = decoder.ReadAdvance();
+    instr.instr  = SCB_NE;
+    instr.op_src = R;
+    instr.op_reg = reg_byte & 0b111;
+    instr.op_dst = imm;
+    instr.imm    = disp;
+}
+
+void Dis_SCB_EQ(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    (void)byte;
+
+    const uint8_t reg_byte = decoder.ReadAdvance();
+
+    if ((reg_byte & 0b11111000) != 0b10111000)
+    {
+        decoder.SetError({
+            .code     = I_DecoderErrorCode::InvalidInstructionFormat,
+            .position = decoder.GetPosition(),
+            .message  = "SCB/EQ: second byte is not 10111rrr",
+        });
+        return;
+    }
+
+    uint8_t disp = decoder.ReadAdvance();
+    instr.instr  = SCB_EQ;
+    instr.op_src = R;
+    instr.op_reg = reg_byte & 0b111;
+    instr.op_dst = imm;
+    instr.imm    = disp;
+}
+
+void Dis_MOV_L_B_aa8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    const uint8_t addr = decoder.ReadAdvance();
+
+    instr.instr   = MOV;
+    instr.format  = I_Format::L;
+    instr.op_size = BYTE;
+    instr.op_src  = imm;
+    instr.imm     = addr;
+    instr.op_dst  = R;
+    instr.op_reg  = byte & 0b111;
+}
+
+void Dis_MOV_L_W_aa8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    const uint8_t addr = decoder.ReadAdvance();
+
+    instr.instr   = MOV;
+    instr.format  = I_Format::L;
+    instr.op_size = WORD;
+    instr.op_src  = imm;
+    instr.imm     = addr;
+    instr.op_dst  = R;
+    instr.op_reg  = byte & 0b111;
+}
+
+void Dis_MOV_S_B_Rs_aa8(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    const uint8_t addr = decoder.ReadAdvance();
+
+    instr.instr   = MOV;
+    instr.format  = I_Format::S;
+    instr.op_size = BYTE;
+    instr.op_src  = R;
+    instr.op_reg  = byte & 0b111;
+    instr.op_dst  = imm;
+    instr.imm     = addr;
+}
+
+void Dis_MOV_S_W_Rs_aa8(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    const uint8_t addr = decoder.ReadAdvance();
+
+    instr.instr   = MOV;
+    instr.format  = I_Format::S;
+    instr.op_size = WORD;
+    instr.op_src  = R;
+    instr.op_reg  = byte & 0b111;
+    instr.op_dst  = imm;
+    instr.imm     = addr;
+}
+
+void Dis_MOV_E_imm8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    const uint8_t data = decoder.ReadAdvance();
+
+    instr.instr   = MOV;
+    instr.format  = I_Format::E;
+    instr.op_size = BYTE;
+    instr.op_src  = imm;
+    instr.imm     = data;
+    instr.op_dst  = R;
+    instr.op_reg  = byte & 0b111;
+}
+
+void Dis_TRAPA_imm4(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    (void)byte;
+
+    const uint8_t vec_byte = decoder.ReadAdvance();
+
+    if ((vec_byte & 0b11110000) != 0b00010000)
+    {
+        decoder.SetError({
+            .code     = I_DecoderErrorCode::InvalidInstructionFormat,
+            .position = decoder.GetPosition(),
+            .message  = "TRAPA: second byte is not 0001#VEC",
+        });
+        return;
+    }
+
+    instr.instr  = TRAPA;
+    instr.op_src = imm;
+    instr.imm    = vec_byte & 0b1111;
+}

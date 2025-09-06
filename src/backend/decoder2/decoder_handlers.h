@@ -135,3 +135,15 @@ void Dis_NOP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 
 void Dis_NotImplemented(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_InvalidInstruction(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+
+void Dis_SCB_F(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_SCB_NE(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_SCB_EQ(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+
+void Dis_MOV_L_B_aa8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_MOV_L_W_aa8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_MOV_S_B_Rs_aa8(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_MOV_S_W_Rs_aa8(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_MOV_E_imm8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+
+void Dis_TRAPA_imm4(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
