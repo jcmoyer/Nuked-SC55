@@ -400,7 +400,7 @@ void Dis_NOT_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 }
 
 // Bit manipulation instructions
-void Dis_BSET_imm_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+void Dis_BSET_imm4_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;
     instr.instr  = BSET;
@@ -418,7 +418,7 @@ void Dis_BSET_Rs_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& ins
     instr.op_reg = byte & 0b111;
 }
 
-void Dis_BCLR_imm_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+void Dis_BCLR_imm4_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;
     instr.instr  = BCLR;
@@ -436,7 +436,7 @@ void Dis_BCLR_Rs_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& ins
     instr.op_reg = byte & 0b111;
 }
 
-void Dis_BTST_imm_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+void Dis_BTST_imm4_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;
     instr.instr  = BTST;
@@ -454,7 +454,7 @@ void Dis_BTST_Rs_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& ins
     instr.op_reg = byte & 0b111;
 }
 
-void Dis_BNOT_imm_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+void Dis_BNOT_imm4_EAd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;
     instr.instr  = BNOT;
