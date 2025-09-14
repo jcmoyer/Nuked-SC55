@@ -30,16 +30,67 @@ struct MCU_Operand_Size_Int<MCU_Operand_Size::WORD>
     using Type = uint16_t;
 };
 
+constexpr uint8_t ModeEASize(Mode_Rn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_ARn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_d8_Rn)
+{
+    return 2;
+}
+
+constexpr uint8_t ModeEASize(Mode_d16_Rn)
+{
+    return 3;
+}
+
+constexpr uint8_t ModeEASize(Mode_PreDecRn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_PostIncRn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_Aa8)
+{
+    return 2;
+}
+
+constexpr uint8_t ModeEASize(Mode_Aa16)
+{
+    return 3;
+}
+
+constexpr uint8_t ModeEASize(Mode_Imm8)
+{
+    return 2;
+}
+
+constexpr uint8_t ModeEASize(Mode_Imm16)
+{
+    return 3;
+}
+
 // Implements pre/post decrement/increment for @-Rn and @Rn+ addressing modes.
-template <MCU_Operand_Size Sz, typename State>
+template <MCU_Operand_Size Sz, typename Mode>
 class InstructionScope
 {
 public:
-    InstructionScope(mcu_t& mcu, const I_CachedInstruction& instr)
+    InstructionScope(mcu_t& mcu, const I_CachedInstruction& instr, uint8_t instr_size)
         : m_mcu(mcu),
-          m_instr(instr)
+          m_instr(instr),
+          m_instr_size(instr_size)
     {
-        if constexpr (std::is_same_v<State, Mode_PreDecRn>)
+        if constexpr (std::is_same_v<Mode, Mode_PreDecRn>)
         {
             m_mcu.r[m_instr.ea_reg] -= GetAdjust();
         }
@@ -47,10 +98,11 @@ public:
 
     ~InstructionScope()
     {
-        if constexpr (std::is_same_v<State, Mode_PostIncRn>)
+        if constexpr (std::is_same_v<Mode, Mode_PostIncRn>)
         {
             m_mcu.r[m_instr.ea_reg] += GetAdjust();
         }
+        m_mcu.pc += static_cast<uint8_t>(ModeEASize(Mode{}) + m_instr_size);
     }
 
 private:
@@ -68,6 +120,7 @@ private:
 private:
     mcu_t&                     m_mcu;
     const I_CachedInstruction& m_instr;
+    const uint8_t              m_instr_size;
 };
 
 constexpr uint8_t GetPageForRegister(const mcu_t& mcu, uint8_t Rn)
@@ -114,7 +167,12 @@ typename MCU_Operand_Size_Int<Sz>::Type LoadFromReg(mcu_t& mcu, uint8_t reg)
 // Computes the EA pointer for a given addressing mode. This operation is only
 // valid for modes that refer to an address in memory - the address of a
 // register or immediate cannot be taken.
-constexpr uint32_t LoadEA(Mode_d8d16_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_d8_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+{
+    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
+}
+
+constexpr uint32_t LoadEA(Mode_d16_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
 }
@@ -349,7 +407,7 @@ typename MCU_Operand_Size_Int<Sz>::Type LoadFromOpReg(mcu_t& mcu, const I_Cached
 template <typename State>
 static void I_CMP_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t d_lo  = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
     const uint8_t ea_lo = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
@@ -367,7 +425,7 @@ static void I_CMP_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CMP_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t d_word  = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
     const uint16_t ea_word = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
@@ -385,7 +443,7 @@ static void I_CMP_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CMP_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 2);
 
     const uint8_t ea_byte  = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t imm_byte = LoadFromOpData<MCU_Operand_Size::BYTE>(mcu, st);
@@ -403,7 +461,7 @@ static void I_CMP_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CMP_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 2);
 
     const uint16_t ea_word  = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint16_t imm_word = SX(LoadFromOpData<MCU_Operand_Size::BYTE>(mcu, st));
@@ -421,7 +479,7 @@ static void I_CMP_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CMP_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 3);
 
     const uint8_t ea_byte  = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t imm_byte = (uint8_t)LoadFromOpData<MCU_Operand_Size::WORD>(mcu, st);
@@ -439,7 +497,7 @@ static void I_CMP_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 3);
 
     const uint16_t ea_word  = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint16_t imm_word = LoadFromOpData<MCU_Operand_Size::WORD>(mcu, st);
@@ -457,7 +515,7 @@ static void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, 0);
     MCU_SetStatus(mcu, 0, STATUS_N);
@@ -470,7 +528,7 @@ static void I_CLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_CLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, 0);
     MCU_SetStatus(mcu, 0, STATUS_N);
@@ -483,7 +541,7 @@ static void I_CLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 void I_ADD_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t data    = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const uint8_t operand = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
@@ -502,7 +560,7 @@ void I_ADD_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 void I_ADD_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t data    = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint16_t operand = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -520,7 +578,7 @@ void I_ADD_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BSET_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t mask   = (uint8_t)(1 << st.op_data);
     const uint8_t data   = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
@@ -533,7 +591,7 @@ static void I_BSET_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BSET_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t mask   = (uint8_t)(1 << st.op_data);
     const uint16_t data   = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
@@ -546,7 +604,7 @@ static void I_BSET_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BNOT_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t mask   = (uint8_t)(1 << st.op_data);
     const uint8_t data   = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
@@ -560,7 +618,7 @@ static void I_BNOT_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t mask   = (uint8_t)(1 << st.op_data);
     const uint16_t data   = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
@@ -575,7 +633,7 @@ static void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_BCLR_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t mask = (uint8_t)(1 << st.op_data);
     const uint8_t data = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
@@ -587,7 +645,7 @@ static void I_BCLR_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t mask = (uint8_t)(1 << st.op_data);
     const uint16_t data = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
@@ -598,7 +656,7 @@ static void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BTST_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t mask = (uint8_t)(1 << st.op_data);
     const uint8_t data = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
@@ -609,7 +667,7 @@ static void I_BTST_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BTST_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t mask = (uint16_t)(1 << st.op_data);
     const uint16_t data = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
@@ -620,7 +678,7 @@ static void I_BTST_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BTST_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t data  = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const uint8_t shift = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st) & 0b1111;
@@ -632,7 +690,7 @@ static void I_BTST_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_BTST_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t data  = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint8_t  shift = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st) & 0b1111;
@@ -645,7 +703,7 @@ static void I_BTST_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MULXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t  data   = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint16_t result = data * LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
@@ -660,7 +718,7 @@ static void I_MULXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MULXU_X_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t data   = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint32_t result = data * LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -676,7 +734,7 @@ static void I_MULXU_X_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint16_t op_value = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
 
@@ -718,7 +776,7 @@ static void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint32_t op_value = static_cast<uint32_t>((mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1]);
 
@@ -763,7 +821,7 @@ static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MOV_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t data = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     StoreToOpReg<MCU_Operand_Size::BYTE>(mcu, st, data);
@@ -776,7 +834,7 @@ static void I_MOV_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MOV_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t data = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     StoreToOpReg<MCU_Operand_Size::WORD>(mcu, st, data);
@@ -789,7 +847,7 @@ static void I_MOV_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_MOV_G_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t data = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
     StoreToEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, data);
@@ -802,7 +860,7 @@ static void I_MOV_G_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_MOV_G_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t data = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
     StoreToEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st, data);
@@ -815,7 +873,7 @@ static void I_MOV_G_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MOV_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 2);
 
     const uint8_t data = LoadFromOpData<MCU_Operand_Size::BYTE>(mcu, st);
     StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, data);
@@ -828,7 +886,7 @@ static void I_MOV_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MOV_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 2);
 
     const uint16_t data_sx = SX(LoadFromOpData<MCU_Operand_Size::BYTE>(mcu, st));
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, data_sx);
@@ -841,7 +899,7 @@ static void I_MOV_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MOV_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 3);
 
     const uint8_t data_lo = (uint8_t)LoadFromOpData<MCU_Operand_Size::WORD>(mcu, st);
     StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, data_lo);
@@ -854,7 +912,7 @@ static void I_MOV_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 3);
 
     const uint16_t data = LoadFromOpData<MCU_Operand_Size::WORD>(mcu, st);
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, data);
@@ -867,7 +925,7 @@ static void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_SWAP_B(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint16_t value = std::byteswap(mcu.r[st.ea_reg]);
     mcu.r[st.ea_reg]     = value;
@@ -880,7 +938,7 @@ static void I_SWAP_B(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_XCH_W_Rs_Rd(mcu_t& mcu, const I_CachedInstruction& instr)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, instr);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, instr, 1);
 
     const uint16_t tmp  = mcu.r[instr.ea_reg];
     mcu.r[instr.ea_reg] = mcu.r[instr.op_reg];
@@ -894,7 +952,7 @@ static void I_XCH_W_Rs_Rd(mcu_t& mcu, const I_CachedInstruction& instr)
 template <typename State, int8_t N>
 static void I_ADD_Q_B_n(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t ea_byte = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
 
@@ -915,7 +973,7 @@ static void I_ADD_Q_B_n(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State, int8_t N>
 static void I_ADD_Q_W_n(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t ea_word = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
 
@@ -932,7 +990,7 @@ static void I_ADD_Q_W_n(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_ADDX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const bool old_C = mcu.sr & STATUS_C;
     const bool old_Z = mcu.sr & STATUS_Z;
@@ -953,7 +1011,7 @@ static void I_ADDX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_ADDX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const bool old_C = mcu.sr & STATUS_C;
     const bool old_Z = mcu.sr & STATUS_Z;
@@ -974,7 +1032,7 @@ static void I_ADDX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SUB_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t EAs = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t Rd  = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
@@ -996,7 +1054,7 @@ static void I_SUB_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SUB_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t EAs = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint16_t Rd  = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -1018,7 +1076,7 @@ static void I_SUB_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SUBX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t sub_C = (uint8_t)((mcu.sr & STATUS_C) != 0);
     const uint8_t EAs   = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
@@ -1041,7 +1099,7 @@ static void I_SUBX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SUBX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint8_t  sub_C = (uint8_t)((mcu.sr & STATUS_C) != 0);
     const uint16_t EAs   = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
@@ -1064,7 +1122,7 @@ static void I_SUBX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SUBS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint16_t EAs = SX(LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st));
     // Rd always accessed as word in this form
@@ -1077,7 +1135,7 @@ static void I_SUBS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SUBS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t EAs = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint16_t Rd  = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -1089,7 +1147,7 @@ static void I_SUBS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_TST_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t value = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     MCU_SetStatus(mcu, value & 0x80, STATUS_N);
@@ -1101,7 +1159,7 @@ static void I_TST_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_TST_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t value = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     MCU_SetStatus(mcu, value & 0x8000, STATUS_N);
@@ -1113,7 +1171,7 @@ static void I_TST_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_NEG_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t value = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
 
@@ -1130,7 +1188,7 @@ static void I_NEG_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_NEG_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t value = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
 
@@ -1148,7 +1206,7 @@ static void I_NEG_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SHLL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t val_old = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t val_new = (uint8_t)(val_old << 1);
@@ -1169,7 +1227,7 @@ static void I_SHLL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SHLL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t val_old = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint16_t val_new = (uint16_t)(val_old << 1);
@@ -1190,7 +1248,7 @@ static void I_SHLL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SHLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t val_old = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
     const uint8_t val_new = val_old >> 1;
@@ -1211,7 +1269,7 @@ static void I_SHLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_SHLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t val_old = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     const uint16_t val_new = val_old >> 1;
@@ -1232,7 +1290,7 @@ static void I_SHLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_LDC_B_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t byte = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
 
@@ -1244,7 +1302,7 @@ static void I_LDC_B_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 static void I_LDC_W_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint16_t word = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
 
@@ -1256,7 +1314,7 @@ static void I_LDC_W_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 void I_STC_B_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
     const uint8_t value = LoadFromCR_B(mcu, st.op_c);
     StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, value);
@@ -1266,16 +1324,18 @@ void I_STC_B_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename State>
 void I_STC_W_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t value = LoadFromCR_W(mcu, st.op_c);
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, value);
 }
 
 // ANDC.B #xx:8, CR
-template <uint8_t CR>
+template <typename Mode, uint8_t CR>
 static void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
+
     const uint8_t result = LoadFromCR_B(mcu, CR) & (uint8_t)st.ea_data;
     StoreToCR_B(mcu, CR, result);
     mcu.ex_ignore = 1;
@@ -1289,9 +1349,11 @@ static void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 // ANDC.W #xx:16, CR
-template <uint8_t CR>
+template <typename Mode, uint8_t CR>
 static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
+
     const uint16_t result = LoadFromCR_W(mcu, CR) & st.ea_data;
     StoreToCR_W(mcu, CR, result);
     mcu.ex_ignore = 1;
@@ -1305,9 +1367,11 @@ static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 // ORC.B #xx:8, CR
-template <uint8_t CR>
+template <typename Mode, uint8_t CR>
 static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
+
     const uint8_t result = (uint8_t)(LoadFromCR_B(mcu, CR) | st.ea_data);
     StoreToCR_B(mcu, CR, result);
     mcu.ex_ignore = 1;
@@ -1321,9 +1385,11 @@ static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 // ORC.W #xx:16, CR
-template <uint8_t CR>
+template <typename Mode, uint8_t CR>
 static void I_ORC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
+
     const uint16_t result = LoadFromCR_W(mcu, CR) | st.ea_data;
     StoreToCR_W(mcu, CR, result);
     mcu.ex_ignore = 1;
@@ -1336,9 +1402,9 @@ static void I_ORC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_SetStatus(mcu, V, STATUS_V);
 }
 
-// //=============================================================================
-// // End general instruction handlers
-// //=============================================================================
+//=============================================================================
+// End general instruction handlers
+//=============================================================================
 
 // CMP:E #xx:8,Rd
 template <uint8_t R>
@@ -1354,6 +1420,8 @@ static void I_CMP_E_imm8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_SetStatus(mcu, (uint8_t)result_u == 0, STATUS_Z);
     MCU_SetStatus(mcu, result_s < INT8_MIN || result_s > INT8_MAX, STATUS_V);
     MCU_SetStatus(mcu, result_u & 0x100, STATUS_C);
+
+    mcu.pc += 2;
 }
 
 void I_Bcc_d8_BRA(mcu_t& mcu, const I_CachedInstruction& st);
@@ -1380,7 +1448,7 @@ void I_NOP(mcu_t&, const I_CachedInstruction&);
 template <typename Mode>
 static void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     mcu.r[st.ea_reg] = SX(static_cast<uint8_t>(mcu.r[st.ea_reg]));
     MCU_SetStatus(mcu, mcu.r[st.ea_reg] & 0x8000, STATUS_N);
@@ -1392,7 +1460,7 @@ static void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_EXTU_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     mcu.r[st.ea_reg] = (uint8_t)mcu.r[st.ea_reg];
     MCU_SetStatus(mcu, 0, STATUS_N);
@@ -1404,7 +1472,7 @@ static void I_EXTU_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_NOT_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t value = ~LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     StoreToEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, value);
@@ -1416,7 +1484,7 @@ static void I_NOT_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_NOT_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t value = ~LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     StoreToEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st, value);
@@ -1428,7 +1496,7 @@ static void I_NOT_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_ADDS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint16_t old_reg = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
     const uint16_t value   = SX(LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st));
@@ -1438,7 +1506,7 @@ static void I_ADDS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_ADDS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t old_reg = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
     const uint16_t value   = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
@@ -1448,7 +1516,7 @@ static void I_ADDS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_ROTL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t input  = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const bool    msb    = input & 0x80;
@@ -1463,7 +1531,7 @@ static void I_ROTL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_ROTL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t input  = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const bool     msb    = input & 0x8000;
@@ -1478,7 +1546,7 @@ static void I_ROTL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_ROTR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t input  = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const bool    lsb    = input & 1;
@@ -1493,7 +1561,7 @@ static void I_ROTR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_ROTR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t input  = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const bool     lsb    = input & 1;
@@ -1508,7 +1576,7 @@ static void I_ROTR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_XOR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t EAs    = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const uint8_t Rd     = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
@@ -1523,7 +1591,7 @@ static void I_XOR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_XOR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t EAs    = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint16_t Rd     = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -1538,7 +1606,7 @@ static void I_XOR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_OR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t EAs    = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const uint8_t Rd     = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
@@ -1553,7 +1621,7 @@ static void I_OR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_OR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t EAs    = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint16_t Rd     = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -1568,7 +1636,7 @@ static void I_OR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_AND_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
     const uint8_t EAs    = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
     const uint8_t Rd     = LoadFromOpReg<MCU_Operand_Size::BYTE>(mcu, st);
@@ -1583,7 +1651,7 @@ static void I_AND_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 template <typename Mode>
 static void I_AND_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
-    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st);
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
     const uint16_t EAs    = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint16_t Rd     = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st);
@@ -1600,6 +1668,8 @@ static void I_CMP_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as register-direct CMP:G.W #xx:16,EAd
     I_CMP_G_W_imm16_EAd<Mode_Rn>(mcu, st);
+    // TODO/FIXME
+    --mcu.pc;
 }
 
 template <uint8_t Rn>
@@ -1607,4 +1677,6 @@ static void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as register-direct MOV:G.W #xx:16,EAd
     I_MOV_G_W_imm16_EAd<Mode_Rn>(mcu, st);
+    // TODO/FIXME
+    --mcu.pc;
 }

@@ -39,7 +39,8 @@ struct Mode_ARn{};
 //
 // This type combines both modes since they share the same instructions and the
 // code to handle displacements is identical.
-struct Mode_d8d16_Rn{};
+struct Mode_d8_Rn{};
+struct Mode_d16_Rn{};
 
 // Register indirect with pre-decrement (@-Rn)
 struct Mode_PreDecRn{};

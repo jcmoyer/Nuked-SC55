@@ -49,7 +49,7 @@ void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIn
 {
     (void)byte;
 
-    instr.op_data = MCU_ReadCodeAdvance(mcu);
+    instr.op_data = mcu.coder.ReadU8(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_B_imm8_EAd<Mode>, instr);
@@ -65,7 +65,7 @@ void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 {
     (void)byte;
 
-    instr.op_data = MCU_ReadCodeAdvance16(mcu);
+    instr.op_data = mcu.coder.ReadU16(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_B_imm16_EAd<Mode>, instr);
@@ -81,7 +81,7 @@ void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIn
 {
     (void)byte;
 
-    instr.op_data = MCU_ReadCodeAdvance(mcu);
+    instr.op_data = mcu.coder.ReadU8(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_B_imm8_EAd<Mode>, instr);
@@ -97,7 +97,7 @@ void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 {
     (void)byte;
 
-    instr.op_data = MCU_ReadCodeAdvance16(mcu);
+    instr.op_data = mcu.coder.ReadU16(mcu);
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_B_imm16_EAd<Mode>, instr);
@@ -590,11 +590,11 @@ void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
     instr.op_c = CR;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
-        mcu.icache.DoCache(mcu, instr_start, I_ORC_B_imm8_CR<CR>, instr);
+        mcu.icache.DoCache(mcu, instr_start, I_ORC_B_imm8_CR<Mode, CR>, instr);
     }
     else if constexpr (Sz == MCU_Operand_Size::WORD)
     {
-        mcu.icache.DoCache(mcu, instr_start, I_ORC_W_imm16_CR<CR>, instr);
+        mcu.icache.DoCache(mcu, instr_start, I_ORC_W_imm16_CR<Mode, CR>, instr);
     }
 }
 
@@ -606,10 +606,10 @@ void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
     instr.op_c = CR;
     if constexpr (Sz == MCU_Operand_Size::BYTE)
     {
-        mcu.icache.DoCache(mcu, instr_start, I_ANDC_B_imm8_CR<CR>, instr);
+        mcu.icache.DoCache(mcu, instr_start, I_ANDC_B_imm8_CR<Mode, CR>, instr);
     }
     else if constexpr (Sz == MCU_Operand_Size::WORD)
     {
-        mcu.icache.DoCache(mcu, instr_start, I_ANDC_W_imm16_CR<CR>, instr);
+        mcu.icache.DoCache(mcu, instr_start, I_ANDC_W_imm16_CR<Mode, CR>, instr);
     }
 }

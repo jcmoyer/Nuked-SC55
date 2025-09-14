@@ -18,7 +18,7 @@
 
 #include "disassemble.h"
 
-#define INSTRUCTION_HIT_TRACING 1
+#define INSTRUCTION_HIT_TRACING 0
 
 #if INSTRUCTION_HIT_TRACING
 #include <vector>
@@ -40,14 +40,6 @@ struct hit
 
     auto operator<=>(const hit&) const = default;
 };
-
-void print_bin(uint8_t x)
-{
-    for (int mask = 0x80; mask; mask >>= 1)
-    {
-        fprintf(stderr, "%c", (x & mask) ? '1' : '0');
-    }
-}
 
 void WriteBin(std::string& s, uint8_t x)
 {
@@ -131,6 +123,7 @@ void D_Fallback(mcu_t& mcu)
     mcu.pc = mcu.restore_pc;
     mcu.cp = mcu.restore_cp;
 
+    // original decoder does not use coder
     const uint8_t byte = MCU_ReadCodeAdvance(mcu);
     MCU_Operand_Table[byte](mcu, byte);
 }
@@ -202,7 +195,7 @@ void D_Short_CMP_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
-    instr.op_data = MCU_ReadCodeAdvance(mcu);
+    instr.op_data = mcu.coder.ReadU8(mcu);
     instr.ea_reg  = Rn;
     mcu.icache.DoCache(mcu, instr_start, I_CMP_E_imm8_Rd<Rn>, instr);
 }
@@ -212,7 +205,7 @@ void D_Short_CMP_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
-    instr.op_data = MCU_ReadCodeAdvance16(mcu);
+    instr.op_data = mcu.coder.ReadU8(mcu);
     instr.ea_reg  = Rn;
     mcu.icache.DoCache(mcu, instr_start, I_CMP_I_W_imm16_Rd<Rn>, instr);
 }
@@ -222,7 +215,7 @@ void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
-    instr.op_data = MCU_ReadCodeAdvance16(mcu);
+    instr.op_data = mcu.coder.ReadU16(mcu);
     instr.ea_reg  = Rn;
     mcu.icache.DoCache(mcu, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
 }
@@ -235,7 +228,7 @@ void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherRn(opcode, Sz);
     if (handler)
     {
@@ -255,7 +248,7 @@ void D_General_PreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherPreDecRn(opcode, Sz);
     if (handler)
     {
@@ -275,7 +268,7 @@ void D_General_PostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherPostIncRn(opcode, Sz);
     if (handler)
     {
@@ -295,7 +288,7 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherARn(opcode, Sz);
     if (handler)
     {
@@ -312,14 +305,14 @@ void D_General_d8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    const int16_t disp = (int8_t)MCU_ReadCodeAdvance(mcu);
+    const int16_t disp = (int8_t)mcu.coder.ReadU8(mcu);
 
     I_CachedInstruction instr{};
     instr.ea_disp = disp;
     instr.ea_reg  = Rn;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
-    D_OpcodeHandler handler = GetDispatcherd8d16Rn(opcode, Sz);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
+    D_OpcodeHandler handler = GetDispatcherd8Rn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -335,16 +328,14 @@ void D_General_d16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    const uint8_t disp_hi = MCU_ReadCodeAdvance(mcu);
-    const uint8_t disp_lo = MCU_ReadCodeAdvance(mcu);
-    const int16_t disp    = (int16_t)((disp_hi << 8) | disp_lo);
+    const int16_t disp = (int16_t)mcu.coder.ReadU16(mcu);
 
     I_CachedInstruction instr{};
     instr.ea_disp = disp;
     instr.ea_reg  = Rn;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
-    D_OpcodeHandler handler = GetDispatcherd8d16Rn(opcode, Sz);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
+    D_OpcodeHandler handler = GetDispatcherd16Rn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -359,12 +350,12 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    const uint16_t imm = MCU_ReadCodeAdvance(mcu);
+    const uint16_t imm = mcu.coder.ReadU8(mcu);
 
     I_CachedInstruction instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherimm16(opcode, MCU_Operand_Size::BYTE);
     if (handler)
     {
@@ -380,14 +371,12 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    const uint8_t  imm_hi = MCU_ReadCodeAdvance(mcu);
-    const uint8_t  imm_lo = MCU_ReadCodeAdvance(mcu);
-    const uint16_t imm    = static_cast<uint16_t>((imm_hi << 8) | imm_lo);
+    const uint16_t imm = mcu.coder.ReadU16(mcu);
 
     I_CachedInstruction instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherimm16(opcode, MCU_Operand_Size::WORD);
     if (handler)
     {
@@ -404,12 +393,12 @@ void D_General_Aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    const uint8_t imm = MCU_ReadCodeAdvance(mcu);
+    const uint8_t imm = mcu.coder.ReadU8(mcu);
 
     I_CachedInstruction instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherAa8(opcode, Sz);
     if (handler)
     {
@@ -426,14 +415,12 @@ void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    const uint8_t  imm_hi = MCU_ReadCodeAdvance(mcu);
-    const uint8_t  imm_lo = MCU_ReadCodeAdvance(mcu);
-    const uint16_t imm    = (uint16_t)((imm_hi << 8) | imm_lo);
+    const uint16_t imm = (uint16_t)mcu.coder.ReadU16(mcu);
 
     I_CachedInstruction instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = MCU_ReadCodeAdvance(mcu);
+    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
     D_OpcodeHandler handler = GetDispatcherAa16(opcode, Sz);
     if (handler)
     {
@@ -454,12 +441,10 @@ void I_Bcc(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
     switch (Sz)
     {
     case MCU_Operand_Size::BYTE:
-        disp = (int8_t)MCU_ReadCodeAdvance(mcu);
+        disp = (int8_t)mcu.coder.ReadU8(mcu);
         break;
     case MCU_Operand_Size::WORD:
-        uint16_t disp_u  = (uint16_t)(MCU_ReadCodeAdvance(mcu) << 8);
-        disp_u          |= (uint16_t)(MCU_ReadCodeAdvance(mcu));
-        disp             = (int16_t)disp_u;
+        disp = (int16_t)mcu.coder.ReadU16(mcu);
         break;
     }
     switch (cond)
@@ -526,16 +511,14 @@ void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr)
 void D_BSR_d8(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 {
     (void)opcode;
-    int8_t disp = (int8_t)MCU_ReadCodeAdvance(mcu);
+    int8_t disp = (int8_t)mcu.coder.ReadU8(mcu);
     mcu.icache.DoCacheBranch(mcu, instr_start, I_BSR, disp);
 }
 
 void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 {
     (void)opcode;
-    const uint8_t  disp_hi = (uint8_t)MCU_ReadCodeAdvance(mcu);
-    const uint8_t  disp_lo = (uint8_t)MCU_ReadCodeAdvance(mcu);
-    const uint16_t disp    = (uint16_t)((disp_hi << 8) | disp_lo);
+    const uint16_t disp = mcu.coder.ReadU16(mcu);
     mcu.icache.DoCacheBranch(mcu, instr_start, I_BSR, (int16_t)disp);
 }
 
@@ -609,22 +592,22 @@ D_Handler DECODE_TABLE_0[256] = {
     I_Bcc<MCU_Operand_Size::WORD>,                  // 00111101
     I_Bcc<MCU_Operand_Size::WORD>,                  // 00111110
     I_Bcc<MCU_Operand_Size::WORD>,                  // 00111111
-    D_Short_CMP_E_imm8_Rd<0>,                       // 01000000
-    D_Short_CMP_E_imm8_Rd<1>,                       // 01000001
-    D_Short_CMP_E_imm8_Rd<2>,                       // 01000010
-    D_Short_CMP_E_imm8_Rd<3>,                       // 01000011
-    D_Short_CMP_E_imm8_Rd<4>,                       // 01000100
-    D_Short_CMP_E_imm8_Rd<5>,                       // 01000101
-    D_Short_CMP_E_imm8_Rd<6>,                       // 01000110
-    D_Short_CMP_E_imm8_Rd<7>,                       // 01000111
-    D_Short_CMP_I_W_imm16_Rd<0>,                    // 01001000
-    D_Short_CMP_I_W_imm16_Rd<1>,                    // 01001001
-    D_Short_CMP_I_W_imm16_Rd<2>,                    // 01001010
-    D_Short_CMP_I_W_imm16_Rd<3>,                    // 01001011
-    D_Short_CMP_I_W_imm16_Rd<4>,                    // 01001100
-    D_Short_CMP_I_W_imm16_Rd<5>,                    // 01001101
-    D_Short_CMP_I_W_imm16_Rd<6>,                    // 01001110
-    D_Short_CMP_I_W_imm16_Rd<7>,                    // 01001111
+    nullptr,                                        // 01000000
+    nullptr,                                        // 01000001
+    nullptr,                                        // 01000010
+    nullptr,                                        // 01000011
+    nullptr,                                        // 01000100
+    nullptr,                                        // 01000101
+    nullptr,                                        // 01000110
+    nullptr,                                        // 01000111
+    nullptr,                                        // 01001000
+    nullptr,                                        // 01001001
+    nullptr,                                        // 01001010
+    nullptr,                                        // 01001011
+    nullptr,                                        // 01001100
+    nullptr,                                        // 01001101
+    nullptr,                                        // 01001110
+    nullptr,                                        // 01001111
     nullptr,                                        // 01010000
     nullptr,                                        // 01010001
     nullptr,                                        // 01010010
@@ -633,14 +616,14 @@ D_Handler DECODE_TABLE_0[256] = {
     nullptr,                                        // 01010101
     nullptr,                                        // 01010110
     nullptr,                                        // 01010111
-    D_Short_MOV_I_W_imm16_Rd<0>,                    // 01011000
-    D_Short_MOV_I_W_imm16_Rd<1>,                    // 01011001
-    D_Short_MOV_I_W_imm16_Rd<2>,                    // 01011010
-    D_Short_MOV_I_W_imm16_Rd<3>,                    // 01011011
-    D_Short_MOV_I_W_imm16_Rd<4>,                    // 01011100
-    D_Short_MOV_I_W_imm16_Rd<5>,                    // 01011101
-    D_Short_MOV_I_W_imm16_Rd<6>,                    // 01011110
-    D_Short_MOV_I_W_imm16_Rd<7>,                    // 01011111
+    nullptr,                                        // 01011000
+    nullptr,                                        // 01011001
+    nullptr,                                        // 01011010
+    nullptr,                                        // 01011011
+    nullptr,                                        // 01011100
+    nullptr,                                        // 01011101
+    nullptr,                                        // 01011110
+    nullptr,                                        // 01011111
     nullptr,                                        // 01100000
     nullptr,                                        // 01100001
     nullptr,                                        // 01100010
@@ -809,11 +792,11 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     mcu.restore_cp = mcu.cp;
 
     uint32_t instr_start = MCU_GetAddress(mcu.cp, mcu.pc);
+    mcu.coder            = CodeReader{};
 
     if (const I_Handler& handler = mcu.icache.Lookup(instr_start); handler.F)
     {
         handler.F(mcu, handler.instr);
-        mcu.pc += handler.size;
         return;
     }
 
@@ -821,7 +804,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     scoped_hit sh(mcu);
 #endif
 
-    const uint8_t byte = MCU_ReadCodeAdvance(mcu);
+    const uint8_t byte = mcu.coder.ReadU8(mcu);
 
     D_Handler handler = DECODE_TABLE_0[byte];
     if (handler)

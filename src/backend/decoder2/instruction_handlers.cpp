@@ -2,8 +2,9 @@
 
 #include "mcu.h"
 
-void I_NOP(mcu_t&, const I_CachedInstruction&)
+void I_NOP(mcu_t& mcu, const I_CachedInstruction&)
 {
+    ++mcu.pc;
 }
 
 void I_Bcc_d8_BRA(mcu_t& mcu, const I_CachedInstruction& st)

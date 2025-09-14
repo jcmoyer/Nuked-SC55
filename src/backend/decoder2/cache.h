@@ -34,7 +34,6 @@ struct I_Handler
 {
     I_Handler_Erased_Func F;
     I_CachedInstruction   instr;
-    uint8_t               size;
 };
 
 class I_InstructionCache
