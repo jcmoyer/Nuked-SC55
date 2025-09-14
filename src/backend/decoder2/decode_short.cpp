@@ -6,7 +6,7 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_NOP,              // 00000000
     Dis_SCB_F,            // 00000001
     Dis_LDM_SP_Reglist,   // 00000010
-    nullptr,              // 00000011
+    Dis_PJSR_aa24,        // 00000011
     nullptr,              // 00000100
     nullptr,              // 00000101
     Dis_SCB_NE,           // 00000110
