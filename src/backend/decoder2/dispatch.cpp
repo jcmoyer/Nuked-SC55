@@ -205,7 +205,7 @@ void D_Short_CMP_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
-    instr.op_data = mcu.coder.ReadU8(mcu);
+    instr.op_data = mcu.coder.ReadU16(mcu);
     instr.ea_reg  = Rn;
     mcu.icache.DoCache(mcu, instr_start, I_CMP_I_W_imm16_Rd<Rn>, instr);
 }
@@ -592,22 +592,22 @@ D_Handler DECODE_TABLE_0[256] = {
     I_Bcc<MCU_Operand_Size::WORD>,                  // 00111101
     I_Bcc<MCU_Operand_Size::WORD>,                  // 00111110
     I_Bcc<MCU_Operand_Size::WORD>,                  // 00111111
-    nullptr,                                        // 01000000
-    nullptr,                                        // 01000001
-    nullptr,                                        // 01000010
-    nullptr,                                        // 01000011
-    nullptr,                                        // 01000100
-    nullptr,                                        // 01000101
-    nullptr,                                        // 01000110
-    nullptr,                                        // 01000111
-    nullptr,                                        // 01001000
-    nullptr,                                        // 01001001
-    nullptr,                                        // 01001010
-    nullptr,                                        // 01001011
-    nullptr,                                        // 01001100
-    nullptr,                                        // 01001101
-    nullptr,                                        // 01001110
-    nullptr,                                        // 01001111
+    D_Short_CMP_E_imm8_Rd<0>,                       // 01000000
+    D_Short_CMP_E_imm8_Rd<1>,                       // 01000001
+    D_Short_CMP_E_imm8_Rd<2>,                       // 01000010
+    D_Short_CMP_E_imm8_Rd<3>,                       // 01000011
+    D_Short_CMP_E_imm8_Rd<4>,                       // 01000100
+    D_Short_CMP_E_imm8_Rd<5>,                       // 01000101
+    D_Short_CMP_E_imm8_Rd<6>,                       // 01000110
+    D_Short_CMP_E_imm8_Rd<7>,                       // 01000111
+    D_Short_CMP_I_W_imm16_Rd<0>,                    // 01001000
+    D_Short_CMP_I_W_imm16_Rd<1>,                    // 01001001
+    D_Short_CMP_I_W_imm16_Rd<2>,                    // 01001010
+    D_Short_CMP_I_W_imm16_Rd<3>,                    // 01001011
+    D_Short_CMP_I_W_imm16_Rd<4>,                    // 01001100
+    D_Short_CMP_I_W_imm16_Rd<5>,                    // 01001101
+    D_Short_CMP_I_W_imm16_Rd<6>,                    // 01001110
+    D_Short_CMP_I_W_imm16_Rd<7>,                    // 01001111
     nullptr,                                        // 01010000
     nullptr,                                        // 01010001
     nullptr,                                        // 01010010
@@ -616,14 +616,14 @@ D_Handler DECODE_TABLE_0[256] = {
     nullptr,                                        // 01010101
     nullptr,                                        // 01010110
     nullptr,                                        // 01010111
-    nullptr,                                        // 01011000
-    nullptr,                                        // 01011001
-    nullptr,                                        // 01011010
-    nullptr,                                        // 01011011
-    nullptr,                                        // 01011100
-    nullptr,                                        // 01011101
-    nullptr,                                        // 01011110
-    nullptr,                                        // 01011111
+    D_Short_MOV_I_W_imm16_Rd<0>,                    // 01011000
+    D_Short_MOV_I_W_imm16_Rd<1>,                    // 01011001
+    D_Short_MOV_I_W_imm16_Rd<2>,                    // 01011010
+    D_Short_MOV_I_W_imm16_Rd<3>,                    // 01011011
+    D_Short_MOV_I_W_imm16_Rd<4>,                    // 01011100
+    D_Short_MOV_I_W_imm16_Rd<5>,                    // 01011101
+    D_Short_MOV_I_W_imm16_Rd<6>,                    // 01011110
+    D_Short_MOV_I_W_imm16_Rd<7>,                    // 01011111
     nullptr,                                        // 01100000
     nullptr,                                        // 01100001
     nullptr,                                        // 01100010
