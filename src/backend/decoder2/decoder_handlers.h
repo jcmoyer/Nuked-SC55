@@ -150,4 +150,5 @@ void Dis_TRAPA_imm4(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& inst
 
 void Dis_PJMP_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_PJSR_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_RTE(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_SLEEP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);

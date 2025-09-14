@@ -1222,6 +1222,13 @@ void Dis_PJSR_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr
     instr.op[1].imm      = addr;
 }
 
+void Dis_RTE(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    (void)decoder;
+    (void)byte;
+    instr.instr = RTE;
+}
+
 void Dis_SLEEP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;

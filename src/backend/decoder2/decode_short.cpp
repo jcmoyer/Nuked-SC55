@@ -13,7 +13,7 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_SCB_EQ,           // 00000111
     Dis_TRAPA_imm4,       // 00001000
     nullptr,              // 00001001
-    nullptr,              // 00001010
+    Dis_RTE,              // 00001010
     nullptr,              // 00001011
     nullptr,              // 00001100
     nullptr,              // 00001101
