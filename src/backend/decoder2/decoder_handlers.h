@@ -149,3 +149,4 @@ void Dis_MOV_E_imm8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& i
 void Dis_TRAPA_imm4(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 
 void Dis_PJMP_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+void Dis_SLEEP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);

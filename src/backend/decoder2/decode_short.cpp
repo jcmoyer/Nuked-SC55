@@ -29,7 +29,7 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     nullptr,              // 00010111
     Dis_JSR_aa16,         // 00011000
     Dis_RTS,              // 00011001
-    nullptr,              // 00011010
+    Dis_SLEEP,            // 00011010
     nullptr,              // 00011011
     Dis_RTD_imm16,        // 00011100
     nullptr,              // 00011101

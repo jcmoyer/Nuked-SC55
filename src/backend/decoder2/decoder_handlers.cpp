@@ -1207,3 +1207,10 @@ void Dis_PJMP_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr
     instr.op[1].location = imm;
     instr.op[1].imm      = addr;
 }
+
+void Dis_SLEEP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
+{
+    (void)decoder;
+    (void)byte;
+    instr.instr = SLEEP;
+}
