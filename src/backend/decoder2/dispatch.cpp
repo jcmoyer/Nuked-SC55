@@ -24,23 +24,6 @@
 #include <vector>
 #endif
 
-struct hit
-{
-    uint8_t _instr_bytes[6]{};
-    uint8_t _instr_size;
-
-    hit(mcu_t& mcu, uint32_t instr_start, uint8_t instr_size)
-    {
-        for (uint8_t i = 0; i < instr_size; ++i)
-        {
-            this->_instr_bytes[i] = MCU_Read(mcu, instr_start + i);
-        }
-        this->_instr_size = instr_size;
-    }
-
-    auto operator<=>(const hit&) const = default;
-};
-
 void WriteBin(std::string& s, uint8_t x)
 {
     for (int mask = 0x80; mask; mask >>= 1)
@@ -49,71 +32,46 @@ void WriteBin(std::string& s, uint8_t x)
     }
 }
 
-void WriteHit(std::string& s, const hit& h)
+void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
 {
-    std::string result;
-    for (int i = 0; i < h._instr_size; ++i)
+    uint8_t  page  = (uint8_t)(addr >> 16);
+    uint16_t paddr = (uint16_t)addr;
+    uint8_t  bytes[6]{};
+
+    // max instruction length is 6; disassembler will only read as many bytes as necessary
+    for (int i = 0; i < 6; ++i)
     {
-        WriteBin(result, h._instr_bytes[i]);
+        bytes[i] = MCU_Read(mcu, MCU_GetAddress(page, (uint16_t)(paddr + i)));
+    }
+
+    I_DecodedInstruction instr;
+    I_Disassemble(bytes, 0, instr);
+
+    std::string result;
+    for (int i = 0; i < instr.instr_size; ++i)
+    {
+        WriteBin(result, bytes[i]);
         result.push_back(' ');
     }
     result.resize(54, ' ');
     result.push_back('|');
     result.push_back(' ');
-    std::string          instr_render;
-    I_DecodedInstruction instr;
-    I_Disassemble(h._instr_bytes, 0, instr);
+    std::string instr_render;
     I_RenderInstruction2(instr, instr_render);
     result += instr_render;
     s      += result;
 }
 
-void PrintHitCount(hit h, uint64_t count)
+void PrintHitCount(mcu_t& mcu, uint32_t addr, uint64_t count)
 {
     std::string buf;
-    WriteHit(buf, h);
+    WriteHit(mcu, buf, addr);
     buf.resize(86, ' ');
     buf += std::to_string(count);
     fprintf(stderr, "%s\n", buf.c_str());
 }
 
-template <>
-struct std::hash<hit>
-{
-    size_t operator()(const hit& h) const
-    {
-        size_t r = INT32_MAX;
-        for (int i = 0; i < h._instr_size; ++i)
-        {
-            r *= h._instr_bytes[i];
-        }
-        return r;
-    }
-};
-
-std::unordered_map<hit, uint64_t> hitcount;
-
-struct scoped_hit
-{
-    mcu_t&   _mcu;
-    uint32_t _start;
-
-    scoped_hit(mcu_t& mcu)
-        : _mcu(mcu)
-    {
-        _start = MCU_GetAddress(mcu.cp, mcu.pc);
-    }
-
-    ~scoped_hit()
-    {
-        uint8_t size = (uint8_t)(MCU_GetAddress(_mcu.cp, _mcu.pc) - _start);
-        // hack: try to filter jump instructions???
-        if (size <= 6)
-        {
-            ++hitcount[hit(_mcu, _start, size)];
-        }
-    }
-};
+std::unordered_map<uint32_t, uint64_t> hitcount;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -801,7 +759,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     }
 
 #if INSTRUCTION_HIT_TRACING
-    scoped_hit sh(mcu);
+    ++hitcount[instr_start];
 #endif
 
     const uint8_t byte = mcu.coder.ReadU8(mcu);
@@ -819,12 +777,12 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
 #if INSTRUCTION_HIT_TRACING
     if (mcu.cycles >= 1000000000)
     {
-        std::vector<std::pair<hit, uint64_t>> hits(hitcount.begin(), hitcount.end());
+        std::vector<std::pair<uint32_t, uint64_t>> hits(hitcount.begin(), hitcount.end());
         std::sort(hits.begin(), hits.end(), [](auto& a, auto& b) { return a.second < b.second; });
 
         for (auto& kvp : hits)
         {
-            PrintHitCount(kvp.first, kvp.second);
+            PrintHitCount(mcu, kvp.first, kvp.second);
         }
 
         fprintf(stderr, "total cached: %zu\n", mcu.icache.CountCached());
