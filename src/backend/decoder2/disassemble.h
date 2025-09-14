@@ -127,26 +127,41 @@ enum class I_Format : uint8_t
     Q,
 };
 
+struct I_InstructionOperand
+{
+    I_OpLocation location;
+
+    // when location: EA, none of these fields are used
+    union {
+        I_RegId        reg; // location: R
+        I_ControlRegId cr;  // location: CR
+        uint16_t       imm; // location: imm
+    };
+
+    int16_t disp;
+};
+
 struct I_DecodedInstruction
 {
-    AddressMode     mode; // only valid when is_general == true
+    AddressMode       mode; // only valid when is_general == true
     I_Format          format;
     I_Size            op_size;
     I_InstructionType instr = Unknown;
 
-    I_RegId        ea_reg; // only present for addressing modes that refer to a register
-    I_RegId        op_reg; // only present for instructions whose opcodes refer to a register
-    I_ControlRegId op_cr;  // only present for instructions whose opcodes refer to a control register
-    uint16_t       op_data;
+    I_RegId ea_reg; // only present for addressing modes that refer to a register
+    // I_RegId        op_reg; // only present for instructions whose opcodes refer to a register
+    // I_ControlRegId op_cr;  // only present for instructions whose opcodes refer to a control register
+    // uint16_t       op_data;
 
-    int16_t  disp; // Ad8_Rn, Ad16_Rn
-    uint16_t addr; // Aaa8, Aaa16
-    uint16_t imm;  // imm8, imm16
+    int16_t  ea_disp; // Ad8_Rn, Ad16_Rn
+    uint16_t ea_addr; // Aaa8, Aaa16
+    uint16_t ea_imm;  // imm8, imm16
     bool     is_general;
     bool     is_branch; // when true, disp contains the displacement when the branch condition is met
 
-    I_OpLocation op_src; // if present, what the operation sources data from
-    I_OpLocation op_dst; // if present, what the operation mutates
+    // These are the operands of the instruction, indexed left-to-right. Usage
+    // varies by instruction, but most often 0 is source and 1 is destination.
+    I_InstructionOperand op[2];
 
     uint8_t instr_size;
 };

@@ -147,3 +147,5 @@ void Dis_MOV_S_W_Rs_aa8(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& 
 void Dis_MOV_E_imm8_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 
 void Dis_TRAPA_imm4(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+
+void Dis_PJMP_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);

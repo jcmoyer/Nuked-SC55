@@ -18,7 +18,7 @@
 
 #include "disassemble.h"
 
-#define INSTRUCTION_HIT_TRACING 0
+#define INSTRUCTION_HIT_TRACING 1
 
 #if INSTRUCTION_HIT_TRACING
 #include <vector>

@@ -49,10 +49,10 @@ void WriteHexU16(std::string& s, uint16_t val)
     WriteHexU8(s, (uint8_t)val);
 }
 
-void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& result)
+void OperandString(I_DecodedInstruction instr, I_InstructionOperand op, std::string& result)
 {
     result.clear();
-    switch (loc)
+    switch (op.location)
     {
     case NotPresent:
         break;
@@ -73,7 +73,7 @@ void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& re
             result  = "[R";
             result += std::to_string(instr.ea_reg);
             result += "+";
-            WriteHexU16(result, static_cast<uint16_t>(instr.disp));
+            WriteHexU16(result, static_cast<uint16_t>(instr.ea_disp));
             result += "]";
             break;
         case AddressMode::APreDecRn:
@@ -88,37 +88,37 @@ void OperandString(I_DecodedInstruction instr, I_OpLocation loc, std::string& re
             break;
         case AddressMode::Aaa8:
             result = "[";
-            WriteHexU8(result, (uint8_t)instr.addr);
+            WriteHexU8(result, (uint8_t)instr.ea_addr);
             result += ":8]";
             break;
         case AddressMode::Aaa16:
             result = "[";
-            WriteHexU16(result, instr.addr);
+            WriteHexU16(result, instr.ea_addr);
             result += ":16]";
             break;
         case AddressMode::imm8:
             result = "#";
-            WriteHexU8(result, (uint8_t)instr.imm);
+            WriteHexU8(result, (uint8_t)instr.ea_imm);
             result += ":8";
             break;
         case AddressMode::imm16:
             result = "#";
-            WriteHexU16(result, instr.imm);
+            WriteHexU16(result, instr.ea_imm);
             result += ":16";
             break;
         }
         break;
     case R:
         result  = "R";
-        result += std::to_string(instr.op_reg);
+        result += std::to_string(op.reg);
         break;
     case imm:
         result  = "#";
-        result += std::to_string(instr.imm);
+        result += std::to_string(op.imm);
         break;
     case CR:
         result  = "CR:";
-        result += std::to_string(instr.op_cr);
+        result += std::to_string(op.cr);
         break;
     }
 }
@@ -210,7 +210,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.mode       = AddressMode::Ad8_Rn;
-        result.disp       = (int8_t)decoder.ReadAdvance();
+        result.ea_disp    = (int8_t)decoder.ReadAdvance();
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
@@ -218,7 +218,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.mode       = AddressMode::Ad16_Rn;
-        result.disp       = (int16_t)decoder.ReadU16();
+        result.ea_disp    = (int16_t)decoder.ReadU16();
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
@@ -240,28 +240,28 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.mode       = AddressMode::Aaa8;
-        result.addr       = decoder.ReadAdvance();
+        result.ea_addr    = decoder.ReadAdvance();
         result.is_general = true;
     }
     else if ((byte & 0b11110111) == 0b00010101)
     {
         result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
         result.mode       = AddressMode::Aaa16;
-        result.addr       = decoder.ReadU16();
+        result.ea_addr    = decoder.ReadU16();
         result.is_general = true;
     }
     else if (byte == 0b00000100)
     {
         result.op_size    = BYTE;
         result.mode       = AddressMode::imm8;
-        result.imm        = decoder.ReadAdvance();
+        result.ea_imm     = decoder.ReadAdvance();
         result.is_general = true;
     }
     else if (byte == 0b00001100)
     {
         result.op_size    = WORD;
         result.mode       = AddressMode::imm16;
-        result.imm        = decoder.ReadU16();
+        result.ea_imm     = decoder.ReadU16();
         result.is_general = true;
     }
     else
@@ -471,21 +471,21 @@ void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result
 
     std::string op_str;
 
-    if (instr.op_src != NotPresent)
+    if (instr.op[0].location != NotPresent)
     {
         result += " ";
-        OperandString(instr, instr.op_src, op_str);
+        OperandString(instr, instr.op[0], op_str);
         result += op_str;
     }
 
-    if (instr.op_dst != NotPresent)
+    if (instr.op[1].location != NotPresent)
     {
-        if (instr.op_src != NotPresent)
+        if (instr.op[0].location != NotPresent)
         {
             result += ",";
         }
         result += " ";
-        OperandString(instr, instr.op_dst, op_str);
+        OperandString(instr, instr.op[1], op_str);
         result += op_str;
     }
 }

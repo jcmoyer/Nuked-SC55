@@ -22,7 +22,7 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_JMP_aa16,         // 00010000
     Dis_GenericJump,      // 00010001
     Dis_STM_Reglist_SP,   // 00010010
-    nullptr,              // 00010011
+    Dis_PJMP_aa24,        // 00010011
     Dis_RTD_imm8,         // 00010100
     nullptr,              // 00010101
     nullptr,              // 00010110
