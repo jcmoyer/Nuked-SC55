@@ -1707,3 +1707,10 @@ inline void I_PRTS(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.cp = (uint8_t)MCU_PopStack(mcu);
     mcu.pc = MCU_PopStack(mcu);
 }
+
+inline void I_SLEEP(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    (void)st;
+    mcu.sleep = 1;
+    ++mcu.pc;
+}

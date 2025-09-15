@@ -242,6 +242,12 @@ void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
+void D_Short_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    mcu.icache.DoCache(mcu, instr_start, I_SLEEP, {});
+}
+
 template <MCU_Operand_Size Sz, uint8_t Rn>
 void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
@@ -576,7 +582,7 @@ D_Handler DECODE_TABLE_0[256] = {
     nullptr,                                        // 00010111
     nullptr,                                        // 00011000
     D_Short_RTS,                                    // 00011001
-    nullptr,                                        // 00011010
+    D_Short_SLEEP,                                  // 00011010
     nullptr,                                        // 00011011
     nullptr,                                        // 00011100
     D_General_Aa16<MCU_Operand_Size::WORD>,         // 00011101
