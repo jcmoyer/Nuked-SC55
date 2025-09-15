@@ -178,6 +178,49 @@ void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
 }
 
+void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    const uint8_t regcode = mcu.coder.ReadU8(mcu);
+    const int8_t  disp    = (int8_t)mcu.coder.ReadU8(mcu);
+
+    if (byte == 0b00000001)
+    {
+        switch (regcode)
+        {
+        case 0b10111000:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<0>, disp);
+            break;
+        case 0b10111001:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<1>, disp);
+            break;
+        case 0b10111010:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<2>, disp);
+            break;
+        case 0b10111011:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<3>, disp);
+            break;
+        case 0b10111100:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<4>, disp);
+            break;
+        case 0b10111101:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<5>, disp);
+            break;
+        case 0b10111110:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<6>, disp);
+            break;
+        case 0b10111111:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<7>, disp);
+            break;
+        default:
+            D_HardError(mcu, "SCB/F invalid regcode");
+        }
+    }
+    else
+    {
+        D_HardError(mcu, "D_Short_SCB not implemented");
+    }
+}
+
 template <MCU_Operand_Size Sz, uint8_t Rn>
 void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
@@ -487,7 +530,7 @@ void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 // form instruction.
 D_Handler DECODE_TABLE_0[256] = {
     D_NOP,                                          // 00000000
-    nullptr,                                        // 00000001
+    D_Short_SCB,                                    // 00000001
     nullptr,                                        // 00000010
     nullptr,                                        // 00000011
     D_General_imm8,                                 // 00000100

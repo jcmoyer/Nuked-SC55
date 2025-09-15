@@ -1680,3 +1680,17 @@ static void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     // TODO/FIXME
     --mcu.pc;
 }
+
+template <uint8_t Rn>
+static void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    --mcu.r[Rn];
+    if (mcu.r[Rn] == (uint16_t)-1)
+    {
+        mcu.pc = st.br_false;
+    }
+    else
+    {
+        mcu.pc = st.br_true;
+    }
+}
