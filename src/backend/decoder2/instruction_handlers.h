@@ -1694,3 +1694,16 @@ static void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
         mcu.pc = st.br_true;
     }
 }
+
+inline void I_RTS(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    (void)st;
+    mcu.pc = MCU_PopStack(mcu);
+}
+
+inline void I_PRTS(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    (void)st;
+    mcu.cp = (uint8_t)MCU_PopStack(mcu);
+    mcu.pc = MCU_PopStack(mcu);
+}

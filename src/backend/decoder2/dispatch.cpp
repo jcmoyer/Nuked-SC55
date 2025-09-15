@@ -135,14 +135,6 @@ void D_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     // TODO
 }
 
-void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)instr_start;
-    (void)byte;
-    D_Fallback(mcu);
-    // TODO
-}
-
 inline uint8_t I_InstrSizeFromPC(const mcu_t& mcu, uint32_t instr_start)
 {
     return (uint8_t)(mcu.pc - instr_start);
@@ -218,6 +210,35 @@ void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     else
     {
         D_HardError(mcu, "D_Short_SCB not implemented");
+    }
+}
+
+void D_Short_RTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    mcu.icache.DoCache(mcu, instr_start, I_RTS, {});
+}
+
+void D_Short_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    mcu.icache.DoCache(mcu, instr_start, I_PRTS, {});
+}
+
+void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)instr_start;
+    (void)byte;
+
+    const uint8_t kind = mcu.coder.ReadU8(mcu);
+    if (kind == 0b00011001)
+    {
+        D_Short_PRTS(mcu, instr_start, kind);
+    }
+    else
+    {
+        D_Fallback(mcu);
+        // TODO
     }
 }
 
@@ -554,7 +575,7 @@ D_Handler DECODE_TABLE_0[256] = {
     nullptr,                                        // 00010110
     nullptr,                                        // 00010111
     nullptr,                                        // 00011000
-    nullptr,                                        // 00011001
+    D_Short_RTS,                                    // 00011001
     nullptr,                                        // 00011010
     nullptr,                                        // 00011011
     nullptr,                                        // 00011100
