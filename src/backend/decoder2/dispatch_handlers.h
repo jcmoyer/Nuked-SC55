@@ -408,6 +408,22 @@ void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
     }
 }
 
+template <MCU_Operand_Size Sz, uint8_t Rs, typename Mode>
+void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+{
+    (void)byte;
+
+    instr.op_reg = Rs;
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_BCLR_B_Rs_EAd<Mode>, instr);
+    }
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_BCLR_W_Rs_EAd<Mode>, instr);
+    }
+}
+
 template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
 void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {

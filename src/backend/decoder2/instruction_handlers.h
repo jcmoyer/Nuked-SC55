@@ -653,6 +653,32 @@ inline void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, data & (~mask));
 }
 
+// BCLR.B Rs,<EAd>
+template <typename State>
+inline void I_BCLR_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
+
+    const uint16_t bit  = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st) & 0b1111;
+    const uint8_t  mask = (uint8_t)(1 << bit);
+    const uint8_t  data = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
+    MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
+    StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, data & (~mask));
+}
+
+// BCLR.W Rs,<EAd>
+template <typename State>
+inline void I_BCLR_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
+
+    const uint16_t bit  = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st) & 0b1111;
+    const uint16_t mask = (uint8_t)(1 << bit);
+    const uint16_t data = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
+    MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
+    StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, data & (~mask));
+}
+
 template <typename Mode>
 inline void I_BTST_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
