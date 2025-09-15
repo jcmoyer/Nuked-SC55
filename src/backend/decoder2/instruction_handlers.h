@@ -405,7 +405,7 @@ typename MCU_Operand_Size_Int<Sz>::Type LoadFromOpReg(mcu_t& mcu, const I_Cached
 
 // CMP:G.B <EAs>, Rd
 template <typename State>
-static void I_CMP_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -423,7 +423,7 @@ static void I_CMP_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CMP:G.W <EAs>, Rd
 template <typename State>
-static void I_CMP_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -441,7 +441,7 @@ static void I_CMP_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CMP:G.B #xx:8, <EAd>
 template <typename State>
-static void I_CMP_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 2);
 
@@ -459,7 +459,7 @@ static void I_CMP_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CMP:G.W #xx:8, <EAd>
 template <typename State>
-static void I_CMP_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 2);
 
@@ -477,7 +477,7 @@ static void I_CMP_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CMP:G.B #xx:16, <EAd>
 template <typename State>
-static void I_CMP_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 3);
 
@@ -495,7 +495,7 @@ static void I_CMP_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CMP:G.W #xx:16, <EAd>
 template <typename State>
-static void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 3);
 
@@ -513,7 +513,7 @@ static void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CLR.B <EAd>
 template <typename State>
-static void I_CLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -526,7 +526,7 @@ static void I_CLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CLR.W <EAd>
 template <typename State>
-static void I_CLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -576,7 +576,7 @@ void I_ADD_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BSET_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BSET_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -589,7 +589,7 @@ static void I_BSET_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BSET_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BSET_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -602,7 +602,7 @@ static void I_BSET_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BNOT_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BNOT_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -616,7 +616,7 @@ static void I_BNOT_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -631,7 +631,7 @@ static void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // BCLR.B #xx, <EAd>
 template <typename State>
-static void I_BCLR_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BCLR_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -643,7 +643,7 @@ static void I_BCLR_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // BCLR.W #xx, <EAd>
 template <typename State>
-static void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -654,7 +654,7 @@ static void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BTST_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BTST_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -665,7 +665,7 @@ static void I_BTST_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BTST_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BTST_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -676,7 +676,7 @@ static void I_BTST_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BTST_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BTST_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -688,7 +688,7 @@ static void I_BTST_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_BTST_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_BTST_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -701,7 +701,7 @@ static void I_BTST_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MULXU.B <EAs>, Rd
 template <typename State>
-static void I_MULXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MULXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -716,7 +716,7 @@ static void I_MULXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MULXU.X <EAs>, Rd
 template <typename State>
-static void I_MULXU_X_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MULXU_X_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -732,7 +732,7 @@ static void I_MULXU_X_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // DIVXU.B <EAs>, Rd
 template <typename State>
-static void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -774,7 +774,7 @@ static void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // DIVXU.W <EAs>, Rd
 template <typename State>
-static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -819,7 +819,7 @@ static void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.B <EAs>, Rd
 template <typename State>
-static void I_MOV_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -832,7 +832,7 @@ static void I_MOV_G_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.W <EAs>, Rd
 template <typename State>
-static void I_MOV_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -845,7 +845,7 @@ static void I_MOV_G_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.B Rs, <EAd>
 template <typename Mode>
-static void I_MOV_G_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -858,7 +858,7 @@ static void I_MOV_G_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.W Rs, <EAd>
 template <typename Mode>
-static void I_MOV_G_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -871,7 +871,7 @@ static void I_MOV_G_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.B #xx:8, <EAd>
 template <typename State>
-static void I_MOV_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 2);
 
@@ -884,7 +884,7 @@ static void I_MOV_G_B_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.W #xx:8, <EAd>
 template <typename State>
-static void I_MOV_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 2);
 
@@ -897,7 +897,7 @@ static void I_MOV_G_W_imm8_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.B #xx:16, <EAd>
 template <typename State>
-static void I_MOV_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 3);
 
@@ -910,7 +910,7 @@ static void I_MOV_G_B_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // MOV:G.W #xx:16, <EAd>
 template <typename State>
-static void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 3);
 
@@ -923,7 +923,7 @@ static void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // SWAP.B Rd
 template <typename Mode>
-static void I_SWAP_B(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SWAP_B(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -936,7 +936,7 @@ static void I_SWAP_B(mcu_t& mcu, const I_CachedInstruction& st)
 
 // XCH.W Rs, Rd
 template <typename Mode>
-static void I_XCH_W_Rs_Rd(mcu_t& mcu, const I_CachedInstruction& instr)
+inline void I_XCH_W_Rs_Rd(mcu_t& mcu, const I_CachedInstruction& instr)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, instr, 1);
 
@@ -950,7 +950,7 @@ static void I_XCH_W_Rs_Rd(mcu_t& mcu, const I_CachedInstruction& instr)
 // ADD:Q.B #-1, <EAd>
 // ADD:Q.B #-2, <EAd>
 template <typename State, int8_t N>
-static void I_ADD_Q_B_n(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ADD_Q_B_n(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -971,7 +971,7 @@ static void I_ADD_Q_B_n(mcu_t& mcu, const I_CachedInstruction& st)
 // ADD:Q.W #-1, <EAd>
 // ADD:Q.W #-2, <EAd>
 template <typename State, int8_t N>
-static void I_ADD_Q_W_n(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ADD_Q_W_n(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -988,7 +988,7 @@ static void I_ADD_Q_W_n(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_ADDX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ADDX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1009,7 +1009,7 @@ static void I_ADDX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_ADDX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ADDX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1030,7 +1030,7 @@ static void I_ADDX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_SUB_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SUB_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1052,7 +1052,7 @@ static void I_SUB_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_SUB_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SUB_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1074,7 +1074,7 @@ static void I_SUB_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_SUBX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SUBX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1097,7 +1097,7 @@ static void I_SUBX_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_SUBX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SUBX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1120,7 +1120,7 @@ static void I_SUBX_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_SUBS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SUBS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1133,7 +1133,7 @@ static void I_SUBS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_SUBS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SUBS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1145,7 +1145,7 @@ static void I_SUBS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_TST_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_TST_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1157,7 +1157,7 @@ static void I_TST_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_TST_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_TST_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1169,7 +1169,7 @@ static void I_TST_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_NEG_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_NEG_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1186,7 +1186,7 @@ static void I_NEG_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename State>
-static void I_NEG_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_NEG_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1204,7 +1204,7 @@ static void I_NEG_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // SHLR.B <EAd>
 template <typename State>
-static void I_SHLL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SHLL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1225,7 +1225,7 @@ static void I_SHLL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // SHLR.W <EAd>
 template <typename State>
-static void I_SHLL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SHLL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1246,7 +1246,7 @@ static void I_SHLL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // SHLR.B <EAd>
 template <typename State>
-static void I_SHLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SHLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1267,7 +1267,7 @@ static void I_SHLR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // SHLR.W <EAd>
 template <typename State>
-static void I_SHLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SHLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
@@ -1288,7 +1288,7 @@ static void I_SHLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // LDC.B <EAs>, CR
 template <typename State>
-static void I_LDC_B_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_LDC_B_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1300,7 +1300,7 @@ static void I_LDC_B_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
 // LDC.W <EAs>, CR
 template <typename State>
-static void I_LDC_W_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_LDC_W_EAs_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
 
@@ -1332,7 +1332,7 @@ void I_STC_W_CR_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 
 // ANDC.B #xx:8, CR
 template <typename Mode, uint8_t CR>
-static void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1350,7 +1350,7 @@ static void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
 // ANDC.W #xx:16, CR
 template <typename Mode, uint8_t CR>
-static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1368,7 +1368,7 @@ static void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
 // ORC.B #xx:8, CR
 template <typename Mode, uint8_t CR>
-static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1386,7 +1386,7 @@ static void I_ORC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
 // ORC.W #xx:16, CR
 template <typename Mode, uint8_t CR>
-static void I_ORC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ORC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1408,7 +1408,7 @@ static void I_ORC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
 // CMP:E #xx:8,Rd
 template <uint8_t R>
-static void I_CMP_E_imm8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_E_imm8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const uint8_t R_lo = (uint8_t)mcu.r[R];
     const uint8_t data = (uint8_t)st.op_data;
@@ -1446,7 +1446,7 @@ void I_RTE(mcu_t& mcu, const I_CachedInstruction& st);
 void I_NOP(mcu_t&, const I_CachedInstruction&);
 
 template <typename Mode>
-static void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1458,7 +1458,7 @@ static void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_EXTU_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_EXTU_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1470,7 +1470,7 @@ static void I_EXTU_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_NOT_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_NOT_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1482,7 +1482,7 @@ static void I_NOT_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_NOT_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_NOT_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1494,7 +1494,7 @@ static void I_NOT_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_ADDS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ADDS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1504,7 +1504,7 @@ static void I_ADDS_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_ADDS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ADDS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1514,7 +1514,7 @@ static void I_ADDS_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_ROTL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ROTL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1529,7 +1529,7 @@ static void I_ROTL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_ROTL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ROTL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1544,7 +1544,7 @@ static void I_ROTL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_ROTR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ROTR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1559,7 +1559,7 @@ static void I_ROTR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_ROTR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_ROTR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1574,7 +1574,7 @@ static void I_ROTR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_XOR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_XOR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1589,7 +1589,7 @@ static void I_XOR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_XOR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_XOR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1604,7 +1604,7 @@ static void I_XOR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_OR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_OR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1619,7 +1619,7 @@ static void I_OR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_OR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_OR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1634,7 +1634,7 @@ static void I_OR_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_AND_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_AND_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1649,7 +1649,7 @@ static void I_AND_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
-static void I_AND_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_AND_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
@@ -1664,7 +1664,7 @@ static void I_AND_W_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <uint8_t Rn>
-static void I_CMP_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_CMP_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as register-direct CMP:G.W #xx:16,EAd
     I_CMP_G_W_imm16_EAd<Mode_Rn>(mcu, st);
@@ -1673,7 +1673,7 @@ static void I_CMP_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <uint8_t Rn>
-static void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as register-direct MOV:G.W #xx:16,EAd
     I_MOV_G_W_imm16_EAd<Mode_Rn>(mcu, st);
@@ -1682,7 +1682,7 @@ static void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <uint8_t Rn>
-static void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
 {
     --mcu.r[Rn];
     if (mcu.r[Rn] == (uint16_t)-1)
@@ -1696,7 +1696,7 @@ static void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <uint8_t Rn>
-static void I_SCB_NE(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SCB_NE(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool Z = mcu.sr & STATUS_Z;
     if (!Z)
@@ -1710,7 +1710,7 @@ static void I_SCB_NE(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <uint8_t Rn>
-static void I_SCB_EQ(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SCB_EQ(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool Z = mcu.sr & STATUS_Z;
     if (Z)
