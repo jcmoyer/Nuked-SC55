@@ -16,8 +16,9 @@ struct I_CachedInstruction
     };
 
     union {
-        uint8_t op_reg; // used by instructions that encode a general purpose register as part of the opcode
-        uint8_t op_c;   // used by instructions that encode a control register as part of the opcode
+        uint8_t op_reg;  // used by instructions that encode a general purpose register as part of the opcode
+        uint8_t op_c;    // used by instructions that encode a control register as part of the opcode
+        uint8_t op_page; // used by instructions that encode an immediate page in addition to immediate address
     };
 
     uint8_t ea_reg; // used by addressing modes that refer to a register

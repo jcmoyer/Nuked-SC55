@@ -1863,3 +1863,15 @@ inline void I_JMP_ARn(mcu_t& mcu, const I_CachedInstruction& st)
 {
     mcu.pc = mcu.r[st.op_reg];
 }
+
+inline void I_PJMP_aa24(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    mcu.cp = st.op_page;
+    mcu.pc = st.op_data;
+}
+
+inline void I_PJMP_ARn(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    mcu.cp = (uint8_t)mcu.r[st.op_reg];
+    mcu.pc = mcu.r[st.op_reg + 1];
+}

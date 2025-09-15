@@ -313,6 +313,22 @@ void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_JMP_ARn, instr);
 }
 
+void D_Short_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.op_page = mcu.coder.ReadU8(mcu);
+    instr.op_data = mcu.coder.ReadU16(mcu);
+    mcu.icache.DoCache(mcu, instr_start, I_PJMP_aa24, instr);
+}
+
+void D_Short_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    I_CachedInstruction instr;
+    instr.op_reg = byte & 0b111;
+    mcu.icache.DoCache(mcu, instr_start, I_PJMP_ARn, instr);
+}
+
 void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)instr_start;
@@ -325,6 +341,11 @@ void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     // JMP @Rn
     case 0b11010000:
         D_JMP_ARn(mcu, instr_start, kind);
+        break;
+
+    // PJMP @Rn
+    case 0b11000000:
+        D_Short_PJMP_ARn(mcu, instr_start, kind);
         break;
 
     default:
@@ -707,7 +728,7 @@ D_Handler DECODE_TABLE_0[256] = {
     D_JMP_aa16,                                        // 00010000
     D_JMP,                                             // 00010001
     D_Short_STM,                                       // 00010010
-    nullptr,                                           // 00010011
+    D_Short_PJMP_aa24,                                 // 00010011
     nullptr,                                           // 00010100
     D_General_Aa16<MCU_Operand_Size::BYTE>,            // 00010101
     nullptr,                                           // 00010110
