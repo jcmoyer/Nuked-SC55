@@ -1215,7 +1215,7 @@ void Dis_PJSR_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr
     const uint8_t  page = decoder.ReadAdvance();
     const uint16_t addr = decoder.ReadU16();
 
-    instr.instr          = PJMP;
+    instr.instr          = PJSR;
     instr.op[0].location = imm;
     instr.op[0].imm      = page;
     instr.op[1].location = imm;
