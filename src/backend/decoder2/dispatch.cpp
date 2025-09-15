@@ -170,6 +170,23 @@ void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
 }
 
+template <MCU_Operand_Size Sz, uint8_t Rn>
+void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.op_reg  = Rn;
+    instr.ea_data = mcu.coder.ReadU8(mcu);
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_MOV_S_B_Rs_aa8<Rn>, instr);
+    }
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_MOV_S_W_Rs_aa8<Rn>, instr);
+    }
+}
+
 void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     const uint8_t regcode = mcu.coder.ReadU8(mcu);
@@ -654,262 +671,262 @@ void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 // Top level table for decoder. Here we can determine addressing mode or short
 // form instruction.
 D_Handler DECODE_TABLE_0[256] = {
-    D_NOP,                                          // 00000000
-    D_Short_SCB,                                    // 00000001
-    D_Short_LDM,                                    // 00000010
-    nullptr,                                        // 00000011
-    D_General_imm8,                                 // 00000100
-    D_General_Aa8<MCU_Operand_Size::BYTE>,          // 00000101
-    D_Short_SCB,                                    // 00000110
-    D_Short_SCB,                                    // 00000111
-    nullptr,                                        // 00001000
-    nullptr,                                        // 00001001
-    D_RTE,                                          // 00001010
-    nullptr,                                        // 00001011
-    D_General_imm16,                                // 00001100
-    D_General_Aa8<MCU_Operand_Size::WORD>,          // 00001101
-    D_BSR_d8,                                       // 00001110
-    nullptr,                                        // 00001111
-    D_JMP_aa16,                                     // 00010000
-    D_JMP,                                          // 00010001
-    D_Short_STM,                                    // 00010010
-    nullptr,                                        // 00010011
-    nullptr,                                        // 00010100
-    D_General_Aa16<MCU_Operand_Size::BYTE>,         // 00010101
-    nullptr,                                        // 00010110
-    nullptr,                                        // 00010111
-    nullptr,                                        // 00011000
-    D_Short_RTS,                                    // 00011001
-    D_Short_SLEEP,                                  // 00011010
-    nullptr,                                        // 00011011
-    nullptr,                                        // 00011100
-    D_General_Aa16<MCU_Operand_Size::WORD>,         // 00011101
-    D_BSR_d16,                                      // 00011110
-    nullptr,                                        // 00011111
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100000
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100001
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100010
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100011
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100100
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100101
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100110
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00100111
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101000
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101001
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101010
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101011
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101100
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101101
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101110
-    I_Bcc<MCU_Operand_Size::BYTE>,                  // 00101111
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110000
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110001
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110010
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110011
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110100
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110101
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110110
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00110111
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111000
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111001
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111010
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111011
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111100
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111101
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111110
-    I_Bcc<MCU_Operand_Size::WORD>,                  // 00111111
-    D_Short_CMP_E_imm8_Rd<0>,                       // 01000000
-    D_Short_CMP_E_imm8_Rd<1>,                       // 01000001
-    D_Short_CMP_E_imm8_Rd<2>,                       // 01000010
-    D_Short_CMP_E_imm8_Rd<3>,                       // 01000011
-    D_Short_CMP_E_imm8_Rd<4>,                       // 01000100
-    D_Short_CMP_E_imm8_Rd<5>,                       // 01000101
-    D_Short_CMP_E_imm8_Rd<6>,                       // 01000110
-    D_Short_CMP_E_imm8_Rd<7>,                       // 01000111
-    D_Short_CMP_I_W_imm16_Rd<0>,                    // 01001000
-    D_Short_CMP_I_W_imm16_Rd<1>,                    // 01001001
-    D_Short_CMP_I_W_imm16_Rd<2>,                    // 01001010
-    D_Short_CMP_I_W_imm16_Rd<3>,                    // 01001011
-    D_Short_CMP_I_W_imm16_Rd<4>,                    // 01001100
-    D_Short_CMP_I_W_imm16_Rd<5>,                    // 01001101
-    D_Short_CMP_I_W_imm16_Rd<6>,                    // 01001110
-    D_Short_CMP_I_W_imm16_Rd<7>,                    // 01001111
-    nullptr,                                        // 01010000
-    nullptr,                                        // 01010001
-    nullptr,                                        // 01010010
-    nullptr,                                        // 01010011
-    nullptr,                                        // 01010100
-    nullptr,                                        // 01010101
-    nullptr,                                        // 01010110
-    nullptr,                                        // 01010111
-    D_Short_MOV_I_W_imm16_Rd<0>,                    // 01011000
-    D_Short_MOV_I_W_imm16_Rd<1>,                    // 01011001
-    D_Short_MOV_I_W_imm16_Rd<2>,                    // 01011010
-    D_Short_MOV_I_W_imm16_Rd<3>,                    // 01011011
-    D_Short_MOV_I_W_imm16_Rd<4>,                    // 01011100
-    D_Short_MOV_I_W_imm16_Rd<5>,                    // 01011101
-    D_Short_MOV_I_W_imm16_Rd<6>,                    // 01011110
-    D_Short_MOV_I_W_imm16_Rd<7>,                    // 01011111
-    nullptr,                                        // 01100000
-    nullptr,                                        // 01100001
-    nullptr,                                        // 01100010
-    nullptr,                                        // 01100011
-    nullptr,                                        // 01100100
-    nullptr,                                        // 01100101
-    nullptr,                                        // 01100110
-    nullptr,                                        // 01100111
-    nullptr,                                        // 01101000
-    nullptr,                                        // 01101001
-    nullptr,                                        // 01101010
-    nullptr,                                        // 01101011
-    nullptr,                                        // 01101100
-    nullptr,                                        // 01101101
-    nullptr,                                        // 01101110
-    nullptr,                                        // 01101111
-    nullptr,                                        // 01110000
-    nullptr,                                        // 01110001
-    nullptr,                                        // 01110010
-    nullptr,                                        // 01110011
-    nullptr,                                        // 01110100
-    nullptr,                                        // 01110101
-    nullptr,                                        // 01110110
-    nullptr,                                        // 01110111
-    nullptr,                                        // 01111000
-    nullptr,                                        // 01111001
-    nullptr,                                        // 01111010
-    nullptr,                                        // 01111011
-    nullptr,                                        // 01111100
-    nullptr,                                        // 01111101
-    nullptr,                                        // 01111110
-    nullptr,                                        // 01111111
-    nullptr,                                        // 10000000
-    nullptr,                                        // 10000001
-    nullptr,                                        // 10000010
-    nullptr,                                        // 10000011
-    nullptr,                                        // 10000100
-    nullptr,                                        // 10000101
-    nullptr,                                        // 10000110
-    nullptr,                                        // 10000111
-    nullptr,                                        // 10001000
-    nullptr,                                        // 10001001
-    nullptr,                                        // 10001010
-    nullptr,                                        // 10001011
-    nullptr,                                        // 10001100
-    nullptr,                                        // 10001101
-    nullptr,                                        // 10001110
-    nullptr,                                        // 10001111
-    nullptr,                                        // 10010000
-    nullptr,                                        // 10010001
-    nullptr,                                        // 10010010
-    nullptr,                                        // 10010011
-    nullptr,                                        // 10010100
-    nullptr,                                        // 10010101
-    nullptr,                                        // 10010110
-    nullptr,                                        // 10010111
-    nullptr,                                        // 10011000
-    nullptr,                                        // 10011001
-    nullptr,                                        // 10011010
-    nullptr,                                        // 10011011
-    nullptr,                                        // 10011100
-    nullptr,                                        // 10011101
-    nullptr,                                        // 10011110
-    nullptr,                                        // 10011111
-    D_General_Rn<MCU_Operand_Size::BYTE, 0>,        // 10100000
-    D_General_Rn<MCU_Operand_Size::BYTE, 1>,        // 10100001
-    D_General_Rn<MCU_Operand_Size::BYTE, 2>,        // 10100010
-    D_General_Rn<MCU_Operand_Size::BYTE, 3>,        // 10100011
-    D_General_Rn<MCU_Operand_Size::BYTE, 4>,        // 10100100
-    D_General_Rn<MCU_Operand_Size::BYTE, 5>,        // 10100101
-    D_General_Rn<MCU_Operand_Size::BYTE, 6>,        // 10100110
-    D_General_Rn<MCU_Operand_Size::BYTE, 7>,        // 10100111
-    D_General_Rn<MCU_Operand_Size::WORD, 0>,        // 10101000
-    D_General_Rn<MCU_Operand_Size::WORD, 1>,        // 10101001
-    D_General_Rn<MCU_Operand_Size::WORD, 2>,        // 10101010
-    D_General_Rn<MCU_Operand_Size::WORD, 3>,        // 10101011
-    D_General_Rn<MCU_Operand_Size::WORD, 4>,        // 10101100
-    D_General_Rn<MCU_Operand_Size::WORD, 5>,        // 10101101
-    D_General_Rn<MCU_Operand_Size::WORD, 6>,        // 10101110
-    D_General_Rn<MCU_Operand_Size::WORD, 7>,        // 10101111
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 0>,  // 10110000
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 1>,  // 10110001
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 2>,  // 10110010
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 3>,  // 10110011
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 4>,  // 10110100
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 5>,  // 10110101
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 6>,  // 10110110
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 7>,  // 10110111
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 0>,  // 10111000
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 1>,  // 10111001
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 2>,  // 10111010
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 3>,  // 10111011
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 4>,  // 10111100
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 5>,  // 10111101
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 6>,  // 10111110
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 7>,  // 10111111
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 0>, // 11000000
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 1>, // 11000001
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 2>, // 11000010
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 3>, // 11000011
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 4>, // 11000100
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 5>, // 11000101
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 6>, // 11000110
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 7>, // 11000111
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 0>, // 11001000
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 1>, // 11001001
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 2>, // 11001010
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 3>, // 11001011
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 4>, // 11001100
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 5>, // 11001101
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 6>, // 11001110
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 7>, // 11001111
-    D_General_ARn<MCU_Operand_Size::BYTE, 0>,       // 11010000
-    D_General_ARn<MCU_Operand_Size::BYTE, 1>,       // 11010001
-    D_General_ARn<MCU_Operand_Size::BYTE, 2>,       // 11010010
-    D_General_ARn<MCU_Operand_Size::BYTE, 3>,       // 11010011
-    D_General_ARn<MCU_Operand_Size::BYTE, 4>,       // 11010100
-    D_General_ARn<MCU_Operand_Size::BYTE, 5>,       // 11010101
-    D_General_ARn<MCU_Operand_Size::BYTE, 6>,       // 11010110
-    D_General_ARn<MCU_Operand_Size::BYTE, 7>,       // 11010111
-    D_General_ARn<MCU_Operand_Size::WORD, 0>,       // 11011000
-    D_General_ARn<MCU_Operand_Size::WORD, 1>,       // 11011001
-    D_General_ARn<MCU_Operand_Size::WORD, 2>,       // 11011010
-    D_General_ARn<MCU_Operand_Size::WORD, 3>,       // 11011011
-    D_General_ARn<MCU_Operand_Size::WORD, 4>,       // 11011100
-    D_General_ARn<MCU_Operand_Size::WORD, 5>,       // 11011101
-    D_General_ARn<MCU_Operand_Size::WORD, 6>,       // 11011110
-    D_General_ARn<MCU_Operand_Size::WORD, 7>,       // 11011111
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 0>,     // 11100000
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 1>,     // 11100001
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 2>,     // 11100010
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 3>,     // 11100011
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 4>,     // 11100100
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 5>,     // 11100101
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 6>,     // 11100110
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 7>,     // 11100111
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 0>,     // 11101000
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 1>,     // 11101001
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 2>,     // 11101010
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 3>,     // 11101011
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 4>,     // 11101100
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 5>,     // 11101101
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 6>,     // 11101110
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 7>,     // 11101111
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 0>,    // 11110000
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 1>,    // 11110001
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 2>,    // 11110010
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 3>,    // 11110011
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 4>,    // 11110100
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 5>,    // 11110101
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 6>,    // 11110110
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 7>,    // 11110111
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 0>,    // 11111000
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 1>,    // 11111001
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 2>,    // 11111010
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 3>,    // 11111011
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 4>,    // 11111100
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 5>,    // 11111101
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 6>,    // 11111110
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 7>,    // 11111111
+    D_NOP,                                             // 00000000
+    D_Short_SCB,                                       // 00000001
+    D_Short_LDM,                                       // 00000010
+    nullptr,                                           // 00000011
+    D_General_imm8,                                    // 00000100
+    D_General_Aa8<MCU_Operand_Size::BYTE>,             // 00000101
+    D_Short_SCB,                                       // 00000110
+    D_Short_SCB,                                       // 00000111
+    nullptr,                                           // 00001000
+    nullptr,                                           // 00001001
+    D_RTE,                                             // 00001010
+    nullptr,                                           // 00001011
+    D_General_imm16,                                   // 00001100
+    D_General_Aa8<MCU_Operand_Size::WORD>,             // 00001101
+    D_BSR_d8,                                          // 00001110
+    nullptr,                                           // 00001111
+    D_JMP_aa16,                                        // 00010000
+    D_JMP,                                             // 00010001
+    D_Short_STM,                                       // 00010010
+    nullptr,                                           // 00010011
+    nullptr,                                           // 00010100
+    D_General_Aa16<MCU_Operand_Size::BYTE>,            // 00010101
+    nullptr,                                           // 00010110
+    nullptr,                                           // 00010111
+    nullptr,                                           // 00011000
+    D_Short_RTS,                                       // 00011001
+    D_Short_SLEEP,                                     // 00011010
+    nullptr,                                           // 00011011
+    nullptr,                                           // 00011100
+    D_General_Aa16<MCU_Operand_Size::WORD>,            // 00011101
+    D_BSR_d16,                                         // 00011110
+    nullptr,                                           // 00011111
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100000
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100001
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100010
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100011
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100100
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100101
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100110
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100111
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101000
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101001
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101010
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101011
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101100
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101101
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101110
+    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101111
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110000
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110001
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110010
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110011
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110100
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110101
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110110
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110111
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111000
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111001
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111010
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111011
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111100
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111101
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111110
+    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111111
+    D_Short_CMP_E_imm8_Rd<0>,                          // 01000000
+    D_Short_CMP_E_imm8_Rd<1>,                          // 01000001
+    D_Short_CMP_E_imm8_Rd<2>,                          // 01000010
+    D_Short_CMP_E_imm8_Rd<3>,                          // 01000011
+    D_Short_CMP_E_imm8_Rd<4>,                          // 01000100
+    D_Short_CMP_E_imm8_Rd<5>,                          // 01000101
+    D_Short_CMP_E_imm8_Rd<6>,                          // 01000110
+    D_Short_CMP_E_imm8_Rd<7>,                          // 01000111
+    D_Short_CMP_I_W_imm16_Rd<0>,                       // 01001000
+    D_Short_CMP_I_W_imm16_Rd<1>,                       // 01001001
+    D_Short_CMP_I_W_imm16_Rd<2>,                       // 01001010
+    D_Short_CMP_I_W_imm16_Rd<3>,                       // 01001011
+    D_Short_CMP_I_W_imm16_Rd<4>,                       // 01001100
+    D_Short_CMP_I_W_imm16_Rd<5>,                       // 01001101
+    D_Short_CMP_I_W_imm16_Rd<6>,                       // 01001110
+    D_Short_CMP_I_W_imm16_Rd<7>,                       // 01001111
+    nullptr,                                           // 01010000
+    nullptr,                                           // 01010001
+    nullptr,                                           // 01010010
+    nullptr,                                           // 01010011
+    nullptr,                                           // 01010100
+    nullptr,                                           // 01010101
+    nullptr,                                           // 01010110
+    nullptr,                                           // 01010111
+    D_Short_MOV_I_W_imm16_Rd<0>,                       // 01011000
+    D_Short_MOV_I_W_imm16_Rd<1>,                       // 01011001
+    D_Short_MOV_I_W_imm16_Rd<2>,                       // 01011010
+    D_Short_MOV_I_W_imm16_Rd<3>,                       // 01011011
+    D_Short_MOV_I_W_imm16_Rd<4>,                       // 01011100
+    D_Short_MOV_I_W_imm16_Rd<5>,                       // 01011101
+    D_Short_MOV_I_W_imm16_Rd<6>,                       // 01011110
+    D_Short_MOV_I_W_imm16_Rd<7>,                       // 01011111
+    nullptr,                                           // 01100000
+    nullptr,                                           // 01100001
+    nullptr,                                           // 01100010
+    nullptr,                                           // 01100011
+    nullptr,                                           // 01100100
+    nullptr,                                           // 01100101
+    nullptr,                                           // 01100110
+    nullptr,                                           // 01100111
+    nullptr,                                           // 01101000
+    nullptr,                                           // 01101001
+    nullptr,                                           // 01101010
+    nullptr,                                           // 01101011
+    nullptr,                                           // 01101100
+    nullptr,                                           // 01101101
+    nullptr,                                           // 01101110
+    nullptr,                                           // 01101111
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 0>, // 01110000
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 1>, // 01110001
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 2>, // 01110010
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 3>, // 01110011
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 4>, // 01110100
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 5>, // 01110101
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 6>, // 01110110
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 7>, // 01110111
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 0>, // 01111000
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 1>, // 01111001
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 2>, // 01111010
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 3>, // 01111011
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 4>, // 01111100
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 5>, // 01111101
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 6>, // 01111110
+    D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::WORD, 7>, // 01111111
+    nullptr,                                           // 10000000
+    nullptr,                                           // 10000001
+    nullptr,                                           // 10000010
+    nullptr,                                           // 10000011
+    nullptr,                                           // 10000100
+    nullptr,                                           // 10000101
+    nullptr,                                           // 10000110
+    nullptr,                                           // 10000111
+    nullptr,                                           // 10001000
+    nullptr,                                           // 10001001
+    nullptr,                                           // 10001010
+    nullptr,                                           // 10001011
+    nullptr,                                           // 10001100
+    nullptr,                                           // 10001101
+    nullptr,                                           // 10001110
+    nullptr,                                           // 10001111
+    nullptr,                                           // 10010000
+    nullptr,                                           // 10010001
+    nullptr,                                           // 10010010
+    nullptr,                                           // 10010011
+    nullptr,                                           // 10010100
+    nullptr,                                           // 10010101
+    nullptr,                                           // 10010110
+    nullptr,                                           // 10010111
+    nullptr,                                           // 10011000
+    nullptr,                                           // 10011001
+    nullptr,                                           // 10011010
+    nullptr,                                           // 10011011
+    nullptr,                                           // 10011100
+    nullptr,                                           // 10011101
+    nullptr,                                           // 10011110
+    nullptr,                                           // 10011111
+    D_General_Rn<MCU_Operand_Size::BYTE, 0>,           // 10100000
+    D_General_Rn<MCU_Operand_Size::BYTE, 1>,           // 10100001
+    D_General_Rn<MCU_Operand_Size::BYTE, 2>,           // 10100010
+    D_General_Rn<MCU_Operand_Size::BYTE, 3>,           // 10100011
+    D_General_Rn<MCU_Operand_Size::BYTE, 4>,           // 10100100
+    D_General_Rn<MCU_Operand_Size::BYTE, 5>,           // 10100101
+    D_General_Rn<MCU_Operand_Size::BYTE, 6>,           // 10100110
+    D_General_Rn<MCU_Operand_Size::BYTE, 7>,           // 10100111
+    D_General_Rn<MCU_Operand_Size::WORD, 0>,           // 10101000
+    D_General_Rn<MCU_Operand_Size::WORD, 1>,           // 10101001
+    D_General_Rn<MCU_Operand_Size::WORD, 2>,           // 10101010
+    D_General_Rn<MCU_Operand_Size::WORD, 3>,           // 10101011
+    D_General_Rn<MCU_Operand_Size::WORD, 4>,           // 10101100
+    D_General_Rn<MCU_Operand_Size::WORD, 5>,           // 10101101
+    D_General_Rn<MCU_Operand_Size::WORD, 6>,           // 10101110
+    D_General_Rn<MCU_Operand_Size::WORD, 7>,           // 10101111
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 0>,     // 10110000
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 1>,     // 10110001
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 2>,     // 10110010
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 3>,     // 10110011
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 4>,     // 10110100
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 5>,     // 10110101
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 6>,     // 10110110
+    D_General_PreDecRn<MCU_Operand_Size::BYTE, 7>,     // 10110111
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 0>,     // 10111000
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 1>,     // 10111001
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 2>,     // 10111010
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 3>,     // 10111011
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 4>,     // 10111100
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 5>,     // 10111101
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 6>,     // 10111110
+    D_General_PreDecRn<MCU_Operand_Size::WORD, 7>,     // 10111111
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 0>,    // 11000000
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 1>,    // 11000001
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 2>,    // 11000010
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 3>,    // 11000011
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 4>,    // 11000100
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 5>,    // 11000101
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 6>,    // 11000110
+    D_General_PostIncRn<MCU_Operand_Size::BYTE, 7>,    // 11000111
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 0>,    // 11001000
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 1>,    // 11001001
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 2>,    // 11001010
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 3>,    // 11001011
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 4>,    // 11001100
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 5>,    // 11001101
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 6>,    // 11001110
+    D_General_PostIncRn<MCU_Operand_Size::WORD, 7>,    // 11001111
+    D_General_ARn<MCU_Operand_Size::BYTE, 0>,          // 11010000
+    D_General_ARn<MCU_Operand_Size::BYTE, 1>,          // 11010001
+    D_General_ARn<MCU_Operand_Size::BYTE, 2>,          // 11010010
+    D_General_ARn<MCU_Operand_Size::BYTE, 3>,          // 11010011
+    D_General_ARn<MCU_Operand_Size::BYTE, 4>,          // 11010100
+    D_General_ARn<MCU_Operand_Size::BYTE, 5>,          // 11010101
+    D_General_ARn<MCU_Operand_Size::BYTE, 6>,          // 11010110
+    D_General_ARn<MCU_Operand_Size::BYTE, 7>,          // 11010111
+    D_General_ARn<MCU_Operand_Size::WORD, 0>,          // 11011000
+    D_General_ARn<MCU_Operand_Size::WORD, 1>,          // 11011001
+    D_General_ARn<MCU_Operand_Size::WORD, 2>,          // 11011010
+    D_General_ARn<MCU_Operand_Size::WORD, 3>,          // 11011011
+    D_General_ARn<MCU_Operand_Size::WORD, 4>,          // 11011100
+    D_General_ARn<MCU_Operand_Size::WORD, 5>,          // 11011101
+    D_General_ARn<MCU_Operand_Size::WORD, 6>,          // 11011110
+    D_General_ARn<MCU_Operand_Size::WORD, 7>,          // 11011111
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 0>,        // 11100000
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 1>,        // 11100001
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 2>,        // 11100010
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 3>,        // 11100011
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 4>,        // 11100100
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 5>,        // 11100101
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 6>,        // 11100110
+    D_General_d8_Rn<MCU_Operand_Size::BYTE, 7>,        // 11100111
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 0>,        // 11101000
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 1>,        // 11101001
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 2>,        // 11101010
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 3>,        // 11101011
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 4>,        // 11101100
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 5>,        // 11101101
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 6>,        // 11101110
+    D_General_d8_Rn<MCU_Operand_Size::WORD, 7>,        // 11101111
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 0>,       // 11110000
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 1>,       // 11110001
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 2>,       // 11110010
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 3>,       // 11110011
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 4>,       // 11110100
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 5>,       // 11110101
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 6>,       // 11110110
+    D_General_d16_Rn<MCU_Operand_Size::BYTE, 7>,       // 11110111
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 0>,       // 11111000
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 1>,       // 11111001
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 2>,       // 11111010
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 3>,       // 11111011
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 4>,       // 11111100
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 5>,       // 11111101
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 6>,       // 11111110
+    D_General_d16_Rn<MCU_Operand_Size::WORD, 7>,       // 11111111
 };
 
 void D_FetchDecodeExecuteNext(mcu_t& mcu)

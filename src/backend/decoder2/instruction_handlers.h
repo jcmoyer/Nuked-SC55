@@ -1708,6 +1708,24 @@ inline void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <uint8_t Rn>
+inline void I_MOV_S_B_Rs_aa8(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    // behave as @aa:8 MOV:G.B Rs,EAd
+    I_MOV_G_B_Rs_EAd<Mode_Aa8>(mcu, st);
+    // TODO/FIXME
+    --mcu.pc;
+}
+
+template <uint8_t Rn>
+inline void I_MOV_S_W_Rs_aa8(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    // behave as @aa:8 MOV:G.W Rs,EAd
+    I_MOV_G_W_Rs_EAd<Mode_Aa8>(mcu, st);
+    // TODO/FIXME
+    --mcu.pc;
+}
+
+template <uint8_t Rn>
 inline void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
 {
     --mcu.r[Rn];
