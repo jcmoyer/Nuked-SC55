@@ -1858,3 +1858,8 @@ inline void I_LDM_Fast(mcu_t& mcu, const I_CachedInstruction& st)
     // clang-format on
     mcu.pc += 2;
 }
+
+inline void I_JMP_ARn(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    mcu.pc = mcu.r[st.op_reg];
+}

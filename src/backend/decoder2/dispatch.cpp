@@ -306,20 +306,37 @@ void D_Short_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_PRTS, {});
 }
 
+void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    I_CachedInstruction instr;
+    instr.op_reg = byte & 0b111;
+    mcu.icache.DoCache(mcu, instr_start, I_JMP_ARn, instr);
+}
+
 void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)instr_start;
     (void)byte;
 
     const uint8_t kind = mcu.coder.ReadU8(mcu);
-    if (kind == 0b00011001)
+
+    switch (kind & 0b11111000)
     {
-        D_Short_PRTS(mcu, instr_start, kind);
-    }
-    else
-    {
-        D_Fallback(mcu);
-        // TODO
+    // JMP @Rn
+    case 0b11010000:
+        D_JMP_ARn(mcu, instr_start, kind);
+        break;
+
+    default:
+        if (kind == 0b00011001)
+        {
+            D_Short_PRTS(mcu, instr_start, kind);
+        }
+        else
+        {
+            D_Fallback(mcu);
+            // TODO
+        }
     }
 }
 
