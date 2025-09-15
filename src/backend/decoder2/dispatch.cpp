@@ -207,6 +207,70 @@ void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
             D_HardError(mcu, "SCB/F invalid regcode");
         }
     }
+    else if (byte == 0b00000110)
+    {
+        switch (regcode)
+        {
+        case 0b10111000:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<0>, disp);
+            break;
+        case 0b10111001:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<1>, disp);
+            break;
+        case 0b10111010:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<2>, disp);
+            break;
+        case 0b10111011:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<3>, disp);
+            break;
+        case 0b10111100:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<4>, disp);
+            break;
+        case 0b10111101:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<5>, disp);
+            break;
+        case 0b10111110:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<6>, disp);
+            break;
+        case 0b10111111:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<7>, disp);
+            break;
+        default:
+            D_HardError(mcu, "SCB/NE invalid regcode");
+        }
+    }
+    else if (byte == 0b00000111)
+    {
+        switch (regcode)
+        {
+        case 0b10111000:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<0>, disp);
+            break;
+        case 0b10111001:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<1>, disp);
+            break;
+        case 0b10111010:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<2>, disp);
+            break;
+        case 0b10111011:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<3>, disp);
+            break;
+        case 0b10111100:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<4>, disp);
+            break;
+        case 0b10111101:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<5>, disp);
+            break;
+        case 0b10111110:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<6>, disp);
+            break;
+        case 0b10111111:
+            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<7>, disp);
+            break;
+        default:
+            D_HardError(mcu, "SCB/EQ invalid regcode");
+        }
+    }
     else
     {
         D_HardError(mcu, "D_Short_SCB not implemented");
@@ -562,8 +626,8 @@ D_Handler DECODE_TABLE_0[256] = {
     nullptr,                                        // 00000011
     D_General_imm8,                                 // 00000100
     D_General_Aa8<MCU_Operand_Size::BYTE>,          // 00000101
-    nullptr,                                        // 00000110
-    nullptr,                                        // 00000111
+    D_Short_SCB,                                    // 00000110
+    D_Short_SCB,                                    // 00000111
     nullptr,                                        // 00001000
     nullptr,                                        // 00001001
     D_RTE,                                          // 00001010

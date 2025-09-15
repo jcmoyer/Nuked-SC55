@@ -1695,6 +1695,34 @@ static void I_SCB_F(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
+template <uint8_t Rn>
+static void I_SCB_NE(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    const bool Z = mcu.sr & STATUS_Z;
+    if (!Z)
+    {
+        mcu.pc = st.br_false;
+    }
+    else
+    {
+        I_SCB_F<Rn>(mcu, st);
+    }
+}
+
+template <uint8_t Rn>
+static void I_SCB_EQ(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    const bool Z = mcu.sr & STATUS_Z;
+    if (Z)
+    {
+        mcu.pc = st.br_false;
+    }
+    else
+    {
+        I_SCB_F<Rn>(mcu, st);
+    }
+}
+
 inline void I_RTS(mcu_t& mcu, const I_CachedInstruction& st)
 {
     (void)st;
