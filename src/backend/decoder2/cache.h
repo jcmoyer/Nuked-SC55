@@ -50,6 +50,11 @@ public:
         return (*m_cache)[addr];
     }
 
+    bool Contains(uint32_t addr) const
+    {
+        return Lookup(addr).F;
+    }
+
     void DoCache(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, const I_CachedInstruction& st);
 
     void DoCacheJump(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);

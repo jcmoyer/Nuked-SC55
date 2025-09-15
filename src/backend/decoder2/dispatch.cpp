@@ -916,7 +916,10 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
 
         for (auto& kvp : hits)
         {
-            PrintHitCount(mcu, kvp.first, kvp.second);
+            if (!mcu.icache.Contains(kvp.first))
+            {
+                PrintHitCount(mcu, kvp.first, kvp.second);
+            }
         }
 
         fprintf(stderr, "total cached: %zu\n", mcu.icache.CountCached());
