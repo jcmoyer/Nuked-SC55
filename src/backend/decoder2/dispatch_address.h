@@ -39,7 +39,7 @@ constexpr std::array<D_OpcodeHandler, 256> DefineGenericTable()
     t[0b00001111] = nullptr;
     t[0b00010000] = nullptr;
     t[0b00010001] = nullptr;
-    t[0b00010010] = nullptr;
+    t[0b00010010] = D_InvalidInstruction;
     t[0b00010011] = D_CLR_EAd<Sz, Mode>;
     t[0b00010100] = nullptr;
     t[0b00010101] = nullptr;

@@ -1768,3 +1768,75 @@ inline void I_SLEEP(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.sleep = 1;
     ++mcu.pc;
 }
+
+// STM <register list>,@-SP
+inline void I_STM(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    const uint8_t reglist = (uint8_t)st.op_data;
+    // clang-format off
+    if (reglist & 0b10000000) MCU_PushStack(mcu, mcu.r[7]);
+    if (reglist & 0b01000000) MCU_PushStack(mcu, mcu.r[6]);
+    if (reglist & 0b00100000) MCU_PushStack(mcu, mcu.r[5]);
+    if (reglist & 0b00010000) MCU_PushStack(mcu, mcu.r[4]);
+    if (reglist & 0b00001000) MCU_PushStack(mcu, mcu.r[3]);
+    if (reglist & 0b00000100) MCU_PushStack(mcu, mcu.r[2]);
+    if (reglist & 0b00000010) MCU_PushStack(mcu, mcu.r[1]);
+    if (reglist & 0b00000001) MCU_PushStack(mcu, mcu.r[0]);
+    // clang-format on
+    mcu.pc += 2;
+}
+
+// STM <register list>,@-SP
+// Specialized form of STM. Optimizer can eliminate runtime bit tests.
+template <uint8_t Reglist>
+inline void I_STM_Fast(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    (void)st;
+    // clang-format off
+    if (Reglist & 0b10000000) MCU_PushStack(mcu, mcu.r[7]);
+    if (Reglist & 0b01000000) MCU_PushStack(mcu, mcu.r[6]);
+    if (Reglist & 0b00100000) MCU_PushStack(mcu, mcu.r[5]);
+    if (Reglist & 0b00010000) MCU_PushStack(mcu, mcu.r[4]);
+    if (Reglist & 0b00001000) MCU_PushStack(mcu, mcu.r[3]);
+    if (Reglist & 0b00000100) MCU_PushStack(mcu, mcu.r[2]);
+    if (Reglist & 0b00000010) MCU_PushStack(mcu, mcu.r[1]);
+    if (Reglist & 0b00000001) MCU_PushStack(mcu, mcu.r[0]);
+    // clang-format on
+    mcu.pc += 2;
+}
+
+// LDM @SP+,<register list>
+inline void I_LDM(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    const uint8_t reglist = (uint8_t)st.op_data;
+    // clang-format off
+    if (reglist & 0b00000001) mcu.r[0] = MCU_PopStack(mcu);
+    if (reglist & 0b00000010) mcu.r[1] = MCU_PopStack(mcu);
+    if (reglist & 0b00000100) mcu.r[2] = MCU_PopStack(mcu);
+    if (reglist & 0b00001000) mcu.r[3] = MCU_PopStack(mcu);
+    if (reglist & 0b00010000) mcu.r[4] = MCU_PopStack(mcu);
+    if (reglist & 0b00100000) mcu.r[5] = MCU_PopStack(mcu);
+    if (reglist & 0b01000000) mcu.r[6] = MCU_PopStack(mcu);
+    if (reglist & 0b10000000) mcu.r[7] = MCU_PopStack(mcu);
+    // clang-format on
+    mcu.pc += 2;
+}
+
+// LDM @SP+,<register list>
+// Specialized form of LDM. Optimizer can eliminate runtime bit tests.
+template <uint8_t Reglist>
+inline void I_LDM_Fast(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    (void)st;
+    // clang-format off
+    if (Reglist & 0b00000001) mcu.r[0] = MCU_PopStack(mcu);
+    if (Reglist & 0b00000010) mcu.r[1] = MCU_PopStack(mcu);
+    if (Reglist & 0b00000100) mcu.r[2] = MCU_PopStack(mcu);
+    if (Reglist & 0b00001000) mcu.r[3] = MCU_PopStack(mcu);
+    if (Reglist & 0b00010000) mcu.r[4] = MCU_PopStack(mcu);
+    if (Reglist & 0b00100000) mcu.r[5] = MCU_PopStack(mcu);
+    if (Reglist & 0b01000000) mcu.r[6] = MCU_PopStack(mcu);
+    if (Reglist & 0b10000000) mcu.r[7] = MCU_PopStack(mcu);
+    // clang-format on
+    mcu.pc += 2;
+}

@@ -312,6 +312,40 @@ void D_Short_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_SLEEP, {});
 }
 
+void D_Short_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    const uint8_t reglist = mcu.coder.ReadU8(mcu);
+    if (reglist == 127)
+    {
+        // specialize the most commonly used form of this instruction
+        mcu.icache.DoCache(mcu, instr_start, I_STM_Fast<127>, {});
+    }
+    else
+    {
+        I_CachedInstruction instr;
+        instr.op_data = reglist;
+        mcu.icache.DoCache(mcu, instr_start, I_STM, instr);
+    }
+}
+
+void D_Short_LDM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    const uint8_t reglist = mcu.coder.ReadU8(mcu);
+    if (reglist == 127)
+    {
+        // specialize the most commonly used form of this instruction
+        mcu.icache.DoCache(mcu, instr_start, I_LDM_Fast<127>, {});
+    }
+    else
+    {
+        I_CachedInstruction instr;
+        instr.op_data = reglist;
+        mcu.icache.DoCache(mcu, instr_start, I_LDM, instr);
+    }
+}
+
 template <MCU_Operand_Size Sz, uint8_t Rn>
 void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
@@ -622,7 +656,7 @@ void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 D_Handler DECODE_TABLE_0[256] = {
     D_NOP,                                          // 00000000
     D_Short_SCB,                                    // 00000001
-    nullptr,                                        // 00000010
+    D_Short_LDM,                                    // 00000010
     nullptr,                                        // 00000011
     D_General_imm8,                                 // 00000100
     D_General_Aa8<MCU_Operand_Size::BYTE>,          // 00000101
@@ -638,7 +672,7 @@ D_Handler DECODE_TABLE_0[256] = {
     nullptr,                                        // 00001111
     D_JMP_aa16,                                     // 00010000
     D_JMP,                                          // 00010001
-    nullptr,                                        // 00010010
+    D_Short_STM,                                    // 00010010
     nullptr,                                        // 00010011
     nullptr,                                        // 00010100
     D_General_Aa16<MCU_Operand_Size::BYTE>,         // 00010101
