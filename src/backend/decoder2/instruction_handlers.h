@@ -1924,8 +1924,29 @@ inline void I_JMP_aa16(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.pc = st.br_true;
 }
 
+inline void I_JSR_aa16(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    MCU_PushStack(mcu, st.br_false);
+    mcu.pc = st.br_true;
+}
+
+inline void I_JSR_ARn(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    MCU_PushStack(mcu, st.br_false);
+    mcu.pc = mcu.r[st.op_reg];
+}
+
 inline void I_PJMP_aa24(mcu_t& mcu, const I_CachedInstruction& st)
 {
+    mcu.cp = st.op_page;
+    mcu.pc = st.op_data;
+}
+
+inline void I_PJSR_aa24(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    // br_true is return address
+    MCU_PushStack(mcu, st.br_true);
+    MCU_PushStack(mcu, mcu.cp);
     mcu.cp = st.op_page;
     mcu.pc = st.op_data;
 }

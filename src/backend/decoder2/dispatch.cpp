@@ -342,6 +342,16 @@ void D_Short_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_PJMP_aa24, instr);
 }
 
+void D_Short_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.op_page = mcu.coder.ReadU8(mcu);
+    instr.op_data = mcu.coder.ReadU16(mcu);
+    instr.br_true = (uint16_t)(instr_start + mcu.coder.offset); // TODO: awkward use of br_true as return address
+    mcu.icache.DoCache(mcu, instr_start, I_PJSR_aa24, instr);
+}
+
 void D_Short_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     I_CachedInstruction instr;
@@ -355,6 +365,23 @@ void D_Short_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr;
     instr.br_true = mcu.coder.ReadU16(mcu);
     mcu.icache.DoCache(mcu, instr_start, I_JMP_aa16, instr);
+}
+
+void D_Short_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.br_true  = mcu.coder.ReadU16(mcu);
+    instr.br_false = (uint16_t)(instr_start + mcu.coder.offset);
+    mcu.icache.DoCache(mcu, instr_start, I_JSR_aa16, instr);
+}
+
+void D_Short_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    I_CachedInstruction instr;
+    instr.op_reg   = byte & 0b111;
+    instr.br_false = (uint16_t)(instr_start + mcu.coder.offset);
+    mcu.icache.DoCache(mcu, instr_start, I_JSR_ARn, instr);
 }
 
 void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
@@ -374,6 +401,11 @@ void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     // PJMP @Rn
     case 0b11000000:
         D_Short_PJMP_ARn(mcu, instr_start, kind);
+        break;
+
+    // JSR @Rn
+    case 0b11011000:
+        D_Short_JSR_ARn(mcu, instr_start, kind);
         break;
 
     default:
@@ -740,7 +772,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_NOP,                                             // 00000000
     D_Short_SCB,                                       // 00000001
     D_Short_LDM,                                       // 00000010
-    nullptr,                                           // 00000011
+    D_Short_PJSR_aa24,                                 // 00000011
     D_General_imm8,                                    // 00000100
     D_General_Aa8<MCU_Operand_Size::BYTE>,             // 00000101
     D_Short_SCB,                                       // 00000110
@@ -761,7 +793,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_General_Aa16<MCU_Operand_Size::BYTE>,            // 00010101
     nullptr,                                           // 00010110
     nullptr,                                           // 00010111
-    nullptr,                                           // 00011000
+    D_Short_JSR_aa16,                                  // 00011000
     D_Short_RTS,                                       // 00011001
     D_Short_SLEEP,                                     // 00011010
     nullptr,                                           // 00011011
