@@ -708,7 +708,7 @@ void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 //=============================================================================
 // Top level table for decoder. Here we can determine addressing mode or short
 // form instruction.
-D_Handler DECODE_TABLE_0[256] = {
+constexpr D_Handler DECODE_TABLE_0[256] = {
     D_NOP,                                             // 00000000
     D_Short_SCB,                                       // 00000001
     D_Short_LDM,                                       // 00000010
