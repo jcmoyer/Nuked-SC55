@@ -153,6 +153,16 @@ void D_Short_CMP_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <uint8_t Rn>
+void D_Short_MOV_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.op_data = mcu.coder.ReadU8(mcu);
+    instr.ea_reg  = Rn;
+    mcu.icache.DoCache(mcu, instr_start, I_MOV_E_imm8_Rd<Rn>, instr);
+}
+
+template <uint8_t Rn>
 void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
@@ -789,14 +799,14 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_Short_CMP_I_W_imm16_Rd<5>,                       // 01001101
     D_Short_CMP_I_W_imm16_Rd<6>,                       // 01001110
     D_Short_CMP_I_W_imm16_Rd<7>,                       // 01001111
-    nullptr,                                           // 01010000
-    nullptr,                                           // 01010001
-    nullptr,                                           // 01010010
-    nullptr,                                           // 01010011
-    nullptr,                                           // 01010100
-    nullptr,                                           // 01010101
-    nullptr,                                           // 01010110
-    nullptr,                                           // 01010111
+    D_Short_MOV_E_imm8_Rd<0>,                          // 01010000
+    D_Short_MOV_E_imm8_Rd<1>,                          // 01010001
+    D_Short_MOV_E_imm8_Rd<2>,                          // 01010010
+    D_Short_MOV_E_imm8_Rd<3>,                          // 01010011
+    D_Short_MOV_E_imm8_Rd<4>,                          // 01010100
+    D_Short_MOV_E_imm8_Rd<5>,                          // 01010101
+    D_Short_MOV_E_imm8_Rd<6>,                          // 01010110
+    D_Short_MOV_E_imm8_Rd<7>,                          // 01010111
     D_Short_MOV_I_W_imm16_Rd<0>,                       // 01011000
     D_Short_MOV_I_W_imm16_Rd<1>,                       // 01011001
     D_Short_MOV_I_W_imm16_Rd<2>,                       // 01011010
