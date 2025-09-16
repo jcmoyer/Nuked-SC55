@@ -162,6 +162,24 @@ void D_Short_MOV_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_MOV_E_imm8_Rd<Rn>, instr);
 }
 
+template <MCU_Operand_Size Sz, uint8_t Rn>
+void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.ea_data = mcu.coder.ReadU8(mcu);
+    instr.op_reg  = Rn;
+
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_MOV_L_B_aa8_Rd<Rn>, instr);
+    }
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_MOV_L_W_aa8_Rd<Rn>, instr);
+    }
+}
+
 template <uint8_t Rn>
 void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
@@ -815,22 +833,22 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_Short_MOV_I_W_imm16_Rd<5>,                       // 01011101
     D_Short_MOV_I_W_imm16_Rd<6>,                       // 01011110
     D_Short_MOV_I_W_imm16_Rd<7>,                       // 01011111
-    nullptr,                                           // 01100000
-    nullptr,                                           // 01100001
-    nullptr,                                           // 01100010
-    nullptr,                                           // 01100011
-    nullptr,                                           // 01100100
-    nullptr,                                           // 01100101
-    nullptr,                                           // 01100110
-    nullptr,                                           // 01100111
-    nullptr,                                           // 01101000
-    nullptr,                                           // 01101001
-    nullptr,                                           // 01101010
-    nullptr,                                           // 01101011
-    nullptr,                                           // 01101100
-    nullptr,                                           // 01101101
-    nullptr,                                           // 01101110
-    nullptr,                                           // 01101111
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 0>,   // 01100000
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 1>,   // 01100001
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 2>,   // 01100010
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 3>,   // 01100011
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 4>,   // 01100100
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 5>,   // 01100101
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 6>,   // 01100110
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::BYTE, 7>,   // 01100111
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 0>,   // 01101000
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 1>,   // 01101001
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 2>,   // 01101010
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 3>,   // 01101011
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 4>,   // 01101100
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 5>,   // 01101101
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 6>,   // 01101110
+    D_Short_MOV_L_aa8_Rd<MCU_Operand_Size::WORD, 7>,   // 01101111
     D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 0>, // 01110000
     D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 1>, // 01110001
     D_Short_I_MOV_S_Rs_aa8<MCU_Operand_Size::BYTE, 2>, // 01110010
