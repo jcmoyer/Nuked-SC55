@@ -593,7 +593,35 @@ inline void I_BSET_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
-    const uint16_t mask   = (uint8_t)(1 << st.op_data);
+    const uint16_t mask   = (uint16_t)(1 << st.op_data);
+    const uint16_t data   = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
+    const uint16_t result = data | mask;
+    const bool     Z      = (data & mask) == 0;
+    StoreToEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st, result);
+    MCU_SetStatus(mcu, Z, STATUS_Z);
+}
+
+template <typename Mode>
+inline void I_BSET_B_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
+
+    const uint16_t bit    = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st) & 0b1111;
+    const uint8_t  mask   = (uint8_t)(1 << bit);
+    const uint8_t  data   = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
+    const uint8_t  result = data | mask;
+    const bool     Z      = (data & mask) == 0;
+    StoreToEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, result);
+    MCU_SetStatus(mcu, Z, STATUS_Z);
+}
+
+template <typename Mode>
+inline void I_BSET_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
+
+    const uint16_t bit    = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st) & 0b1111;
+    const uint16_t mask   = (uint16_t)(1 << bit);
     const uint16_t data   = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint16_t result = data | mask;
     const bool     Z      = (data & mask) == 0;
@@ -620,7 +648,7 @@ inline void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
 
-    const uint16_t mask   = (uint8_t)(1 << st.op_data);
+    const uint16_t mask   = (uint16_t)(1 << st.op_data);
     const uint16_t data   = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
     const uint16_t result = data ^ mask;
     const bool     Z      = (data & mask) == 0;
@@ -647,7 +675,7 @@ inline void I_BCLR_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
-    const uint16_t mask = (uint8_t)(1 << st.op_data);
+    const uint16_t mask = (uint16_t)(1 << st.op_data);
     const uint16_t data = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, data & (~mask));
@@ -673,7 +701,7 @@ inline void I_BCLR_W_Rs_EAd(mcu_t& mcu, const I_CachedInstruction& st)
     InstructionScope<MCU_Operand_Size::WORD, State> scope(mcu, st, 1);
 
     const uint16_t bit  = LoadFromOpReg<MCU_Operand_Size::WORD>(mcu, st) & 0b1111;
-    const uint16_t mask = (uint8_t)(1 << bit);
+    const uint16_t mask = (uint16_t)(1 << bit);
     const uint16_t data = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
     StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, data & (~mask));
