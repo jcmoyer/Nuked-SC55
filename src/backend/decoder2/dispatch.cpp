@@ -127,14 +127,6 @@ void D_RTE(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCacheBranch(mcu, instr_start, I_RTE, 0);
 }
 
-void D_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)instr_start;
-    (void)byte;
-    D_Fallback(mcu);
-    // TODO
-}
-
 inline uint8_t I_InstrSizeFromPC(const mcu_t& mcu, uint32_t instr_start)
 {
     return (uint8_t)(mcu.pc - instr_start);
@@ -327,6 +319,14 @@ void D_Short_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr;
     instr.op_reg = byte & 0b111;
     mcu.icache.DoCache(mcu, instr_start, I_PJMP_ARn, instr);
+}
+
+void D_Short_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.br_true = mcu.coder.ReadU16(mcu);
+    mcu.icache.DoCache(mcu, instr_start, I_JMP_aa16, instr);
 }
 
 void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
@@ -725,7 +725,7 @@ D_Handler DECODE_TABLE_0[256] = {
     D_General_Aa8<MCU_Operand_Size::WORD>,             // 00001101
     D_BSR_d8,                                          // 00001110
     nullptr,                                           // 00001111
-    D_JMP_aa16,                                        // 00010000
+    D_Short_JMP_aa16,                                  // 00010000
     D_JMP,                                             // 00010001
     D_Short_STM,                                       // 00010010
     D_Short_PJMP_aa24,                                 // 00010011
