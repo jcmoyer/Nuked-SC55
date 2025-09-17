@@ -18,7 +18,7 @@
 
 #include "disassemble.h"
 
-#define INSTRUCTION_HIT_TRACING 1
+#define INSTRUCTION_HIT_TRACING 0
 
 #if INSTRUCTION_HIT_TRACING
 #include <vector>
@@ -421,6 +421,17 @@ void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
+void D_Short_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+
+    const uint8_t vec_byte = mcu.coder.ReadU8(mcu);
+
+    I_CachedInstruction instr;
+    instr.op_data = vec_byte & 0b1111;
+    mcu.icache.DoCache(mcu, instr_start, I_TRAPA_imm4, instr);
+}
+
 void D_Short_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
@@ -777,7 +788,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_General_Aa8<MCU_Operand_Size::BYTE>,             // 00000101
     D_Short_SCB,                                       // 00000110
     D_Short_SCB,                                       // 00000111
-    nullptr,                                           // 00001000
+    D_Short_TRAPA,                                     // 00001000
     nullptr,                                           // 00001001
     D_RTE,                                             // 00001010
     nullptr,                                           // 00001011

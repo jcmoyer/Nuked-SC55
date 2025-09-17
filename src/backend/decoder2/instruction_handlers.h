@@ -1956,3 +1956,9 @@ inline void I_PJMP_ARn(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.cp = (uint8_t)mcu.r[st.op_reg];
     mcu.pc = mcu.r[st.op_reg + 1];
 }
+
+inline void I_TRAPA_imm4(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    MCU_Interrupt_TRAPA(mcu, (uint8_t)st.op_data);
+    mcu.pc += 2;
+}
