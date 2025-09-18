@@ -88,7 +88,7 @@ void D_Fallback(mcu_t& mcu)
 
 void D_HardError(mcu_t& mcu, const char* help_context)
 {
-    const uint32_t base_addr = MCU_GetAddress(mcu.restore_cp, mcu.restore_pc);
+    const uint32_t base_addr = MCU_GetAddress(mcu.cp, mcu.pc);
 
     const uint8_t bytes[6]{
         MCU_Read(mcu, base_addr + 0),
@@ -391,6 +391,7 @@ void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint8_t kind = mcu.coder.ReadU8(mcu);
 
+    // TODO - not all kinds implemented
     switch (kind & 0b11111000)
     {
     // JMP @Rn
@@ -415,8 +416,7 @@ void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
         }
         else
         {
-            D_Fallback(mcu);
-            // TODO
+            D_HardError(mcu, "D_JMP");
         }
     }
 }
@@ -548,7 +548,7 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_ARn");
     }
 }
 
@@ -571,7 +571,7 @@ void D_General_d8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_d8_Rn");
     }
 }
 
@@ -594,7 +594,7 @@ void D_General_d16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_d16_Rn");
     }
 }
 
@@ -615,7 +615,7 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_imm8");
     }
 }
 
@@ -636,7 +636,7 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_imm16");
     }
 }
 
@@ -658,7 +658,7 @@ void D_General_Aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_Aa8");
     }
 }
 
@@ -680,7 +680,7 @@ void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_General_Aa16");
     }
 }
 
@@ -1065,7 +1065,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     }
     else
     {
-        D_Fallback(mcu);
+        D_HardError(mcu, "D_FetchDecodeExecuteNext");
     }
 
 #if INSTRUCTION_HIT_TRACING
@@ -1088,44 +1088,10 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
 #endif
 }
 
-void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)instr_start;
-    (void)byte;
-
-    fprintf(stderr, "Decoder: invalid instruction at %d:%x\n", mcu.cp, mcu.pc);
-    D_Fallback(mcu);
-}
-
 void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)instr_start;
     (void)byte;
     (void)instr;
-
-    const uint32_t base_addr = MCU_GetAddress(mcu.restore_cp, mcu.restore_pc);
-
-    const uint8_t bytes[6]{
-        MCU_Read(mcu, base_addr + 0),
-        MCU_Read(mcu, base_addr + 1),
-        MCU_Read(mcu, base_addr + 2),
-        MCU_Read(mcu, base_addr + 3),
-        MCU_Read(mcu, base_addr + 4),
-        MCU_Read(mcu, base_addr + 5),
-    };
-
-    fprintf(stderr, "Dispatcher: unrecognized instruction at %d:%x:\n", mcu.cp, mcu.pc);
-
-    I_DecodedInstruction decoded;
-    if (!I_Disassemble(bytes, 0, decoded))
-    {
-        fprintf(stderr, "    failed to disassemble instruction\n");
-        return;
-    }
-
-    std::string code;
-    I_RenderInstruction2(decoded, code);
-    fprintf(stderr, "    %s\n", code.c_str());
-
-    D_Fallback(mcu);
+    D_HardError(mcu, "D_InvalidInstruction");
 }
