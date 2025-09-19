@@ -314,8 +314,6 @@ struct mcu_t {
     mcu_sample_callback sample_callback = MCU_DefaultSampleCallback;
 
     // Decoder state
-    uint16_t           restore_pc;
-    uint8_t            restore_cp;
     I_InstructionCache icache;
     CodeReader         coder;
 };

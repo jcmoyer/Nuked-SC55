@@ -78,9 +78,6 @@ std::unordered_map<uint32_t, uint64_t> hitcount;
 // Backtrack and re-try using original decoder
 void D_Fallback(mcu_t& mcu)
 {
-    mcu.pc = mcu.restore_pc;
-    mcu.cp = mcu.restore_cp;
-
     // original decoder does not use coder
     const uint8_t byte = MCU_ReadCodeAdvance(mcu);
     MCU_Operand_Table[byte](mcu, byte);
@@ -1040,9 +1037,6 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
 
 void D_FetchDecodeExecuteNext(mcu_t& mcu)
 {
-    mcu.restore_pc = mcu.pc;
-    mcu.restore_cp = mcu.cp;
-
     uint32_t instr_start = MCU_GetAddress(mcu.cp, mcu.pc);
     mcu.coder            = CodeReader{};
 
