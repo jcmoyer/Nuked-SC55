@@ -989,7 +989,8 @@ inline void I_SWAP_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-// XCH.W Rs, Rd
+// XCH Rs, Rd
+// This instruction defined for WORD size only.
 template <typename Mode>
 inline void I_XCH_W_Rs_Rd(mcu_t& mcu, const I_CachedInstruction& instr)
 {

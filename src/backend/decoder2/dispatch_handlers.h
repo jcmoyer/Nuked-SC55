@@ -132,7 +132,7 @@ void D_SWAP_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <uint8_t OpReg, typename Mode>
-void D_XCH_W_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_XCH_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
