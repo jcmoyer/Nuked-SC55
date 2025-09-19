@@ -124,11 +124,11 @@ void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <typename Mode>
-void D_SWAP_B(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SWAP_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    mcu.icache.DoCache(mcu, instr_start, I_SWAP_B<Mode>, instr);
+    mcu.icache.DoCache(mcu, instr_start, I_SWAP_B_Rd<Mode>, instr);
 }
 
 template <uint8_t OpReg, typename Mode>
@@ -328,7 +328,7 @@ void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <typename Mode>
-void D_EXTS_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_EXTS_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
@@ -337,7 +337,7 @@ void D_EXTS_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 }
 
 template <typename Mode>
-void D_EXTU_B_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_EXTU_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 

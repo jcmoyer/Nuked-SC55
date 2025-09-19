@@ -24,9 +24,9 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     t[0b00001101] = D_ADD_Q_n_EAd<Sz, Mode_Rn, -2>;
     t[0b00001110] = D_InvalidInstruction;
     t[0b00001111] = D_InvalidInstruction;
-    t[0b00010000] = Sz == MCU_Operand_Size::BYTE ? D_SWAP_B<Mode_Rn> : D_InvalidInstruction;
-    t[0b00010001] = Sz == MCU_Operand_Size::BYTE ? D_EXTS_B_Rd<Mode_Rn> : D_InvalidInstruction;
-    t[0b00010010] = Sz == MCU_Operand_Size::BYTE ? D_EXTU_B_Rd<Mode_Rn> : D_InvalidInstruction;
+    t[0b00010000] = Sz == MCU_Operand_Size::BYTE ? D_SWAP_Rd<Mode_Rn> : D_InvalidInstruction;
+    t[0b00010001] = Sz == MCU_Operand_Size::BYTE ? D_EXTS_Rd<Mode_Rn> : D_InvalidInstruction;
+    t[0b00010010] = Sz == MCU_Operand_Size::BYTE ? D_EXTU_Rd<Mode_Rn> : D_InvalidInstruction;
     t[0b00010011] = D_CLR_EAd<Sz, Mode_Rn>;
     t[0b00010100] = D_NEG_EAd<Sz, Mode_Rn>;
     t[0b00010101] = D_NOT_EAd<Sz, Mode_Rn>;

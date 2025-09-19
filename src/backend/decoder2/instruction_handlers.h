@@ -975,9 +975,10 @@ inline void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-// SWAP.B Rd
+// SWAP Rd
+// This instruction defined for BYTE size despite operating on the entire register WORD.
 template <typename Mode>
-inline void I_SWAP_B(mcu_t& mcu, const I_CachedInstruction& st)
+inline void I_SWAP_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
 
@@ -1499,6 +1500,8 @@ void I_RTE(mcu_t& mcu, const I_CachedInstruction& st);
 
 void I_NOP(mcu_t&, const I_CachedInstruction&);
 
+// EXTS Rd
+// This instruction defined for BYTE size despite operating on the entire register WORD.
 template <typename Mode>
 inline void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
@@ -1511,6 +1514,8 @@ inline void I_EXTS_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_SetStatus(mcu, 0, STATUS_C);
 }
 
+// EXTU Rd
+// This instruction defined for BYTE size despite operating on the entire register WORD.
 template <typename Mode>
 inline void I_EXTU_B_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
