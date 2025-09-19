@@ -40,32 +40,32 @@ constexpr uint8_t ModeEASize(Mode_ARn)
     return 1;
 }
 
-constexpr uint8_t ModeEASize(Mode_d8_Rn)
+constexpr uint8_t ModeEASize(Mode_Ad8_Rn)
 {
     return 2;
 }
 
-constexpr uint8_t ModeEASize(Mode_d16_Rn)
+constexpr uint8_t ModeEASize(Mode_Ad16_Rn)
 {
     return 3;
 }
 
-constexpr uint8_t ModeEASize(Mode_PreDecRn)
+constexpr uint8_t ModeEASize(Mode_APreDecRn)
 {
     return 1;
 }
 
-constexpr uint8_t ModeEASize(Mode_PostIncRn)
+constexpr uint8_t ModeEASize(Mode_APostIncRn)
 {
     return 1;
 }
 
-constexpr uint8_t ModeEASize(Mode_Aa8)
+constexpr uint8_t ModeEASize(Mode_Aaa8)
 {
     return 2;
 }
 
-constexpr uint8_t ModeEASize(Mode_Aa16)
+constexpr uint8_t ModeEASize(Mode_Aaa16)
 {
     return 3;
 }
@@ -90,7 +90,7 @@ public:
           m_instr(instr),
           m_instr_size(instr_size)
     {
-        if constexpr (std::is_same_v<Mode, Mode_PreDecRn>)
+        if constexpr (std::is_same_v<Mode, Mode_APreDecRn>)
         {
             m_mcu.r[m_instr.ea_reg] -= GetAdjust();
         }
@@ -98,7 +98,7 @@ public:
 
     ~InstructionScope()
     {
-        if constexpr (std::is_same_v<Mode, Mode_PostIncRn>)
+        if constexpr (std::is_same_v<Mode, Mode_APostIncRn>)
         {
             m_mcu.r[m_instr.ea_reg] += GetAdjust();
         }
@@ -167,23 +167,23 @@ typename MCU_Operand_Size_Int<Sz>::Type LoadFromReg(mcu_t& mcu, uint8_t reg)
 // Computes the EA pointer for a given addressing mode. This operation is only
 // valid for modes that refer to an address in memory - the address of a
 // register or immediate cannot be taken.
-constexpr uint32_t LoadEA(Mode_d8_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_Ad8_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
 }
 
-constexpr uint32_t LoadEA(Mode_d16_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_Ad16_Rn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
 }
 
-constexpr uint32_t LoadEA(Mode_PreDecRn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_APreDecRn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)instr;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(Mode_PostIncRn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_APostIncRn, mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)instr;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
@@ -195,13 +195,13 @@ constexpr uint32_t LoadEA(Mode_ARn, mcu_t& mcu, uint8_t Rn, const I_CachedInstru
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(Mode_Aa8, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_Aaa8, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)Rn;
     return (uint32_t)(mcu.br << 8) | instr.ea_data;
 }
 
-constexpr uint32_t LoadEA(Mode_Aa16, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
+constexpr uint32_t LoadEA(Mode_Aaa16, const mcu_t& mcu, uint8_t Rn, const I_CachedInstruction& instr)
 {
     (void)Rn;
     return (uint32_t)(mcu.dp << 16) | instr.ea_data;
@@ -1743,7 +1743,7 @@ template <uint8_t Rn>
 inline void I_MOV_L_B_aa8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as @aa:8 MOV:G.B EAs,Rd
-    I_MOV_G_B_EAs_Rd<Mode_Aa8>(mcu, st);
+    I_MOV_G_B_EAs_Rd<Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1752,7 +1752,7 @@ template <uint8_t Rn>
 inline void I_MOV_L_W_aa8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as @aa:8 MOV:G.W EAs,Rd
-    I_MOV_G_W_EAs_Rd<Mode_Aa8>(mcu, st);
+    I_MOV_G_W_EAs_Rd<Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1770,7 +1770,7 @@ template <uint8_t Rn>
 inline void I_MOV_S_B_Rs_aa8(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as @aa:8 MOV:G.B Rs,EAd
-    I_MOV_G_B_Rs_EAd<Mode_Aa8>(mcu, st);
+    I_MOV_G_B_Rs_EAd<Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1779,7 +1779,7 @@ template <uint8_t Rn>
 inline void I_MOV_S_W_Rs_aa8(mcu_t& mcu, const I_CachedInstruction& st)
 {
     // behave as @aa:8 MOV:G.W Rs,EAd
-    I_MOV_G_W_Rs_EAd<Mode_Aa8>(mcu, st);
+    I_MOV_G_W_Rs_EAd<Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
