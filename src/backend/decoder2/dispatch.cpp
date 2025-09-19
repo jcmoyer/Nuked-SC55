@@ -345,7 +345,7 @@ void D_Short_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     I_CachedInstruction instr;
     instr.op_page = mcu.coder.ReadU8(mcu);
     instr.op_data = mcu.coder.ReadU16(mcu);
-    instr.br_true = (uint16_t)(instr_start + mcu.coder.offset); // TODO: awkward use of br_true as return address
+    instr.br_true = mcu.coder.GetAddressInPage(mcu); // TODO: awkward use of br_true as return address
     mcu.icache.DoCache(mcu, instr_start, I_PJSR_aa24, instr);
 }
 
@@ -369,7 +369,7 @@ void D_Short_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     (void)byte;
     I_CachedInstruction instr;
     instr.br_true  = mcu.coder.ReadU16(mcu);
-    instr.br_false = (uint16_t)(instr_start + mcu.coder.offset);
+    instr.br_false = mcu.coder.GetAddressInPage(mcu);
     mcu.icache.DoCache(mcu, instr_start, I_JSR_aa16, instr);
 }
 
@@ -377,7 +377,7 @@ void D_Short_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     I_CachedInstruction instr;
     instr.op_reg   = byte & 0b111;
-    instr.br_false = (uint16_t)(instr_start + mcu.coder.offset);
+    instr.br_false = mcu.coder.GetAddressInPage(mcu);
     mcu.icache.DoCache(mcu, instr_start, I_JSR_ARn, instr);
 }
 

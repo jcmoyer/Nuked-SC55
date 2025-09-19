@@ -19,7 +19,7 @@ void I_InstructionCache::DoCache(mcu_t&                     mcu,
 
 void I_InstructionCache::DoCacheJump(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
 {
-    const uint16_t next_ip = (uint16_t)(mcu.pc + mcu.coder.offset);
+    const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
 
     I_CachedInstruction st;
     st.br_true              = (uint16_t)(next_ip + disp);
@@ -30,7 +30,7 @@ void I_InstructionCache::DoCacheJump(mcu_t& mcu, uint32_t instr_start, I_Handler
 
 void I_InstructionCache::DoCacheBranch(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
 {
-    const uint16_t next_ip = (uint16_t)(mcu.pc + mcu.coder.offset);
+    const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
 
     I_CachedInstruction st;
     st.br_true              = (uint16_t)(next_ip + disp);
