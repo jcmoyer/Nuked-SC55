@@ -640,7 +640,6 @@ inline void I_BNOT_B_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
     const bool    Z      = (data & mask) == 0;
     StoreToEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, Z, STATUS_Z);
-    fprintf(stderr, "bnot.b\n");
 }
 
 template <typename Mode>
@@ -654,7 +653,6 @@ inline void I_BNOT_W_imm4_EAd(mcu_t& mcu, const I_CachedInstruction& st)
     const bool     Z      = (data & mask) == 0;
     StoreToEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, Z, STATUS_Z);
-    fprintf(stderr, "bnot.w\n");
 }
 
 // BCLR.B #xx, <EAd>
