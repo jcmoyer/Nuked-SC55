@@ -149,9 +149,6 @@ struct I_DecodedInstruction
     I_InstructionType instr = Unknown;
 
     I_RegId ea_reg; // only present for addressing modes that refer to a register
-    // I_RegId        op_reg; // only present for instructions whose opcodes refer to a register
-    // I_ControlRegId op_cr;  // only present for instructions whose opcodes refer to a control register
-    // uint16_t       op_data;
 
     int16_t  ea_disp; // Ad8_Rn, Ad16_Rn
     uint16_t ea_addr; // Aaa8, Aaa16
