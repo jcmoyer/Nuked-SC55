@@ -226,14 +226,14 @@ void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
 constexpr D_Handler DECODE_TABLE_0[256] = {
     D_NOP,                                             // 00000000
-    D_Short_SCB,                                       // 00000001
-    D_Short_LDM,                                       // 00000010
-    D_Short_PJSR_aa24,                                 // 00000011
+    D_SCB,                                             // 00000001
+    D_LDM,                                             // 00000010
+    D_PJSR_aa24,                                       // 00000011
     D_General_imm8,                                    // 00000100
     D_General_Aa8<MCU_Operand_Size::BYTE>,             // 00000101
-    D_Short_SCB,                                       // 00000110
-    D_Short_SCB,                                       // 00000111
-    D_Short_TRAPA,                                     // 00001000
+    D_SCB,                                             // 00000110
+    D_SCB,                                             // 00000111
+    D_TRAPA,                                           // 00001000
     nullptr,                                           // 00001001
     D_RTE,                                             // 00001010
     nullptr,                                           // 00001011
@@ -241,17 +241,17 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_General_Aa8<MCU_Operand_Size::WORD>,             // 00001101
     D_BSR_d8,                                          // 00001110
     nullptr,                                           // 00001111
-    D_Short_JMP_aa16,                                  // 00010000
+    D_JMP_aa16,                                        // 00010000
     D_JMP,                                             // 00010001
-    D_Short_STM,                                       // 00010010
-    D_Short_PJMP_aa24,                                 // 00010011
+    D_STM,                                             // 00010010
+    D_PJMP_aa24,                                       // 00010011
     nullptr,                                           // 00010100
     D_General_Aa16<MCU_Operand_Size::BYTE>,            // 00010101
     nullptr,                                           // 00010110
     nullptr,                                           // 00010111
-    D_Short_JSR_aa16,                                  // 00011000
-    D_Short_RTS,                                       // 00011001
-    D_Short_SLEEP,                                     // 00011010
+    D_JSR_aa16,                                        // 00011000
+    D_RTS,                                             // 00011001
+    D_SLEEP,                                           // 00011010
     nullptr,                                           // 00011011
     nullptr,                                           // 00011100
     D_General_Aa16<MCU_Operand_Size::WORD>,            // 00011101

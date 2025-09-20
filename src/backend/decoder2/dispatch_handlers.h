@@ -736,7 +736,7 @@ inline void D_RTE(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCacheBranch(mcu, instr_start, I_RTE, 0);
 }
 
-inline void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     const uint8_t regcode = mcu.coder.ReadU8(mcu);
     const int8_t  disp    = (int8_t)mcu.coder.ReadU8(mcu);
@@ -843,13 +843,13 @@ inline void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-inline void D_Short_RTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_RTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     mcu.icache.DoCache(mcu, instr_start, I_RTS, {});
 }
 
-inline void D_Short_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     mcu.icache.DoCache(mcu, instr_start, I_PRTS, {});
@@ -862,7 +862,7 @@ inline void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_JMP_ARn, instr);
 }
 
-inline void D_Short_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
@@ -871,7 +871,7 @@ inline void D_Short_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_PJMP_aa24, instr);
 }
 
-inline void D_Short_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
@@ -881,14 +881,14 @@ inline void D_Short_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_PJSR_aa24, instr);
 }
 
-inline void D_Short_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     I_CachedInstruction instr;
     instr.op_reg = byte & 0b111;
     mcu.icache.DoCache(mcu, instr_start, I_PJMP_ARn, instr);
 }
 
-inline void D_Short_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
@@ -896,7 +896,7 @@ inline void D_Short_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_JMP_aa16, instr);
 }
 
-inline void D_Short_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
@@ -905,7 +905,7 @@ inline void D_Short_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_JSR_aa16, instr);
 }
 
-inline void D_Short_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     I_CachedInstruction instr;
     instr.op_reg   = byte & 0b111;
@@ -930,18 +930,18 @@ inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     // PJMP @Rn
     case 0b11000000:
-        D_Short_PJMP_ARn(mcu, instr_start, kind);
+        D_PJMP_ARn(mcu, instr_start, kind);
         break;
 
     // JSR @Rn
     case 0b11011000:
-        D_Short_JSR_ARn(mcu, instr_start, kind);
+        D_JSR_ARn(mcu, instr_start, kind);
         break;
 
     default:
         if (kind == 0b00011001)
         {
-            D_Short_PRTS(mcu, instr_start, kind);
+            D_PRTS(mcu, instr_start, kind);
         }
         else
         {
@@ -950,7 +950,7 @@ inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-inline void D_Short_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -961,13 +961,13 @@ inline void D_Short_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_TRAPA_imm4, instr);
 }
 
-inline void D_Short_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     mcu.icache.DoCache(mcu, instr_start, I_SLEEP, {});
 }
 
-inline void D_Short_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     const uint8_t reglist = mcu.coder.ReadU8(mcu);
@@ -984,7 +984,7 @@ inline void D_Short_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-inline void D_Short_LDM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+inline void D_LDM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     const uint8_t reglist = mcu.coder.ReadU8(mcu);
