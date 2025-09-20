@@ -1478,22 +1478,22 @@ inline void I_CMP_E_imm8_Rd(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.pc += 2;
 }
 
-void I_Bcc_d8_BRA(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BRN(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BHI(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BLS(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BCC(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BCS(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BNE(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BEQ(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BVC(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BVS(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BPL(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BMI(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BGE(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BLT(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BGT(mcu_t& mcu, const I_CachedInstruction& st);
-void I_Bcc_d8_BLE(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BRA(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BRN(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BHI(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BLS(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BCC(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BCS(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BNE(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BEQ(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BVC(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BVS(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BPL(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BMI(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BGE(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BLT(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BGT(mcu_t& mcu, const I_CachedInstruction& st);
+void I_BLE(mcu_t& mcu, const I_CachedInstruction& st);
 
 void I_RTE(mcu_t& mcu, const I_CachedInstruction& st);
 
@@ -1965,3 +1965,5 @@ inline void I_TRAPA_imm4(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_Interrupt_TRAPA(mcu, (uint8_t)st.op_data);
     mcu.pc += 2;
 }
+
+void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr);

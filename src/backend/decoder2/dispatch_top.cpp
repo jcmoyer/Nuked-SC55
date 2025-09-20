@@ -4,364 +4,13 @@
 #include "dispatch_aa.h"
 #include "dispatch_arn.h"
 #include "dispatch_d8d16_rn.h"
+#include "dispatch_handlers.h"
 #include "dispatch_imm16.h"
 #include "dispatch_postinc_rn.h"
 #include "dispatch_predec_rn.h"
 #include "dispatch_rn.h"
 #include "instruction_handlers.h"
 #include "mcu.h"
-
-void D_NOP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    mcu.icache.DoCache(mcu, instr_start, I_NOP, {});
-}
-
-void D_RTE(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    mcu.icache.DoCacheBranch(mcu, instr_start, I_RTE, 0);
-}
-
-template <uint8_t Rn>
-void D_Short_CMP_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    instr.ea_reg  = Rn;
-    mcu.icache.DoCache(mcu, instr_start, I_CMP_E_imm8_Rd<Rn>, instr);
-}
-
-template <uint8_t Rn>
-void D_Short_CMP_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    instr.ea_reg  = Rn;
-    mcu.icache.DoCache(mcu, instr_start, I_CMP_I_W_imm16_Rd<Rn>, instr);
-}
-
-template <uint8_t Rn>
-void D_Short_MOV_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    instr.ea_reg  = Rn;
-    mcu.icache.DoCache(mcu, instr_start, I_MOV_E_imm8_Rd<Rn>, instr);
-}
-
-template <MCU_Operand_Size Sz, uint8_t Rn>
-void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.ea_data = mcu.coder.ReadU8(mcu);
-    instr.op_reg  = Rn;
-
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
-    {
-        mcu.icache.DoCache(mcu, instr_start, I_MOV_L_B_aa8_Rd<Rn>, instr);
-    }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
-    {
-        mcu.icache.DoCache(mcu, instr_start, I_MOV_L_W_aa8_Rd<Rn>, instr);
-    }
-}
-
-template <uint8_t Rn>
-void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    instr.ea_reg  = Rn;
-    mcu.icache.DoCache(mcu, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
-}
-
-template <MCU_Operand_Size Sz, uint8_t Rn>
-void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_reg  = Rn;
-    instr.ea_data = mcu.coder.ReadU8(mcu);
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
-    {
-        mcu.icache.DoCache(mcu, instr_start, I_MOV_S_B_Rs_aa8<Rn>, instr);
-    }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
-    {
-        mcu.icache.DoCache(mcu, instr_start, I_MOV_S_W_Rs_aa8<Rn>, instr);
-    }
-}
-
-void D_Short_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    const uint8_t regcode = mcu.coder.ReadU8(mcu);
-    const int8_t  disp    = (int8_t)mcu.coder.ReadU8(mcu);
-
-    if (byte == 0b00000001)
-    {
-        switch (regcode)
-        {
-        case 0b10111000:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<0>, disp);
-            break;
-        case 0b10111001:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<1>, disp);
-            break;
-        case 0b10111010:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<2>, disp);
-            break;
-        case 0b10111011:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<3>, disp);
-            break;
-        case 0b10111100:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<4>, disp);
-            break;
-        case 0b10111101:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<5>, disp);
-            break;
-        case 0b10111110:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<6>, disp);
-            break;
-        case 0b10111111:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_F<7>, disp);
-            break;
-        default:
-            D_HardError(mcu, "SCB/F invalid regcode");
-        }
-    }
-    else if (byte == 0b00000110)
-    {
-        switch (regcode)
-        {
-        case 0b10111000:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<0>, disp);
-            break;
-        case 0b10111001:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<1>, disp);
-            break;
-        case 0b10111010:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<2>, disp);
-            break;
-        case 0b10111011:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<3>, disp);
-            break;
-        case 0b10111100:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<4>, disp);
-            break;
-        case 0b10111101:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<5>, disp);
-            break;
-        case 0b10111110:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<6>, disp);
-            break;
-        case 0b10111111:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_NE<7>, disp);
-            break;
-        default:
-            D_HardError(mcu, "SCB/NE invalid regcode");
-        }
-    }
-    else if (byte == 0b00000111)
-    {
-        switch (regcode)
-        {
-        case 0b10111000:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<0>, disp);
-            break;
-        case 0b10111001:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<1>, disp);
-            break;
-        case 0b10111010:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<2>, disp);
-            break;
-        case 0b10111011:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<3>, disp);
-            break;
-        case 0b10111100:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<4>, disp);
-            break;
-        case 0b10111101:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<5>, disp);
-            break;
-        case 0b10111110:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<6>, disp);
-            break;
-        case 0b10111111:
-            mcu.icache.DoCacheBranch(mcu, instr_start, I_SCB_EQ<7>, disp);
-            break;
-        default:
-            D_HardError(mcu, "SCB/EQ invalid regcode");
-        }
-    }
-    else
-    {
-        D_HardError(mcu, "D_Short_SCB not implemented");
-    }
-}
-
-void D_Short_RTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    mcu.icache.DoCache(mcu, instr_start, I_RTS, {});
-}
-
-void D_Short_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    mcu.icache.DoCache(mcu, instr_start, I_PRTS, {});
-}
-
-void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    I_CachedInstruction instr;
-    instr.op_reg = byte & 0b111;
-    mcu.icache.DoCache(mcu, instr_start, I_JMP_ARn, instr);
-}
-
-void D_Short_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_page = mcu.coder.ReadU8(mcu);
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    mcu.icache.DoCache(mcu, instr_start, I_PJMP_aa24, instr);
-}
-
-void D_Short_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.op_page  = mcu.coder.ReadU8(mcu);
-    instr.br_true  = mcu.coder.ReadU16(mcu);
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    mcu.icache.DoCache(mcu, instr_start, I_PJSR_aa24, instr);
-}
-
-void D_Short_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    I_CachedInstruction instr;
-    instr.op_reg = byte & 0b111;
-    mcu.icache.DoCache(mcu, instr_start, I_PJMP_ARn, instr);
-}
-
-void D_Short_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.br_true = mcu.coder.ReadU16(mcu);
-    mcu.icache.DoCache(mcu, instr_start, I_JMP_aa16, instr);
-}
-
-void D_Short_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    I_CachedInstruction instr;
-    instr.br_true  = mcu.coder.ReadU16(mcu);
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    mcu.icache.DoCache(mcu, instr_start, I_JSR_aa16, instr);
-}
-
-void D_Short_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    I_CachedInstruction instr;
-    instr.op_reg   = byte & 0b111;
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    mcu.icache.DoCache(mcu, instr_start, I_JSR_ARn, instr);
-}
-
-void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)instr_start;
-    (void)byte;
-
-    const uint8_t kind = mcu.coder.ReadU8(mcu);
-
-    // TODO - not all kinds implemented
-    switch (kind & 0b11111000)
-    {
-    // JMP @Rn
-    case 0b11010000:
-        D_JMP_ARn(mcu, instr_start, kind);
-        break;
-
-    // PJMP @Rn
-    case 0b11000000:
-        D_Short_PJMP_ARn(mcu, instr_start, kind);
-        break;
-
-    // JSR @Rn
-    case 0b11011000:
-        D_Short_JSR_ARn(mcu, instr_start, kind);
-        break;
-
-    default:
-        if (kind == 0b00011001)
-        {
-            D_Short_PRTS(mcu, instr_start, kind);
-        }
-        else
-        {
-            D_HardError(mcu, "D_JMP");
-        }
-    }
-}
-
-void D_Short_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-
-    const uint8_t vec_byte = mcu.coder.ReadU8(mcu);
-
-    I_CachedInstruction instr;
-    instr.op_data = vec_byte & 0b1111;
-    mcu.icache.DoCache(mcu, instr_start, I_TRAPA_imm4, instr);
-}
-
-void D_Short_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    mcu.icache.DoCache(mcu, instr_start, I_SLEEP, {});
-}
-
-void D_Short_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    const uint8_t reglist = mcu.coder.ReadU8(mcu);
-    if (reglist == 127)
-    {
-        // specialize the most commonly used form of this instruction
-        mcu.icache.DoCache(mcu, instr_start, I_STM_Fast<127>, {});
-    }
-    else
-    {
-        I_CachedInstruction instr;
-        instr.op_data = reglist;
-        mcu.icache.DoCache(mcu, instr_start, I_STM, instr);
-    }
-}
-
-void D_Short_LDM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
-{
-    (void)byte;
-    const uint8_t reglist = mcu.coder.ReadU8(mcu);
-    if (reglist == 127)
-    {
-        // specialize the most commonly used form of this instruction
-        mcu.icache.DoCache(mcu, instr_start, I_LDM_Fast<127>, {});
-    }
-    else
-    {
-        I_CachedInstruction instr;
-        instr.op_data = reglist;
-        mcu.icache.DoCache(mcu, instr_start, I_LDM, instr);
-    }
-}
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
 void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
@@ -575,96 +224,6 @@ void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-// Handles both d:8 and d:16 forms
-template <MCU_Operand_Size Sz>
-void I_Bcc(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
-{
-    const uint8_t cond = opcode & 0b1111;
-    int16_t       disp;
-    switch (Sz)
-    {
-    case MCU_Operand_Size::BYTE:
-        disp = (int8_t)mcu.coder.ReadU8(mcu);
-        break;
-    case MCU_Operand_Size::WORD:
-        disp = (int16_t)mcu.coder.ReadU16(mcu);
-        break;
-    }
-    switch (cond)
-    {
-    case 0:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BRA, disp);
-        break;
-    case 1:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BRN, disp);
-        break;
-    case 2:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BHI, disp);
-        break;
-    case 3:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BLS, disp);
-        break;
-    case 4:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BCC, disp);
-        break;
-    case 5:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BCS, disp);
-        break;
-    case 6:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BNE, disp);
-        break;
-    case 7:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BEQ, disp);
-        break;
-    case 8:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BVC, disp);
-        break;
-    case 9:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BVS, disp);
-        break;
-    case 10:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BPL, disp);
-        break;
-    case 11:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BMI, disp);
-        break;
-    case 12:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BGE, disp);
-        break;
-    case 13:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BLT, disp);
-        break;
-    case 14:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BGT, disp);
-        break;
-    case 15:
-        mcu.icache.DoCacheBranch(mcu, instr_start, I_Bcc_d8_BLE, disp);
-        break;
-    default:
-        std::unreachable();
-    }
-}
-
-void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr)
-{
-    MCU_PushStack(mcu, instr.br_false);
-    mcu.pc = instr.br_true;
-}
-
-void D_BSR_d8(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
-{
-    (void)opcode;
-    int8_t disp = (int8_t)mcu.coder.ReadU8(mcu);
-    mcu.icache.DoCacheBranch(mcu, instr_start, I_BSR, disp);
-}
-
-void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
-{
-    (void)opcode;
-    const uint16_t disp = mcu.coder.ReadU16(mcu);
-    mcu.icache.DoCacheBranch(mcu, instr_start, I_BSR, (int16_t)disp);
-}
-
 constexpr D_Handler DECODE_TABLE_0[256] = {
     D_NOP,                                             // 00000000
     D_Short_SCB,                                       // 00000001
@@ -698,38 +257,38 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_General_Aa16<MCU_Operand_Size::WORD>,            // 00011101
     D_BSR_d16,                                         // 00011110
     nullptr,                                           // 00011111
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100000
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100001
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100010
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100011
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100100
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100101
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100110
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00100111
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101000
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101001
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101010
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101011
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101100
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101101
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101110
-    I_Bcc<MCU_Operand_Size::BYTE>,                     // 00101111
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110000
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110001
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110010
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110011
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110100
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110101
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110110
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00110111
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111000
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111001
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111010
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111011
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111100
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111101
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111110
-    I_Bcc<MCU_Operand_Size::WORD>,                     // 00111111
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100000
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100001
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100010
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100011
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100100
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100101
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100110
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100111
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101000
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101001
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101010
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101011
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101100
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101101
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101110
+    D_Bcc<MCU_Operand_Size::BYTE>,                     // 00101111
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110000
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110001
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110010
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110011
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110100
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110101
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110110
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00110111
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111000
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111001
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111010
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111011
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111100
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111101
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111110
+    D_Bcc<MCU_Operand_Size::WORD>,                     // 00111111
     D_Short_CMP_E_imm8_Rd<0>,                          // 01000000
     D_Short_CMP_E_imm8_Rd<1>,                          // 01000001
     D_Short_CMP_E_imm8_Rd<2>,                          // 01000010

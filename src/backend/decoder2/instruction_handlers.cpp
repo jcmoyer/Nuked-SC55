@@ -7,17 +7,17 @@ void I_NOP(mcu_t& mcu, const I_CachedInstruction&)
     ++mcu.pc;
 }
 
-void I_Bcc_d8_BRA(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BRA(mcu_t& mcu, const I_CachedInstruction& st)
 {
     mcu.pc = st.br_true;
 }
 
-void I_Bcc_d8_BRN(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BRN(mcu_t& mcu, const I_CachedInstruction& st)
 {
     mcu.pc = st.br_false;
 }
 
-void I_Bcc_d8_BHI(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BHI(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool C = mcu.sr & STATUS_C;
     const bool Z = mcu.sr & STATUS_Z;
@@ -31,7 +31,7 @@ void I_Bcc_d8_BHI(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BLS(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BLS(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool C = mcu.sr & STATUS_C;
     const bool Z = mcu.sr & STATUS_Z;
@@ -45,7 +45,7 @@ void I_Bcc_d8_BLS(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BCC(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BCC(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool C = mcu.sr & STATUS_C;
     if (C == false)
@@ -58,7 +58,7 @@ void I_Bcc_d8_BCC(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BCS(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BCS(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool C = mcu.sr & STATUS_C;
     if (C == true)
@@ -71,7 +71,7 @@ void I_Bcc_d8_BCS(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BNE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BNE(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool Z = mcu.sr & STATUS_Z;
     if (Z == false)
@@ -84,7 +84,7 @@ void I_Bcc_d8_BNE(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BEQ(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BEQ(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool Z = mcu.sr & STATUS_Z;
     if (Z == true)
@@ -97,7 +97,7 @@ void I_Bcc_d8_BEQ(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BVC(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BVC(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool V = mcu.sr & STATUS_V;
     if (V == false)
@@ -110,7 +110,7 @@ void I_Bcc_d8_BVC(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BVS(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BVS(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool V = mcu.sr & STATUS_V;
     if (V == true)
@@ -123,7 +123,7 @@ void I_Bcc_d8_BVS(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BPL(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BPL(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool N = mcu.sr & STATUS_N;
     if (N == false)
@@ -136,7 +136,7 @@ void I_Bcc_d8_BPL(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BMI(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BMI(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool N = mcu.sr & STATUS_N;
     if (N == true)
@@ -149,7 +149,7 @@ void I_Bcc_d8_BMI(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BGE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BGE(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -163,7 +163,7 @@ void I_Bcc_d8_BGE(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BLT(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BLT(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -177,7 +177,7 @@ void I_Bcc_d8_BLT(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BGT(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BGT(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -192,7 +192,7 @@ void I_Bcc_d8_BGT(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_Bcc_d8_BLE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BLE(mcu_t& mcu, const I_CachedInstruction& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -214,4 +214,10 @@ void I_RTE(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.cp        = (uint8_t)MCU_PopStack(mcu);
     mcu.pc        = MCU_PopStack(mcu);
     mcu.ex_ignore = 1;
+}
+
+void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr)
+{
+    MCU_PushStack(mcu, instr.br_false);
+    mcu.pc = instr.br_true;
 }
