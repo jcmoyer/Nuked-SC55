@@ -288,11 +288,15 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     return t;
 }
 
-constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES{
-    {DefineTable<MCU_Operand_Size::BYTE>(), DefineTable<MCU_Operand_Size::WORD>()},
-};
+constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM8  = DefineTable<MCU_Operand_Size::BYTE>();
+constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM16 = DefineTable<MCU_Operand_Size::WORD>();
 
-D_OpcodeHandler GetDispatcherimm16(uint8_t opcode, MCU_Operand_Size size)
+D_OpcodeHandler GetDispatcherImm8(uint8_t opcode)
 {
-    return DECODE_TABLES[(size_t)size][opcode];
+    return DECODE_TABLE_IMM8[opcode];
+}
+
+D_OpcodeHandler GetDispatcherImm16(uint8_t opcode)
+{
+    return DECODE_TABLE_IMM16[opcode];
 }

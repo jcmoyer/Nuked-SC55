@@ -9,7 +9,6 @@
 #include "dispatch_postinc_rn.h"
 #include "dispatch_predec_rn.h"
 #include "dispatch_rn.h"
-#include "instruction_handlers.h"
 #include "mcu.h"
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
@@ -41,7 +40,7 @@ void D_General_PreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_reg = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherPreDecRn(opcode, Sz);
+    D_OpcodeHandler handler = GetDispatcherAPreDecRn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -61,7 +60,7 @@ void D_General_PostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_reg = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherPostIncRn(opcode, Sz);
+    D_OpcodeHandler handler = GetDispatcherAPostIncRn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -104,7 +103,7 @@ void D_General_d8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_reg  = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherd8Rn(opcode, Sz);
+    D_OpcodeHandler handler = GetDispatcherAd8Rn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -127,7 +126,7 @@ void D_General_d16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_reg  = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherd16Rn(opcode, Sz);
+    D_OpcodeHandler handler = GetDispatcherAd16Rn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -148,7 +147,7 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherimm16(opcode, MCU_Operand_Size::BYTE);
+    D_OpcodeHandler handler = GetDispatcherImm8(opcode);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -169,7 +168,7 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherimm16(opcode, MCU_Operand_Size::WORD);
+    D_OpcodeHandler handler = GetDispatcherImm16(opcode);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
