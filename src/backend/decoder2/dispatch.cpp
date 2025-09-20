@@ -124,11 +124,6 @@ void D_RTE(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCacheBranch(mcu, instr_start, I_RTE, 0);
 }
 
-inline uint8_t I_InstrSizeFromPC(const mcu_t& mcu, uint32_t instr_start)
-{
-    return (uint8_t)(mcu.pc - instr_start);
-}
-
 template <uint8_t Rn>
 void D_Short_CMP_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
