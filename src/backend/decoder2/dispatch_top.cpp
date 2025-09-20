@@ -237,9 +237,9 @@ void D_Short_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
-    instr.op_page = mcu.coder.ReadU8(mcu);
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    instr.br_true = mcu.coder.GetAddressInPage(mcu); // TODO: awkward use of br_true as return address
+    instr.op_page  = mcu.coder.ReadU8(mcu);
+    instr.br_true  = mcu.coder.ReadU16(mcu);
+    instr.br_false = mcu.coder.GetAddressInPage(mcu);
     mcu.icache.DoCache(mcu, instr_start, I_PJSR_aa24, instr);
 }
 
