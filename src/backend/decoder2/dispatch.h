@@ -16,3 +16,7 @@ void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_Cach
 
 // Backtrack and re-try using original decoder
 void D_Fallback(mcu_t& mcu);
+
+// Disassembles the instruction at current IP, prints it, and exits process.
+[[noreturn]]
+void D_HardError(mcu_t& mcu, const char* help_context);

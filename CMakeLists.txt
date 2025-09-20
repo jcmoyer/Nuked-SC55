@@ -85,6 +85,7 @@ target_sources(nuked-sc55-backend
     src/backend/decoder2/dispatch_postinc_rn.cpp
     src/backend/decoder2/dispatch_predec_rn.cpp
     src/backend/decoder2/dispatch_rn.cpp
+    src/backend/decoder2/dispatch_top.cpp
     src/backend/decoder2/dispatch.cpp
     src/backend/decoder2/instruction_handlers.cpp
 
