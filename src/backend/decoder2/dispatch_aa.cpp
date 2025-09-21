@@ -8,7 +8,7 @@ constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES_AA8{{
     DefineGenericTable<MCU_Operand_Size::WORD, Mode_Aaa8>(),
 }};
 
-D_OpcodeHandler GetDispatcherAa8(uint8_t opcode, MCU_Operand_Size size)
+D_OpcodeHandler GetDispatcherAaa8(uint8_t opcode, MCU_Operand_Size size)
 {
     return DECODE_TABLES_AA8[(size_t)size][opcode];
 }
@@ -18,7 +18,7 @@ constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES_AA16{{
     DefineGenericTable<MCU_Operand_Size::WORD, Mode_Aaa16>(),
 }};
 
-D_OpcodeHandler GetDispatcherAa16(uint8_t opcode, MCU_Operand_Size size)
+D_OpcodeHandler GetDispatcherAaa16(uint8_t opcode, MCU_Operand_Size size)
 {
     return DECODE_TABLES_AA16[(size_t)size][opcode];
 }

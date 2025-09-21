@@ -839,7 +839,7 @@ inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_Short_SCB not implemented");
+        D_HardError(mcu, "not implemented");
     }
 }
 
@@ -945,7 +945,7 @@ inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
         }
         else
         {
-            D_HardError(mcu, "D_JMP");
+            D_HardError(mcu);
         }
     }
 }

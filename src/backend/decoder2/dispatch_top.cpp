@@ -27,12 +27,12 @@ void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_Rn");
+        D_HardError(mcu);
     }
 }
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
-void D_General_PreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_APreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -47,12 +47,12 @@ void D_General_PreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_PreDecRn");
+        D_HardError(mcu);
     }
 }
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
-void D_General_PostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_APostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -67,7 +67,7 @@ void D_General_PostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_PostIncRn");
+        D_HardError(mcu);
     }
 }
 
@@ -87,12 +87,12 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_ARn");
+        D_HardError(mcu);
     }
 }
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
-void D_General_d8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Ad8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -110,12 +110,12 @@ void D_General_d8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_d8_Rn");
+        D_HardError(mcu);
     }
 }
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
-void D_General_d16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Ad16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -133,7 +133,7 @@ void D_General_d16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_d16_Rn");
+        D_HardError(mcu);
     }
 }
 
@@ -154,7 +154,7 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_imm8");
+        D_HardError(mcu);
     }
 }
 
@@ -175,12 +175,12 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu, "D_General_imm16");
+        D_HardError(mcu);
     }
 }
 
 template <MCU_Operand_Size Sz>
-void D_General_Aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Aaa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -190,19 +190,19 @@ void D_General_Aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAa8(opcode, Sz);
+    D_OpcodeHandler handler = GetDispatcherAaa8(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
     }
     else
     {
-        D_HardError(mcu, "D_General_Aa8");
+        D_HardError(mcu);
     }
 }
 
 template <MCU_Operand_Size Sz>
-void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Aaa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
@@ -212,14 +212,14 @@ void D_General_Aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAa16(opcode, Sz);
+    D_OpcodeHandler handler = GetDispatcherAaa16(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
     }
     else
     {
-        D_HardError(mcu, "D_General_Aa16");
+        D_HardError(mcu);
     }
 }
 
@@ -229,7 +229,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_LDM,                                             // 00000010
     D_PJSR_aa24,                                       // 00000011
     D_General_imm8,                                    // 00000100
-    D_General_Aa8<MCU_Operand_Size::BYTE>,             // 00000101
+    D_General_Aaa8<MCU_Operand_Size::BYTE>,            // 00000101
     D_SCB,                                             // 00000110
     D_SCB,                                             // 00000111
     D_TRAPA,                                           // 00001000
@@ -237,7 +237,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_RTE,                                             // 00001010
     nullptr,                                           // 00001011
     D_General_imm16,                                   // 00001100
-    D_General_Aa8<MCU_Operand_Size::WORD>,             // 00001101
+    D_General_Aaa8<MCU_Operand_Size::WORD>,            // 00001101
     D_BSR_d8,                                          // 00001110
     nullptr,                                           // 00001111
     D_JMP_aa16,                                        // 00010000
@@ -245,7 +245,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_STM,                                             // 00010010
     D_PJMP_aa24,                                       // 00010011
     nullptr,                                           // 00010100
-    D_General_Aa16<MCU_Operand_Size::BYTE>,            // 00010101
+    D_General_Aaa16<MCU_Operand_Size::BYTE>,           // 00010101
     nullptr,                                           // 00010110
     nullptr,                                           // 00010111
     D_JSR_aa16,                                        // 00011000
@@ -253,7 +253,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_SLEEP,                                           // 00011010
     nullptr,                                           // 00011011
     nullptr,                                           // 00011100
-    D_General_Aa16<MCU_Operand_Size::WORD>,            // 00011101
+    D_General_Aaa16<MCU_Operand_Size::WORD>,           // 00011101
     D_BSR_d16,                                         // 00011110
     nullptr,                                           // 00011111
     D_Bcc<MCU_Operand_Size::BYTE>,                     // 00100000
@@ -400,38 +400,38 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_General_Rn<MCU_Operand_Size::WORD, 5>,           // 10101101
     D_General_Rn<MCU_Operand_Size::WORD, 6>,           // 10101110
     D_General_Rn<MCU_Operand_Size::WORD, 7>,           // 10101111
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 0>,     // 10110000
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 1>,     // 10110001
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 2>,     // 10110010
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 3>,     // 10110011
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 4>,     // 10110100
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 5>,     // 10110101
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 6>,     // 10110110
-    D_General_PreDecRn<MCU_Operand_Size::BYTE, 7>,     // 10110111
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 0>,     // 10111000
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 1>,     // 10111001
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 2>,     // 10111010
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 3>,     // 10111011
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 4>,     // 10111100
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 5>,     // 10111101
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 6>,     // 10111110
-    D_General_PreDecRn<MCU_Operand_Size::WORD, 7>,     // 10111111
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 0>,    // 11000000
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 1>,    // 11000001
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 2>,    // 11000010
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 3>,    // 11000011
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 4>,    // 11000100
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 5>,    // 11000101
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 6>,    // 11000110
-    D_General_PostIncRn<MCU_Operand_Size::BYTE, 7>,    // 11000111
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 0>,    // 11001000
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 1>,    // 11001001
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 2>,    // 11001010
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 3>,    // 11001011
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 4>,    // 11001100
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 5>,    // 11001101
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 6>,    // 11001110
-    D_General_PostIncRn<MCU_Operand_Size::WORD, 7>,    // 11001111
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 0>,    // 10110000
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 1>,    // 10110001
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 2>,    // 10110010
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 3>,    // 10110011
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 4>,    // 10110100
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 5>,    // 10110101
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 6>,    // 10110110
+    D_General_APreDecRn<MCU_Operand_Size::BYTE, 7>,    // 10110111
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 0>,    // 10111000
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 1>,    // 10111001
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 2>,    // 10111010
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 3>,    // 10111011
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 4>,    // 10111100
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 5>,    // 10111101
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 6>,    // 10111110
+    D_General_APreDecRn<MCU_Operand_Size::WORD, 7>,    // 10111111
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 0>,   // 11000000
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 1>,   // 11000001
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 2>,   // 11000010
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 3>,   // 11000011
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 4>,   // 11000100
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 5>,   // 11000101
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 6>,   // 11000110
+    D_General_APostIncRn<MCU_Operand_Size::BYTE, 7>,   // 11000111
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 0>,   // 11001000
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 1>,   // 11001001
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 2>,   // 11001010
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 3>,   // 11001011
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 4>,   // 11001100
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 5>,   // 11001101
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 6>,   // 11001110
+    D_General_APostIncRn<MCU_Operand_Size::WORD, 7>,   // 11001111
     D_General_ARn<MCU_Operand_Size::BYTE, 0>,          // 11010000
     D_General_ARn<MCU_Operand_Size::BYTE, 1>,          // 11010001
     D_General_ARn<MCU_Operand_Size::BYTE, 2>,          // 11010010
@@ -448,38 +448,38 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_General_ARn<MCU_Operand_Size::WORD, 5>,          // 11011101
     D_General_ARn<MCU_Operand_Size::WORD, 6>,          // 11011110
     D_General_ARn<MCU_Operand_Size::WORD, 7>,          // 11011111
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 0>,        // 11100000
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 1>,        // 11100001
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 2>,        // 11100010
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 3>,        // 11100011
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 4>,        // 11100100
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 5>,        // 11100101
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 6>,        // 11100110
-    D_General_d8_Rn<MCU_Operand_Size::BYTE, 7>,        // 11100111
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 0>,        // 11101000
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 1>,        // 11101001
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 2>,        // 11101010
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 3>,        // 11101011
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 4>,        // 11101100
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 5>,        // 11101101
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 6>,        // 11101110
-    D_General_d8_Rn<MCU_Operand_Size::WORD, 7>,        // 11101111
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 0>,       // 11110000
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 1>,       // 11110001
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 2>,       // 11110010
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 3>,       // 11110011
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 4>,       // 11110100
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 5>,       // 11110101
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 6>,       // 11110110
-    D_General_d16_Rn<MCU_Operand_Size::BYTE, 7>,       // 11110111
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 0>,       // 11111000
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 1>,       // 11111001
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 2>,       // 11111010
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 3>,       // 11111011
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 4>,       // 11111100
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 5>,       // 11111101
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 6>,       // 11111110
-    D_General_d16_Rn<MCU_Operand_Size::WORD, 7>,       // 11111111
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 0>,       // 11100000
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 1>,       // 11100001
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 2>,       // 11100010
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 3>,       // 11100011
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 4>,       // 11100100
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 5>,       // 11100101
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 6>,       // 11100110
+    D_General_Ad8_Rn<MCU_Operand_Size::BYTE, 7>,       // 11100111
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 0>,       // 11101000
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 1>,       // 11101001
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 2>,       // 11101010
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 3>,       // 11101011
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 4>,       // 11101100
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 5>,       // 11101101
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 6>,       // 11101110
+    D_General_Ad8_Rn<MCU_Operand_Size::WORD, 7>,       // 11101111
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 0>,      // 11110000
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 1>,      // 11110001
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 2>,      // 11110010
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 3>,      // 11110011
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 4>,      // 11110100
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 5>,      // 11110101
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 6>,      // 11110110
+    D_General_Ad16_Rn<MCU_Operand_Size::BYTE, 7>,      // 11110111
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 0>,      // 11111000
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 1>,      // 11111001
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 2>,      // 11111010
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 3>,      // 11111011
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 4>,      // 11111100
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 5>,      // 11111101
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 6>,      // 11111110
+    D_General_Ad16_Rn<MCU_Operand_Size::WORD, 7>,      // 11111111
 };
 
 D_Handler GetDispatcherTop(uint8_t byte)

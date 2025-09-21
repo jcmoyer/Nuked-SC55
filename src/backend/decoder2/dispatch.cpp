@@ -74,7 +74,7 @@ void D_Fallback(mcu_t& mcu)
     MCU_Operand_Table[byte](mcu, byte);
 }
 
-void D_HardError(mcu_t& mcu, const char* help_context)
+void D_HardError(mcu_t& mcu, const char* message, const std::source_location& location)
 {
     const uint32_t base_addr = MCU_GetAddress(mcu.cp, mcu.pc);
 
@@ -87,7 +87,11 @@ void D_HardError(mcu_t& mcu, const char* help_context)
         MCU_Read(mcu, base_addr + 5),
     };
 
-    fprintf(stderr, "Dispatcher: in %s, unrecognized instruction at %d:%x:\n", help_context, mcu.cp, mcu.pc);
+    fprintf(stderr, "Dispatcher: in %s, at address %d:%x:\n", location.function_name(), mcu.cp, mcu.pc);
+    if (message)
+    {
+        fprintf(stderr, "    error: %s\n", message);
+    }
 
     I_DecodedInstruction decoded;
     if (I_Disassemble(bytes, 0, decoded))
@@ -128,7 +132,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     }
     else
     {
-        D_HardError(mcu, "D_FetchDecodeExecuteNext");
+        D_HardError(mcu);
     }
 
 #if INSTRUCTION_HIT_TRACING
@@ -156,5 +160,5 @@ void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_Cach
     (void)instr_start;
     (void)byte;
     (void)instr;
-    D_HardError(mcu, "D_InvalidInstruction");
+    D_HardError(mcu);
 }

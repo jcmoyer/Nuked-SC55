@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <source_location>
 
 #include "cache.h"
 
@@ -19,4 +20,6 @@ void D_Fallback(mcu_t& mcu);
 
 // Disassembles the instruction at current IP, prints it, and exits process.
 [[noreturn]]
-void D_HardError(mcu_t& mcu, const char* help_context);
+void D_HardError(mcu_t&                      mcu,
+                 const char*                 message  = nullptr,
+                 const std::source_location& location = std::source_location::current());
