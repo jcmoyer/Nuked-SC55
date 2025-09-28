@@ -1,16 +1,23 @@
 # Version 0.7.0 (TBD)
 
+The main new feature in this release is a new H8/532 VM that supports
+instruction caching. Compared to 0.6.1, measured render times are 1.42x faster
+for MK1 romsets and 1.32x for MK2 romsets. The exact figures will vary based on
+your hardware.
+
 - Optimized interrupt handling for a 10-16% overall performance improvement
   depending on compiler.
 - Rewrite H8/532 VM from scratch to support instruction caching and reduce
-  number of ROM reads. [TODO: add final benchmark numbers, ~12% faster with
-  partial implementation]
+  number of ROM reads. [TODO: add final benchmark numbers for this particular
+  change]
 - Fixed a bug where selecting a specific romset using `--romset` would cause
   the emulator to not load all the roms in that romset.
 - Fixed a bug where the renderer output was ~20% slower than the set tempo when
   using a JV880 romset.
 - Fixed a subtle timing bug that caused sample output for the JV880 to differ
   slightly from upstream.
+
+>>>>>>> f257ca5 (update changelog)
 
 # Version 0.6.1 (2025-07-30)
 
