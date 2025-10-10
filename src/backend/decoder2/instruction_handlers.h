@@ -265,6 +265,16 @@ void StoreToEA(Mode, mcu_t& mcu, const I_CachedInstruction& st, typename MCU_Ope
         MCU_Write16(mcu, addr, value);
 }
 
+inline bool IsSR_B(uint8_t cr)
+{
+    return cr == 1;
+}
+
+inline bool IsSR_W(uint8_t cr)
+{
+    return cr == 0;
+}
+
 inline uint8_t LoadFromCR_B(mcu_t& mcu, uint8_t cr)
 {
     switch (cr)
@@ -1436,12 +1446,26 @@ inline void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
     StoreToCR_B(mcu, CR, result);
     mcu.ex_ignore = 1;
 
-    const bool N = result & 0x80;
-    const bool Z = result == 0;
-    const bool V = 0;
-    MCU_SetStatus(mcu, N, STATUS_N);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-    MCU_SetStatus(mcu, V, STATUS_V);
+    if (IsSR_B(CR))
+    {
+        const bool N = (mcu.sr & STATUS_N) || (st.ea_data & 0b1000);
+        const bool Z = (mcu.sr & STATUS_Z) || (st.ea_data & 0b0100);
+        const bool V = (mcu.sr & STATUS_V) || (st.ea_data & 0b0010);
+        const bool C = (mcu.sr & STATUS_C) || (st.ea_data & 0b0001);
+        MCU_SetStatus(mcu, N, STATUS_N);
+        MCU_SetStatus(mcu, Z, STATUS_Z);
+        MCU_SetStatus(mcu, V, STATUS_V);
+        MCU_SetStatus(mcu, C, STATUS_C);
+    }
+    else
+    {
+        const bool N = result & 0x80;
+        const bool Z = result == 0;
+        const bool V = 0;
+        MCU_SetStatus(mcu, N, STATUS_N);
+        MCU_SetStatus(mcu, Z, STATUS_Z);
+        MCU_SetStatus(mcu, V, STATUS_V);
+    }
 }
 
 // ANDC.W #xx:16, CR
@@ -1454,12 +1478,26 @@ inline void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
     StoreToCR_W(mcu, CR, result);
     mcu.ex_ignore = 1;
 
-    const bool N = result & 0x8000;
-    const bool Z = result == 0;
-    const bool V = 0;
-    MCU_SetStatus(mcu, N, STATUS_N);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-    MCU_SetStatus(mcu, V, STATUS_V);
+    if (IsSR_W(CR))
+    {
+        const bool N = (mcu.sr & STATUS_N) || (st.ea_data & 0b1000);
+        const bool Z = (mcu.sr & STATUS_Z) || (st.ea_data & 0b0100);
+        const bool V = (mcu.sr & STATUS_V) || (st.ea_data & 0b0010);
+        const bool C = (mcu.sr & STATUS_C) || (st.ea_data & 0b0001);
+        MCU_SetStatus(mcu, N, STATUS_N);
+        MCU_SetStatus(mcu, Z, STATUS_Z);
+        MCU_SetStatus(mcu, V, STATUS_V);
+        MCU_SetStatus(mcu, C, STATUS_C);
+    }
+    else
+    {
+        const bool N = result & 0x8000;
+        const bool Z = result == 0;
+        const bool V = 0;
+        MCU_SetStatus(mcu, N, STATUS_N);
+        MCU_SetStatus(mcu, Z, STATUS_Z);
+        MCU_SetStatus(mcu, V, STATUS_V);
+    }
 }
 
 // ORC.B #xx:8, CR
