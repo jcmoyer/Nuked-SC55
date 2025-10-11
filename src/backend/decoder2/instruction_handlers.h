@@ -1786,6 +1786,38 @@ inline void I_ROTXL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 template <typename Mode>
+inline void I_ROTXR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
+
+    const bool    old_C  = mcu.sr & STATUS_C;
+    const uint8_t input  = LoadFromEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st);
+    const bool    lsb    = input & 1;
+    const uint8_t result = static_cast<uint8_t>((input >> 1) | (static_cast<uint8_t>(old_C) << 7));
+    StoreToEA<MCU_Operand_Size::BYTE>(Mode{}, mcu, st, result);
+    MCU_SetStatus(mcu, result & 0x80, STATUS_N);
+    MCU_SetStatus(mcu, result == 0, STATUS_Z);
+    MCU_SetStatus(mcu, 0, STATUS_V);
+    MCU_SetStatus(mcu, lsb, STATUS_C);
+}
+
+template <typename Mode>
+inline void I_ROTXR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::WORD, Mode> scope(mcu, st, 1);
+
+    const bool     old_C  = mcu.sr & STATUS_C;
+    const uint16_t input  = LoadFromEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st);
+    const bool     lsb    = input & 1;
+    const uint16_t result = (uint16_t)(input >> 1) | ((uint16_t)old_C << 15);
+    StoreToEA<MCU_Operand_Size::WORD>(Mode{}, mcu, st, result);
+    MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
+    MCU_SetStatus(mcu, result == 0, STATUS_Z);
+    MCU_SetStatus(mcu, 0, STATUS_V);
+    MCU_SetStatus(mcu, lsb, STATUS_C);
+}
+
+template <typename Mode>
 inline void I_XOR_B_EAs_Rd(mcu_t& mcu, const I_CachedInstruction& st)
 {
     InstructionScope<MCU_Operand_Size::BYTE, Mode> scope(mcu, st, 1);
