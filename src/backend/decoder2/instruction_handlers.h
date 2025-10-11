@@ -1350,6 +1350,48 @@ inline void I_SHLR_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
     MCU_SetStatus(mcu, C, STATUS_C);
 }
 
+// SHAL.B <EAd>
+template <typename State>
+inline void I_SHAL_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
+
+    const uint8_t val_old = LoadFromEA<MCU_Operand_Size::BYTE>(State{}, mcu, st);
+    const uint8_t val_new = val_old << 1;
+    StoreToEA<MCU_Operand_Size::BYTE>(State{}, mcu, st, val_new);
+
+    const bool N = val_new & 0x80;
+    const bool Z = val_new == 0;
+    const bool V = (val_new & 0x80) != (val_old & 0x80);
+    const bool C = val_old & 0x80;
+
+    MCU_SetStatus(mcu, N, STATUS_N);
+    MCU_SetStatus(mcu, Z, STATUS_Z);
+    MCU_SetStatus(mcu, V, STATUS_V);
+    MCU_SetStatus(mcu, C, STATUS_C);
+}
+
+// SHAL.W <EAd>
+template <typename State>
+inline void I_SHAL_W_EAd(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    InstructionScope<MCU_Operand_Size::BYTE, State> scope(mcu, st, 1);
+
+    const uint16_t val_old = LoadFromEA<MCU_Operand_Size::WORD>(State{}, mcu, st);
+    const uint16_t val_new = val_old << 1;
+    StoreToEA<MCU_Operand_Size::WORD>(State{}, mcu, st, val_new);
+
+    const bool N = val_new & 0x8000;
+    const bool Z = val_new == 0;
+    const bool V = (val_new & 0x8000) != (val_old & 0x8000);
+    const bool C = val_old & 0x8000;
+
+    MCU_SetStatus(mcu, N, STATUS_N);
+    MCU_SetStatus(mcu, Z, STATUS_Z);
+    MCU_SetStatus(mcu, V, STATUS_V);
+    MCU_SetStatus(mcu, C, STATUS_C);
+}
+
 // SHAR.B <EAd>
 template <typename State>
 inline void I_SHAR_B_EAd(mcu_t& mcu, const I_CachedInstruction& st)

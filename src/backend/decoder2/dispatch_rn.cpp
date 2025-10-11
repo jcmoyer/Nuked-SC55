@@ -32,7 +32,7 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     t[0b00010101] = D_NOT_EAd<Sz, Mode_Rn>;
     t[0b00010110] = D_TST_EAd<Sz, Mode_Rn>;
     t[0b00010111] = nullptr;
-    t[0b00011000] = nullptr;
+    t[0b00011000] = D_SHAL_EAd<Sz, Mode_Rn>;
     t[0b00011001] = D_SHAR_EAd<Sz, Mode_Rn>;
     t[0b00011010] = D_SHLL_EAd<Sz, Mode_Rn>;
     t[0b00011011] = D_SHLR_EAd<Sz, Mode_Rn>;
