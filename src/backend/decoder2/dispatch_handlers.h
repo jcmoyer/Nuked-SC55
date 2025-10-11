@@ -926,6 +926,14 @@ inline void D_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_PJSR_aa24, instr);
 }
 
+inline void D_PJSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    I_CachedInstruction instr;
+    instr.op_reg  = byte & 0b111;
+    instr.br_false = mcu.coder.GetAddressInPage(mcu);
+    mcu.icache.DoCache(mcu, instr_start, I_PJSR_ARn, instr);
+}
+
 inline void D_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     I_CachedInstruction instr;
@@ -992,6 +1000,11 @@ inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     // PJMP @Rn
     case 0b11000000:
         D_PJMP_ARn(mcu, instr_start, kind);
+        break;
+
+    // PJSR @Rn
+    case 0b11001000:
+        D_PJSR_ARn(mcu, instr_start, kind);
         break;
 
     // JSR @Rn

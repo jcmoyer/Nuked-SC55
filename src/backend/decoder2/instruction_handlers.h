@@ -2108,6 +2108,14 @@ inline void I_PJSR_aa24(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.pc = st.br_true;
 }
 
+inline void I_PJSR_ARn(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    MCU_PushStack(mcu, st.br_false);
+    MCU_PushStack(mcu, mcu.cp);
+    mcu.cp = static_cast<uint8_t>(mcu.r[st.op_reg]);
+    mcu.pc = mcu.r[st.op_reg + 1];
+}
+
 inline void I_PJMP_ARn(mcu_t& mcu, const I_CachedInstruction& st)
 {
     mcu.cp = (uint8_t)mcu.r[st.op_reg];
