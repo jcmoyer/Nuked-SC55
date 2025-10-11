@@ -2072,6 +2072,12 @@ inline void I_PJMP_ARn(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.pc = mcu.r[st.op_reg + 1];
 }
 
+inline void I_RTD_immXX(mcu_t& mcu, const I_CachedInstruction& st)
+{
+    mcu.pc   = MCU_PopStack(mcu);
+    mcu.r[7] = (uint16_t)(mcu.r[7] + (int16_t)st.op_data);
+}
+
 inline void I_TRAPA_imm4(mcu_t& mcu, const I_CachedInstruction& st)
 {
     MCU_Interrupt_TRAPA(mcu, (uint8_t)st.op_data);

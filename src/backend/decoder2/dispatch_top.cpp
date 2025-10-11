@@ -244,7 +244,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_JMP,                                             // 00010001
     D_STM,                                             // 00010010
     D_PJMP_aa24,                                       // 00010011
-    nullptr,                                           // 00010100
+    D_RTD_imm8,                                        // 00010100
     D_General_Aaa16<MCU_Operand_Size::BYTE>,           // 00010101
     nullptr,                                           // 00010110
     nullptr,                                           // 00010111
@@ -252,7 +252,7 @@ constexpr D_Handler DECODE_TABLE_0[256] = {
     D_RTS,                                             // 00011001
     D_SLEEP,                                           // 00011010
     nullptr,                                           // 00011011
-    nullptr,                                           // 00011100
+    D_RTD_imm16,                                       // 00011100
     D_General_Aaa16<MCU_Operand_Size::WORD>,           // 00011101
     D_BSR_d16,                                         // 00011110
     nullptr,                                           // 00011111

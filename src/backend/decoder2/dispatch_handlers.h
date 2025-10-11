@@ -943,6 +943,22 @@ inline void D_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     mcu.icache.DoCache(mcu, instr_start, I_JSR_ARn, instr);
 }
 
+inline void D_RTD_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.op_data = mcu.coder.ReadU8(mcu);
+    mcu.icache.DoCache(mcu, instr_start, I_RTD_immXX, instr);
+}
+
+inline void D_RTD_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+{
+    (void)byte;
+    I_CachedInstruction instr;
+    instr.op_data = mcu.coder.ReadU16(mcu);
+    mcu.icache.DoCache(mcu, instr_start, I_RTD_immXX, instr);
+}
+
 inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)instr_start;
