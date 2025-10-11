@@ -491,6 +491,21 @@ void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
     }
 }
 
+template <MCU_Operand_Size Sz, typename Mode>
+void D_ROTXL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+{
+    (void)byte;
+
+    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_ROTXL_B_EAd<Mode>, instr);
+    }
+    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    {
+        mcu.icache.DoCache(mcu, instr_start, I_ROTXL_W_EAd<Mode>, instr);
+    }
+}
+
 template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
 void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {

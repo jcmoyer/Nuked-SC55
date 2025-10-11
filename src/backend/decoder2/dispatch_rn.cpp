@@ -38,7 +38,7 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     t[0b00011011] = D_SHLR_EAd<Sz, Mode_Rn>;
     t[0b00011100] = D_ROTL_EAd<Sz, Mode_Rn>;
     t[0b00011101] = D_ROTR_EAd<Sz, Mode_Rn>;
-    t[0b00011110] = nullptr;
+    t[0b00011110] = D_ROTXL_EAd<Sz, Mode_Rn>;
     t[0b00011111] = nullptr;
     t[0b00100000] = D_ADD_G_EAs_Rd<Sz, 0, Mode_Rn>;
     t[0b00100001] = D_ADD_G_EAs_Rd<Sz, 1, Mode_Rn>;

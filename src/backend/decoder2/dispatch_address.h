@@ -51,7 +51,7 @@ constexpr std::array<D_OpcodeHandler, 256> DefineGenericTable()
     t[0b00011011] = nullptr;
     t[0b00011100] = nullptr;
     t[0b00011101] = nullptr;
-    t[0b00011110] = nullptr;
+    t[0b00011110] = D_ROTXL_EAd<Sz, Mode>;
     t[0b00011111] = nullptr;
     t[0b00100000] = D_ADD_G_EAs_Rd<Sz, 0, Mode>;
     t[0b00100001] = D_ADD_G_EAs_Rd<Sz, 1, Mode>;
