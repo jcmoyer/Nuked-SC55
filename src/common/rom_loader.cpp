@@ -43,9 +43,7 @@ LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
             return LoadRomsetError::InvalidRomsetName;
         }
 
-        // When the user specifies a romset, we can speed up the loading process a bit.
         RomLocationSet desired{};
-        desired[(size_t)result.romset] = true;
 
         if (legacy_loader)
         {
