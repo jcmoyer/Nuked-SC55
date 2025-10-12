@@ -1355,7 +1355,7 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
             break;
         }
         data <<= 1;
-        data |= C;
+        data |= (uint32_t)C;
         MCU_Operand_Write(mcu, data);
         MCU_SetStatus(mcu, C, STATUS_C);
         MCU_SetStatusCommon(mcu, data, mcu.operand_size);
