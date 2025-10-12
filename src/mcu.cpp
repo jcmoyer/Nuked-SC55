@@ -1952,17 +1952,11 @@ int main(int argc, char *argv[])
     SM_Reset();
     PCM_Reset();
 
-    if (resetType != ResetType::NONE)
+    MIDI_Reset(resetType);
+    fprintf(stderr, "Running reset, this might take a couple seconds...\n");
+    for (int i = 0; i < 24000000; ++i)
     {
-        MIDI_Reset(resetType);
-        // TODO: HACK: The reset causes program changes at T=0 to not occur, so
-        // run the emulator for a bit to let it complete the reset before we
-        // start rendering.
-        fprintf(stderr, "Running reset, this might take a couple seconds...\n");
-        for (int i = 0; i < 24000000; ++i)
-        {
-            MCU_Step();
-        }
+        MCU_Step();
     }
 
 #if 0
