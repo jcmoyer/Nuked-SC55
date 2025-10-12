@@ -1382,7 +1382,7 @@ void MIDI_Reset(ResetType resetType)
 uint64_t R_NSPerStep()
 {
     // These are best guesses.
-    if (mcu_mk1)
+    if (mcu_mk1 || mcu_jv880)
     {
         return 600;
     }
