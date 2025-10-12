@@ -1002,7 +1002,7 @@ R_TrackList R_SplitTrackModulo(const SMF_Track& merged_track, size_t n)
 uint64_t R_NSPerStep(Emulator& emu)
 {
     // These are best guesses.
-    if (emu.GetMCU().is_mk1)
+    if (emu.GetMCU().is_mk1 || emu.GetMCU().is_jv880)
     {
         return 600;
     }

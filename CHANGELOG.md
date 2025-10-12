@@ -4,6 +4,8 @@
   depending on compiler.
 - Fixed a bug where selecting a specific romset using `--romset` would cause
   the emulator to not load all the roms in that romset.
+- Fixed a bug where the renderer output was ~20% slower than the set tempo when
+  using a JV880 romset.
 
 # Version 0.6.1 (2025-07-30)
 
