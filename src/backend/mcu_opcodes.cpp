@@ -1536,7 +1536,7 @@ void MCU_Opcode_ADDS(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
     switch (mcu.operand_size)
     {
     case MCU_Operand_Size::BYTE:
-        data = (uint8_t)data;
+        data = (uint32_t)(int8_t)data;
         break;
     case MCU_Operand_Size::WORD:
         // explicitly do nothing
