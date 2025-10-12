@@ -6,6 +6,8 @@
   the emulator to not load all the roms in that romset.
 - Fixed a bug where the renderer output was ~20% slower than the set tempo when
   using a JV880 romset.
+- Fixed a subtle timing bug that caused sample output for the JV880 to differ
+  slightly from upstream.
 
 # Version 0.6.1 (2025-07-30)
 

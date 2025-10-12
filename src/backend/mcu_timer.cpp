@@ -331,7 +331,14 @@ inline void TIMER_ClockTmr(mcu_timer_t& timer)
 {
     tmr_t& tmr = timer.tmr;
 
-    if (timer.cycles & timer.tmr_step_table[tmr.tcr & (TMR_TCR_CKS0 | TMR_TCR_CKS1 | TMR_TCR_CKS2)])
+    const uint16_t step_mask = timer.tmr_step_table[tmr.tcr & (TMR_TCR_CKS0 | TMR_TCR_CKS1 | TMR_TCR_CKS2)];
+
+    if (step_mask == 0)
+    {
+        return;
+    }
+
+    if (timer.cycles & step_mask)
     {
         return;
     }
@@ -388,6 +395,7 @@ void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
 constexpr FRT_Step_Table FRT_STEP_TABLE_GENERIC = {3, 7, 31, 1};
 constexpr FRT_Step_Table FRT_STEP_TABLE_MK1     = {3, 7, 31, 3};
 
+// A value of 0 means do not step.
 constexpr TMR_Step_Table TMR_STEP_TABLE_GENERIC = {0, 7, 63, 1023, 0, 1, 1, 1};
 constexpr TMR_Step_Table TMR_STEP_TABLE_MK1     = {0, 7, 63, 1023, 0, 3, 3, 3};
 
