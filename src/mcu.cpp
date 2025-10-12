@@ -1482,6 +1482,7 @@ int main(int argc, char *argv[])
     ResetType resetType = ResetType::NONE;
     std::string inputFilename;
     std::string outputFilename;
+    std::string nvramFilename;
 
     romset = ROM_SET_MK2;
 
@@ -1608,6 +1609,19 @@ int main(int argc, char *argv[])
                 else
                 {
                     fprintf(stderr, "Expected output filename\n");
+                    return 1;
+                }
+            }
+            else if (!strcmp(argv[i], "-nvram"))
+            {
+                if (i + 1 < argc)
+                {
+                    nvramFilename = argv[i + 1];
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected nvram filename\n");
                     return 1;
                 }
             }
@@ -1904,6 +1918,26 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "Expected output filename\n");
         return 1;
+    }
+
+    if (nvramFilename.size())
+    {
+        FILE* nvramf = fopen(nvramFilename.c_str(), "rb");
+
+        if (!nvramf)
+        {
+            fprintf(stderr, "FATAL ERROR: Failed to open nvram\n");
+            return 1;
+        }
+
+        if (fread(nvram, 1, NVRAM_SIZE, nvramf) != NVRAM_SIZE)
+        {
+            fclose(nvramf);
+            fprintf(stderr, "FATAL ERROR: Failed to read nvram\n");
+            return 1;
+        }
+
+        fclose(nvramf);
     }
 
     SMF_Data data = SMF_LoadEvents(inputFilename.c_str());
