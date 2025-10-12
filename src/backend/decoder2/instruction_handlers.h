@@ -1490,10 +1490,10 @@ inline void I_ANDC_B_imm8_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
     if (IsSR_B(CR))
     {
-        const bool N = (mcu.sr & STATUS_N) || (st.ea_data & 0b1000);
-        const bool Z = (mcu.sr & STATUS_Z) || (st.ea_data & 0b0100);
-        const bool V = (mcu.sr & STATUS_V) || (st.ea_data & 0b0010);
-        const bool C = (mcu.sr & STATUS_C) || (st.ea_data & 0b0001);
+        const bool N = (mcu.sr & STATUS_N) && (st.ea_data & 0b1000);
+        const bool Z = (mcu.sr & STATUS_Z) && (st.ea_data & 0b0100);
+        const bool V = (mcu.sr & STATUS_V) && (st.ea_data & 0b0010);
+        const bool C = (mcu.sr & STATUS_C) && (st.ea_data & 0b0001);
         MCU_SetStatus(mcu, N, STATUS_N);
         MCU_SetStatus(mcu, Z, STATUS_Z);
         MCU_SetStatus(mcu, V, STATUS_V);
@@ -1522,10 +1522,10 @@ inline void I_ANDC_W_imm16_CR(mcu_t& mcu, const I_CachedInstruction& st)
 
     if (IsSR_W(CR))
     {
-        const bool N = (mcu.sr & STATUS_N) || (st.ea_data & 0b1000);
-        const bool Z = (mcu.sr & STATUS_Z) || (st.ea_data & 0b0100);
-        const bool V = (mcu.sr & STATUS_V) || (st.ea_data & 0b0010);
-        const bool C = (mcu.sr & STATUS_C) || (st.ea_data & 0b0001);
+        const bool N = (mcu.sr & STATUS_N) && (st.ea_data & 0b1000);
+        const bool Z = (mcu.sr & STATUS_Z) && (st.ea_data & 0b0100);
+        const bool V = (mcu.sr & STATUS_V) && (st.ea_data & 0b0010);
+        const bool C = (mcu.sr & STATUS_C) && (st.ea_data & 0b0001);
         MCU_SetStatus(mcu, N, STATUS_N);
         MCU_SetStatus(mcu, Z, STATUS_Z);
         MCU_SetStatus(mcu, V, STATUS_V);
