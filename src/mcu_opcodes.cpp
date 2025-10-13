@@ -1307,12 +1307,12 @@ void MCU_Opcode_SHLR(uint8_t opcode, uint8_t opcode_reg)
         if (operand_size)
         {
             msb = data & 0x8000;
-            data &= 0x7fff;
+            data &= 0xffff;
         }
         else
         {
             msb = data & 0x80;
-            data &= 0x7f;
+            data &= 0xff;
         }
         data >>= 1;
         data |= msb;
