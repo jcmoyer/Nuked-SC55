@@ -1387,11 +1387,11 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         {
         case MCU_Operand_Size::WORD:
             msb = data & 0x8000;
-            data &= 0x7fff;
+            data &= 0xffff;
             break;
         case MCU_Operand_Size::BYTE:
             msb = data & 0x80;
-            data &= 0x7f;
+            data &= 0xff;
             break;
         }
         data >>= 1;
