@@ -1,6 +1,14 @@
 # filename should be a string pointing to a MIDI file
 # sha256 is the expected hash after rendering raw data
 function(add_render_test romset filename sha256)
+    if("${romset}" STREQUAL "jv880")
+        set(ART_RESET_FLAG "")
+        set(ART_NVRAM_FLAG "--nvram" "${NUKED_TEST_JV880_NVRAM}")
+    else()
+        set(ART_RESET_FLAG "--reset" "gm")
+        set(ART_NVRAM_FLAG "")
+    endif()
+
     add_test(
         NAME "Render ${romset} ${filename}"
         COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/test_runner.py
@@ -10,7 +18,8 @@ function(add_render_test romset filename sha256)
             ${CMAKE_CURRENT_SOURCE_DIR}/${filename}
             --rom-directory ${NUKED_TEST_ROMDIR}
             --romset ${romset}
-            --reset gm
+            ${ART_RESET_FLAG}
+            ${ART_NVRAM_FLAG}
         COMMAND_EXPAND_LISTS
     )
 endfunction()
@@ -106,3 +115,5 @@ add_render_test("mk1" "avmidi/32.mid" "d04559f84dc491cdfbe383f89e3b1cf14c4abb292
 add_render_test("mk2" "issue_18/issue_18.mid" "4453907c5db6a35024e20d76909867a5396a069a83d204e65f785adc59897414")
 
 add_render_test_multi_instance("mk2" "issue_42/anacrusis.mid" 2 "8db9e6e53d0d1d070919492638d942e24932387020dfb55be873cf78e2c8bdd5")
+
+add_render_test("jv880" "jv880/jv880.mid" "0cf004b3a568262bdb0c212e2a8af1103129c2deb6eb0275ef9cc2fa946bd968")

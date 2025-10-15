@@ -14,6 +14,8 @@ set(NUKED_SOURCE "unknown" CACHE STRING "Origin of this build")
 option(NUKED_ENABLE_TESTS "Enable tests" OFF)
 set(NUKED_TEST_ROMDIR "" CACHE PATH
     "Directory the test runner should look for roms in")
+set(NUKED_TEST_JV880_NVRAM "" CACHE PATH
+    "Path to file containing JV-880 factory preset nvram")
 
 if(NUKED_ENABLE_TESTS)
     enable_testing()

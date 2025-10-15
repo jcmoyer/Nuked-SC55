@@ -61,21 +61,26 @@ Requirements:
   `CMAKE_PREFIX_PATH`
 
 There is a test suite that makes sure new commits don't change existing
-behavior. It is expected that all tests pass for every commit unless either:
+behavior. It is expected that all tests pass for every commit on master.
 
-- Upstream modified backend behavior in a way that affects sample output, or
-- We modified the renderer frontend in a way that causes different output
+You can run the test suite by configuring with the following cmake variables:
 
-You can run the test suite by configuring with `-DNUKED_ENABLE_TESTS=ON` and
-`-DNUKED_TEST_ROMDIR=<path>` and running:
+- `-DNUKED_ENABLE_TESTS=ON`: when set, the following variables must all be set
+  as well.
+- `-DNUKED_TEST_ROMDIR=<path>`: `<path>` should point to a directory containing
+  the romsets listed below.
+- `-DNUKED_TEST_JV880_NVRAM=<path>`: `<path>` should point to a file containing
+  nvram dumped from the JV-880 immediately after it has been reset to the
+  factory preset. This can be obtained by launching nuked-sc55 with `--romset
+  jv880 --nvram <path>`. Once the emulator has started, press `T` to enter the
+  utility menu, then press `.` until `Util:Factory preset` appears. Press `G`
+  twice and close the emulator. The file `<path>` should contain a 32K nvram
+  dump. Note that the actual filename will have a number appended to it. This
+  is the emulator instance number and should **not** be included in the
+  filename passed to cmake.
 
-```
-ctest . -C Release
-```
-
-Note that these tests take a long time to finish individually, so you may want
-to pass `-j` to run them in parallel. Currently these tests require a SC-55
-(v1.21) and SC-55mk2 romset with these SHA256 hashes:
+Currently these tests require SC-55 (v1.21), SC-55mk2, and JV-880 romsets with
+these SHA-256 hashes:
 
 ```
 7e1bacd1d7c62ed66e465ba05597dcd60dfc13fc23de0287fdbce6cf906c6544 *sc55_rom1.bin
@@ -89,6 +94,25 @@ a4c9fd821059054c7e7681d61f49ce6f42ed2fe407a7ec1ba0dfdc9722582ce0 *rom2.bin
 b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8 *rom_sm.bin
 c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b *waverom1.bin
 5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491 *waverom2.bin
+
+aabfcf883b29060198566440205f2fae1ce689043ea0fc7074842aaa4fd4823e *jv880_rom1.bin
+ed437f1bc75cc558f174707bcfeb45d5e03483efd9bfd0a382ca57c0edb2a40c *jv880_rom2.bin
+aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4 *jv880_waverom1.bin
+a7b50bb47734ee9117fa16df1f257990a9a1a0b5ed420337ae4310eb80df75c8 *jv880_waverom2.bin
 ```
 
-`NUKED_TEST_ROMDIR` should point to a directory containing these files.
+Additionally, the file containing the JV-880 factory preset nvram dump should
+have the following SHA-256 hash:
+
+```
+d5da784546f9fd482c82beb366c527f313e8ea81bc9039dbb8c531197aa6d207 *jv880/nvram0
+```
+
+After cmake has configured the build, you can run the test suite:
+
+```
+$ cmake --build . --config Release && ctest . -C Release
+```
+
+Note that these tests take a long time to finish individually, so you may want
+to pass `-j` to run them in parallel.
