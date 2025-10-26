@@ -32,6 +32,7 @@ bool Instance::Initialize(const InstanceParameters& params)
     }
 
     m_instance_id  = params.instance_id;
+    m_format       = params.output_format;
     m_buffer_size  = params.buffer_size;
     m_buffer_count = params.buffer_count;
     m_gain         = params.gain;
