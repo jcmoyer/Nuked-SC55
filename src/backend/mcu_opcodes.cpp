@@ -1348,6 +1348,9 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         case MCU_Operand_Size::BYTE:
             C = (data & 0x80) != 0;
             break;
+        default:
+            // reason: operand_size set to valid value in decoder
+            std::unreachable();
         }
         data <<= 1;
         data |= bit;
@@ -1367,6 +1370,9 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         case MCU_Operand_Size::BYTE:
             C = (data & 0x80) != 0;
             break;
+        default:
+            // reason: operand_size set to valid value in decoder
+            std::unreachable();
         }
         data <<= 1;
         data |= (uint32_t)C;
@@ -1386,6 +1392,9 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         case MCU_Operand_Size::BYTE:
             C = (data & 0x80) != 0;
             break;
+        default:
+            // reason: operand_size set to valid value in decoder
+            std::unreachable();
         }
         data <<= 1;
         MCU_Operand_Write(mcu, data);
