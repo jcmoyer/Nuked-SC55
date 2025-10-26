@@ -35,6 +35,8 @@
 #include "mcu.h"
 #include "mcu_interrupt.h"
 
+#include <utility>
+
 int32_t MCU_SUB_Common(mcu_t& mcu, int32_t t1, int32_t t2, int32_t c_bit, MCU_Operand_Size siz)
 {
     int32_t st1, st2;
@@ -77,6 +79,9 @@ int32_t MCU_SUB_Common(mcu_t& mcu, int32_t t1, int32_t t2, int32_t c_bit, MCU_Op
         if (st1 < INT8_MIN || st1 > INT8_MAX)
             V = 1;
         break;
+    default:
+        // reason: siz provided always valid
+        std::unreachable();
     }
     MCU_SetStatus(mcu, N, STATUS_N);
     MCU_SetStatus(mcu, Z, STATUS_Z);
@@ -128,6 +133,9 @@ int32_t MCU_ADD_Common(mcu_t& mcu, int32_t t1, int32_t t2, int32_t c_bit, MCU_Op
         if (st1 < INT8_MIN || st1 > INT8_MAX)
             V = 1;
         break;
+    default:
+        // reason: siz provided always valid
+        std::unreachable();
     }
     MCU_SetStatus(mcu, N, STATUS_N);
     MCU_SetStatus(mcu, Z, STATUS_Z);
@@ -848,6 +856,9 @@ void MCU_Opcode_Short_CMP(mcu_t& mcu, uint8_t opcode)
     case MCU_Operand_Size::BYTE:
         t2 = MCU_ReadCodeAdvance(mcu);
         break;
+    default:
+        // reason: initialized to one of the two values above
+        std::unreachable();
     }
     t1 = mcu.r[reg];
     MCU_SUB_Common(mcu, t1, t2, 0, siz);
@@ -1315,6 +1326,9 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         case MCU_Operand_Size::BYTE:
             C = (data & 0x80) != 0;
             break;
+        default:
+            // reason: operand_size set to one of these values in decoder
+            std::unreachable();
         }
         data <<= 1;
         MCU_Operand_Write(mcu, data);
@@ -1393,6 +1407,9 @@ void MCU_Opcode_SHLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
             msb = data & 0x80;
             data &= 0xff;
             break;
+        default:
+            // reason: operand_size always set to valid value in decoder
+            std::unreachable();
         }
         data >>= 1;
         data |= msb;
@@ -1454,6 +1471,9 @@ void MCU_Opcode_MULXU(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         mcu.r[opcode_reg] = (uint16_t)t1;
         N = (t1 & 0x8000UL) != 0; // FIXME
         break;
+    default:
+        // reason: operand_size always set to a valid value in decoder
+        std::unreachable();
     }
     Z = t1 == 0;
     MCU_SetStatus(mcu, N, STATUS_N);
