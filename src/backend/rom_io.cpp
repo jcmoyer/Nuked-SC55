@@ -303,7 +303,7 @@ static constexpr KnownHash ROM_HASHES[] = {
     // R15199858 (H8/532 mcu)
     {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), Romset::ST, RomLocation::ROM1},
     // R00561413 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::ST, RomLocation::ROM2},
+    {ToDigest("03517ac0a3b1ad8b69a1a4ee045e0c21da0170027bd1ba1bd3cf72cd017bbe6a"), Romset::ST, RomLocation::ROM2},
     // R15199880 (M37450M2 mcu)
     {ToDigest("b0b5f865a403f7308b4be8d0ed3ba2ed1c22db881b8a8326769dea222f6431d8"), Romset::ST, RomLocation::SMROM},
     // R15209359 (WAVE 16M)
@@ -315,10 +315,25 @@ static constexpr KnownHash ROM_HASHES[] = {
     // SC-55 (v1.21)
     ///////////////////////////////////////////////////////////////////////////
 
-    // R15199748 (H8/532 mcu)
+    // R15199778 (H8/532 mcu)
     {ToDigest("7e1bacd1d7c62ed66e465ba05597dcd60dfc13fc23de0287fdbce6cf906c6544"), Romset::MK1, RomLocation::ROM1},
-    // R1544925800 (H8/532 extra code)
+    // R15209363 (H8/532 extra code)
     {ToDigest("effc6132d68f7e300aaef915ccdd08aba93606c22d23e580daf9ea6617913af1"), Romset::MK1, RomLocation::ROM2},
+    // R15209276 (WAVE A)
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, RomLocation::WAVEROM1},
+    // R15209277 (WAVE B)
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, RomLocation::WAVEROM2},
+    // R15209281 (WAVE C)
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, RomLocation::WAVEROM3},
+
+    ///////////////////////////////////////////////////////////////////////////
+    // SC-55 (v2.00)
+    ///////////////////////////////////////////////////////////////////////////
+
+    // R15199799 (H8/532 mcu)
+    {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), Romset::MK1, RomLocation::ROM1},
+    // R15209387 (H8/532 extra code)
+    {ToDigest("f5dac35d450ab986570a209dff3816eec75cee669e161f54b51224b467dd0bcc"), Romset::MK1, RomLocation::ROM2},
     // R15209276 (WAVE A)
     {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, RomLocation::WAVEROM1},
     // R15209277 (WAVE B)
@@ -331,7 +346,7 @@ static constexpr KnownHash ROM_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199774 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, RomLocation::ROM1},
+    {ToDigest("72ed35481efbf25b3c492b83183655d17a3b266ecb30ffbc6dc977e6a8d261b2"), Romset::CM300, RomLocation::ROM1},
     // R15279809 (H8/532 extra code)
     {ToDigest("0283d32e6993a0265710c4206463deb937b0c3a4819b69f471a0eca5865719f9"), Romset::CM300, RomLocation::ROM2},
     // R15279806 (WAVE A)
@@ -346,7 +361,7 @@ static constexpr KnownHash ROM_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199774 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::CM300, RomLocation::ROM1},
+    {ToDigest("72ed35481efbf25b3c492b83183655d17a3b266ecb30ffbc6dc977e6a8d261b2"), Romset::CM300, RomLocation::ROM1},
     // R15279812 (H8/532 extra code)
     {ToDigest("fef1acb1969525d66238be5e7811108919b07a4df5fbab656ad084966373483f"), Romset::CM300, RomLocation::ROM2},
     // R15279806 (WAVE A)
@@ -372,7 +387,7 @@ static constexpr KnownHash ROM_HASHES[] = {
     {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
-    // JV-880 (v1.0.0)
+    // JV-880 (v1.0.1)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199810 (H8/532 mcu)
@@ -394,12 +409,10 @@ static constexpr KnownHash ROM_HASHES[] = {
     // SCB-55/RLP-3194
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: missing hashes for this romset
-
     // R15199827 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, RomLocation::ROM1},
+    {ToDigest("00df835d3f97fc8b0059db63f36d608eec2bfd1f51ad54eb5af52c868c1111b1"), Romset::SCB55, RomLocation::ROM1},
     // R15279828 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SCB55, RomLocation::ROM2},
+    {ToDigest("541be4d0b1ef0d07bb042ba67ffd099c8a5d746aac4cd24ce8842c034379f213"), Romset::SCB55, RomLocation::ROM2},
     // R15209359 (WAVE 16M)
     {ToDigest("c6429e21b9b3a02fbd68ef0b2053668433bee0bccd537a71841bc70b8874243b"), Romset::SCB55, RomLocation::WAVEROM1},
     // R15279813 (WAVE 8M)
@@ -410,14 +423,12 @@ static constexpr KnownHash ROM_HASHES[] = {
     // RLP-3237
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: missing hashes for this romset
-
     // R15199827 (H8/532 mcu)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, RomLocation::ROM1},
+    {ToDigest("00df835d3f97fc8b0059db63f36d608eec2bfd1f51ad54eb5af52c868c1111b1"), Romset::RLP3237, RomLocation::ROM1},
     // R15209486 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, RomLocation::ROM2},
+    {ToDigest("e0a3d6d9b05e82374a0d289901273ce560ce1ead86459c75f844158b32d204a9"), Romset::RLP3237, RomLocation::ROM2},
     // R15279824 (WAVE 16M)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::RLP3237, RomLocation::WAVEROM1},
+    {ToDigest("dae2a8bc0fd3bcaf3f5e3ab6c4c6fd30e2663bf26ca17afe52924874c0afc4e2"), Romset::RLP3237, RomLocation::WAVEROM1},
 
     ///////////////////////////////////////////////////////////////////////////
     // SC-155 (rev 1)
@@ -438,12 +449,10 @@ static constexpr KnownHash ROM_HASHES[] = {
     // SC-155 (rev 2)
     ///////////////////////////////////////////////////////////////////////////
 
-    // TODO: missing hashes for this romset
-
     // R15199799 (H8/532 mcu)
     {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), Romset::SC155, RomLocation::ROM1},
     // R15209400 (H8/532 extra code)
-    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::SC155, RomLocation::ROM2},
+    {ToDigest("ceb7b9d3d9d264efe5dc3ba992b94f3be35eb6d0451abc574b6f6b5dc3db237b"), Romset::SC155, RomLocation::ROM2},
     // R15209276 (WAVE A)
     {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::SC155, RomLocation::WAVEROM1},
     // R15209277 (WAVE B)

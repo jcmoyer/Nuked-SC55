@@ -8,6 +8,7 @@
   using a JV880 romset.
 - Fixed a subtle timing bug that caused sample output for the JV880 to differ
   slightly from upstream.
+- Updated hashes for several romsets thanks to @zilch510. (#56)
 
 # Version 0.6.1 (2025-07-30)
 
