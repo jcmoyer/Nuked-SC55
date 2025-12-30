@@ -9,6 +9,8 @@
 - Fixed a subtle timing bug that caused sample output for the JV880 to differ
   slightly from upstream.
 - Updated hashes for several romsets thanks to @zilch510. (#56)
+- Fixed a bug where `--disable-oversampling` with an mk1 romset would cause the
+  renderer to run indefinitely. (#48)
 
 # Version 0.6.1 (2025-07-30)
 

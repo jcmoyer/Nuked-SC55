@@ -912,8 +912,10 @@ struct R_SilenceModelMK1
 {
     static constexpr bool IsSilence(const AudioFrame<int32_t>& in_raw)
     {
-        // MK1 has a DC offset. TODO: Maybe want thresholds too?
-        return in_raw.left == 0x1000000 && in_raw.right == 0x1000000;
+        constexpr int32_t DC_OFFSET = 0x1000000;
+        constexpr int32_t MIN       = DC_OFFSET - 0x10000;
+        constexpr int32_t MAX       = DC_OFFSET + 0x10000;
+        return MIN <= in_raw.left && in_raw.left <= MAX && MIN <= in_raw.right && in_raw.right <= MAX;
     }
 };
 
