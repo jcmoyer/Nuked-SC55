@@ -11,6 +11,8 @@
 - Updated hashes for several romsets thanks to @zilch510. (#56)
 - Fixed a bug where `--disable-oversampling` with an mk1 romset would cause the
   renderer to run indefinitely. (#48)
+- Added rom hashes for MK1 versions 1.00, 1.10, and 1.20 as well as SC155MK2
+  CTF-patched roms thanks to @akse0435. (#58, #59)
 
 # Version 0.6.1 (2025-07-30)
 
