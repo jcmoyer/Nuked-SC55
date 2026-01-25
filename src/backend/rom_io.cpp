@@ -312,6 +312,51 @@ static constexpr KnownHash ROM_HASHES[] = {
     {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::ST, RomLocation::WAVEROM2},
 
     ///////////////////////////////////////////////////////////////////////////
+    // SC-55 (v1.00)
+    ///////////////////////////////////////////////////////////////////////////
+
+    // R15199748 (H8/532 mcu)
+    {ToDigest("b4ecf44bc0520322b0d114d397951d3bf92ca6fa51d0d27b2407df58a6be2efe"), Romset::MK1, RomLocation::ROM1},
+    // R15449258 (H8/532 extra code)
+    {ToDigest("014e2e21ea30de7a1e4f1cdea14dd9a719960535e257a9e40e98dbb1a5870226"), Romset::MK1, RomLocation::ROM2},
+    // R15209276 (WAVE A)
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, RomLocation::WAVEROM1},
+    // R15209277 (WAVE B)
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, RomLocation::WAVEROM2},
+    // R15209281 (WAVE C)
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, RomLocation::WAVEROM3},
+
+    ///////////////////////////////////////////////////////////////////////////
+    // SC-55 (v1.10)
+    ///////////////////////////////////////////////////////////////////////////
+
+    // R15199736 (H8/532 mcu)
+    {ToDigest("2fe88ec39f3ef4b1de8cdf74527419467975c47f7aacfcd07605e01d54bd89b5"), Romset::MK1, RomLocation::ROM1},
+    // R15209275 (H8/532 extra code)
+    {ToDigest("ec064d6c4fc70ec990911089d966043cb819fba0e26e6f6afdd0a05e5301b91b"), Romset::MK1, RomLocation::ROM2},
+    // R15209276 (WAVE A)
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, RomLocation::WAVEROM1},
+    // R15209277 (WAVE B)
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, RomLocation::WAVEROM2},
+    // R15209281 (WAVE C)
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, RomLocation::WAVEROM3},
+
+    ///////////////////////////////////////////////////////////////////////////
+    // SC-55 (v1.20)
+    ///////////////////////////////////////////////////////////////////////////
+
+    // R15199778 (H8/532 mcu)
+    {ToDigest("7e1bacd1d7c62ed66e465ba05597dcd60dfc13fc23de0287fdbce6cf906c6544"), Romset::MK1, RomLocation::ROM1},
+    // R15209337 (H8/532 extra code)
+    {ToDigest("22ce6ca59e6332143b335525e81fab501ea6fccce4b7e2f3bfc2cc8bf6612ff6"), Romset::MK1, RomLocation::ROM2},
+    // R15209276 (WAVE A)
+    {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), Romset::MK1, RomLocation::WAVEROM1},
+    // R15209277 (WAVE B)
+    {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), Romset::MK1, RomLocation::WAVEROM2},
+    // R15209281 (WAVE C)
+    {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), Romset::MK1, RomLocation::WAVEROM3},
+
+    ///////////////////////////////////////////////////////////////////////////
     // SC-55 (v1.21)
     ///////////////////////////////////////////////////////////////////////////
 
@@ -466,6 +511,8 @@ static constexpr KnownHash ROM_HASHES[] = {
 
     // CTF patched roms from https://github.com/shingo45endo/sc55mk2-ctf-patcher
 
+    //MK2
+
     // Tone: Strict SC-55 | Drum: SC-55 v1.21 or earlier
     {ToDigest("64f8c9daf1021cf86ea4ddf03a29b81b5ea0c18e74f462833023436388bb9dc4"), Romset::MK2, RomLocation::ROM2},
     // Tone: Strict SC-55 | Drum: SC-55 v2.00
@@ -478,6 +525,21 @@ static constexpr KnownHash ROM_HASHES[] = {
     {ToDigest("16cec615da10089beffe6de5129ba8ba33fa1bf017a5e6b78ad1d6d15cf4708e"), Romset::MK2, RomLocation::ROM2},
     // Tone: SC-55mkII | Drum: SC-55 v2.00
     {ToDigest("c22bf7d34a3406530924d750b007bbdb470f3216c65086edb6e53023383ee907"), Romset::MK2, RomLocation::ROM2},
+
+    //SC155MK2
+
+    // Tone: Strict SC-55 | Drum: SC-55 v1.21 or earlier
+    {ToDigest("64f8c9daf1021cf86ea4ddf03a29b81b5ea0c18e74f462833023436388bb9dc4"), Romset::SC155MK2, RomLocation::ROM2},
+    // Tone: Strict SC-55 | Drum: SC-55 v2.00
+    {ToDigest("14d14778caf46ffa9e3d608aa8e9c1a60c32bd4a536c26af3b2e1d81784c60f9"), Romset::SC155MK2, RomLocation::ROM2},
+    // Tone: SC-55 | Drum: SC-55 v1.21 or earlier
+    {ToDigest("10b3f09485a74bb014f1a940d5c67f380c7979b62891d540d788154c83f17430"), Romset::SC155MK2, RomLocation::ROM2},
+    // Tone: SC-55 | Drum: SC-55 v2.00
+    {ToDigest("a2c720be1ab9115930d27f821a413c0366b7bf0c4ddfe0dadc5086136a1a4345"), Romset::SC155MK2, RomLocation::ROM2},
+    // Tone: SC-55mkII | Drum: SC-55 v1.21 or earlier
+    {ToDigest("16cec615da10089beffe6de5129ba8ba33fa1bf017a5e6b78ad1d6d15cf4708e"), Romset::SC155MK2, RomLocation::ROM2},
+    // Tone: SC-55mkII | Drum: SC-55 v2.00
+    {ToDigest("c22bf7d34a3406530924d750b007bbdb470f3216c65086edb6e53023383ee907"), Romset::SC155MK2, RomLocation::ROM2},
 };
 // clang-format on
 
