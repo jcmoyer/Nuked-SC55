@@ -713,16 +713,13 @@ bool PickCompleteRomset(const AllRomsetInfo& all_info, Romset& out_romset)
 }
 
 bool DetectRomsetsByFilename(const std::filesystem::path& base_path,
-                                 AllRomsetInfo&           all_info,
-                                 RomLocationSet*          desired)
+                             AllRomsetInfo&               all_info,
+                             RomLocationSet*              desired)
 {
+    (void)desired;
+
     for (size_t romset = 0; romset < ROMSET_COUNT; ++romset)
     {
-        if (desired && !(*desired)[romset])
-        {
-            continue;
-        }
-
         for (size_t rom = 0; rom < ROMLOCATION_COUNT; ++rom)
         {
             if (legacy_rom_names[romset][rom][0] == '\0')
