@@ -13,6 +13,8 @@
   renderer to run indefinitely. (#48)
 - Added rom hashes for MK1 versions 1.00, 1.10, and 1.20 as well as SC155MK2
   CTF-patched roms thanks to @akse0435. (#58, #59)
+- Fixed a bug that caused `--legacy-romset-detection` to fail loading any roms.
+  (#60)
 
 # Version 0.6.1 (2025-07-30)
 
