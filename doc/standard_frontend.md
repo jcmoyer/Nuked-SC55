@@ -192,6 +192,20 @@ R15209276 (WAVE A) -> sc55_waverom1.bin
 R15209277 (WAVE B) -> sc55_waverom2.bin
 R15209281 (WAVE C) -> sc55_waverom3.bin
 
+SC-55 (v1.10):
+R15199736 (H8/532 mcu) -> sc55_rom1.bin
+R15209275 (H8/532 extra code) -> sc55_rom2.bin
+R15209276 (WAVE A) -> sc55_waverom1.bin
+R15209277 (WAVE B) -> sc55_waverom2.bin
+R15209281 (WAVE C) -> sc55_waverom3.bin
+
+SC-55 (v1.20):
+R15199778 (H8/532 mcu) -> sc55_rom1.bin
+R15209337 (H8/532 extra code) -> sc55_rom2.bin
+R15209276 (WAVE A) -> sc55_waverom1.bin
+R15209277 (WAVE B) -> sc55_waverom2.bin
+R15209281 (WAVE C) -> sc55_waverom3.bin
+
 SC-55 (v1.21):
 R15199778 (H8/532 mcu) -> sc55_rom1.bin
 R15209363 (H8/532 extra code) -> sc55_rom2.bin
