@@ -23,8 +23,8 @@ struct InstanceParameters
 
     std::filesystem::path nvram_filename;
 
-    const AllRomsetInfo* romset_info;
-    Romset               romset;
+    const RomsetInfo* romset_info;
+    Romset            romset;
 };
 
 class Instance

@@ -1,8 +1,12 @@
 #pragma once
 
-#include "rom.h"
+#include <array>
 #include <filesystem>
 #include <vector>
+
+#include "rom.h"
+
+class HashedFileRegistry;
 
 enum class RomLoadStatus
 {
@@ -48,53 +52,77 @@ struct RomsetInfo
     bool HasRom(RomLocation location) const;
 };
 
-// Contains RomsetInfo for all supported romsets.
-struct AllRomsetInfo
-{
-    // Array indexed by Romset
-    RomsetInfo romsets[ROMSET_COUNT]{};
-
-    // Release all rom_data for all romsets.
-    void PurgeRomData();
-};
-
-// Scans files in `base_path` for specific rom filenames. Consult the `legacy_rom_names` constant in `emu.cpp` for the
-// exact filename requirements.
+// Sets `romset_info.rom_paths` relative to `base_path` using filenames for `romset`. Consult the `legacy_rom_names`
+// constant in `rom_io.cpp` for the exact filenames.
 //
-// If `desired` is non-null, this function will use it as a hint to determine what filenames to examine. This function
-// may also load `rom_data` for desired roms.
-bool DetectRomsetsByFilename(const std::filesystem::path& base_path,
-                             AllRomsetInfo&               all_info,
-                             RomLocationSet*              desired = nullptr);
+// `location_mask` can be used to control which rom locations are populated. A value of `true` sets the corresponding
+// path if it is used by the romset; otherwise that path will be skipped.
+void SetRomsetFilenames(RomsetInfo&                  romset_info,
+                        const std::filesystem::path& base_path,
+                        Romset                       romset,
+                        const RomLocationSet&        location_mask);
 
-// Scans files in `base_path` for roms by hashing them. The locations of each rom will be made available in `info`. This
-// will return *all* romsets in `base_path`.
-//
-// If any of the rom locations in `all_info` are already populated with a path or data, this function will not overwrite
-// them.
-//
-// If `desired` is non-null, this function will use it as a hint to determine what hashes to consider. This function may
-// also load `rom_data` for desired roms.
-bool DetectRomsetsByHash(const std::filesystem::path& base_path,
-                         AllRomsetInfo&               all_info,
-                         RomLocationSet*              desired = nullptr);
-
-// Returns true if `all_info` contains all the files required to load `romset`. Missing roms will be reported in
+// Returns true if `info` contains all the files required to load `romset`. Missing roms will be reported in
 // `missing`.
-bool IsCompleteRomset(const AllRomsetInfo& all_info, Romset romset, RomCompletionStatusSet* status = nullptr);
+bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatusSet* status = nullptr);
+
+// Similar to `IsCompleteRomset`, except this function operates on `RomsetDefinition` which may be known earlier than a
+// `RomsetInfo` is available.
+bool GetDefinitionCompletion(const RomsetDefinition&   def,
+                             const HashedFileRegistry& hashed_files,
+                             const RomLocationSet&     location_mask,
+                             RomCompletionStatusSet&   completion);
 
 size_t CountPresent(const RomCompletionStatusSet& status);
 
-// Picks the first complete romset in `all_info` and writes it to `out_romset`. If multiple romsets are present, the one
-// returned is unspecified. Returns true if successful, or false if there are no complete romsets.
-bool PickCompleteRomset(const AllRomsetInfo& all_info, Romset& out_romset);
-
-// For each `rom` in `romset`, this function loads the file referenced by `all_info.romsets[romset].rom_paths[rom]` into
-// the corresponding `rom_data`. Waveroms will be unscrambled at this point.
+// For each `rom` in `info` this function loads the file referenced by `info.rom_paths[rom]` into `info.rom_data[rom]`.
+// If `info.rom_data[rom]` is already populated, no data will be loaded from disk.
+//
+// Waveroms will be unscrambled at this point. If `info.rom_data[rom]` is provided by the caller, it should *not* be
+// provided unscrambled.
 //
 // `rom` will only be loaded when `rom_data` is empty and `rom_path` is non-empty.
 //
-// To automatically determine rom_paths, call `DetectRomsetsByHash` with a directory containing roms.
+// To automatically determine elements of `rom_path`, populate a `HashedFileRegistry` and `RomsetRegistry` then
+// use the `RomsetRegistry` to look up a specific romset in the `HashedFileRegistry`.
+bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded);
+
+// Returns romsets identifiers whose complete romsets are contained in `hashed_files`. `location_mask` can be used
+// to filter which roms are considered for the completeness of the romset. The test logic works the same as in
+// `ContainsRomsetFiles`. `out_names` will be cleared before receiving the names.
+void GetCompleteRomsetNames(const RomsetRegistry&     romsets,
+                            const HashedFileRegistry& hashed_files,
+                            const RomLocationSet&     location_mask,
+                            StringVector&             out_names);
+
+// Returns romsets identifiers whose partial romsets are contained in `hashed_files`. `location_mask` can be used
+// to filter which roms are considered for the completeness of the romset. The test logic works the same as in
+// `ContainsRomsetFiles`. `out_names` will be cleared before receiving the names.
+void GetPartialRomsetNames(const RomsetRegistry&     romsets,
+                           const HashedFileRegistry& hashed_files,
+                           const RomLocationSet&     location_mask,
+                           StringVector&             out_names);
+
+// Returns true if all the roms in the romset named `name` is in `hashed_files`.
 //
-// Roms that were loaded successfully will be marked as true in `loaded`.
-bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded = nullptr);
+// `location_mask` allows the caller to control which roms will be tested. For rom locations used by the romset, a
+// value of `true` enables the test and a value of `false` disables the test. The test succeeds if the hash for
+// that location is in `hashed_files`. If a rom location is not used by the romset, the value is ignored.
+bool ContainsRomsetFiles(const RomsetRegistry&     romsets,
+                         std::string_view          name,
+                         const HashedFileRegistry& hashed_files,
+                         const RomLocationSet&     location_mask);
+
+// If the romset given by `name` exists, `out_info` receives the paths and data contained for each rom in the
+// romset.
+//
+// `location_mask` allows the caller to control which roms will be returned. The test logic works the same way as
+// in `ContainsRomsetFiles`.
+//
+// Returns true if the definition exists and all the required roms exist in `hashed_files`. If this function returns
+// false, `out_info` will still be populated with the contents of any roms that were found.
+bool GetRomsetInfo(const RomsetRegistry&     romsets,
+                   std::string_view          name,
+                   const HashedFileRegistry& hashed_files,
+                   const RomLocationSet&     location_mask,
+                   RomsetInfo&               out_info);

@@ -59,7 +59,7 @@ struct R_Parameters
     bool debug = false;
     R_EndBehavior end_behavior = R_EndBehavior::Cut;
     std::filesystem::path nvram_filename;
-    bool legacy_romset_detection = false;
+    common::RomLoader rom_loader = common::RomLoader::Hashing;
     bool dump_emidi_loop_points = false;
     float gain = 1.0f;
     R_AdvancedParameters adv;
@@ -260,7 +260,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
         }
         else if (reader.Any("--legacy-romset-detection"))
         {
-            result.legacy_romset_detection = true;
+            result.rom_loader = common::RomLoader::Legacy;
         }
         else if (reader.Any("--end"))
         {
@@ -1270,18 +1270,12 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     // Then create a track specifically for each emulator instance
     const R_TrackList split_tracks = R_SplitTrackModulo(merged_track, instances);
 
-    AllRomsetInfo romset_info;
-
     common::LoadRomsetResult load_result;
 
-    common::LoadRomsetError err = common::LoadRomset(romset_info,
-                                                     params.rom_directory,
-                                                     params.romset_name,
-                                                     params.legacy_romset_detection,
-                                                     params.adv.rom_overrides,
-                                                     load_result);
+    common::LoadRomsetError err = common::LoadRomset(
+        params.rom_directory, params.romset_name, params.rom_loader, params.adv.rom_overrides, load_result);
 
-    common::PrintLoadRomsetDiagnostics(stderr, err, load_result, romset_info);
+    common::PrintLoadRomsetDiagnostics(stderr, err, load_result);
 
     if (err != common::LoadRomsetError{})
     {
@@ -1331,7 +1325,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
 
         RomLocationSet loaded{};
-        if (!render_states[i].emu.LoadRoms(load_result.romset, romset_info, &loaded))
+        if (!render_states[i].emu.LoadRoms(load_result.romset, load_result.romset_info, &loaded))
         {
             fprintf(stderr, "FATAL: Failed to load roms for instance #%02zu\n", i);
             return false;
@@ -1356,7 +1350,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         render_states[i].thread = std::thread(R_RenderOne, std::cref(data), std::ref(render_states[i]));
     }
 
-    romset_info.PurgeRomData();
+    load_result.Purge();
 
     WAV_Handle render_output;
     if (params.output_stdout)

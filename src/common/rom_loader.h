@@ -1,5 +1,6 @@
 #pragma once
 
+#include "file_hashing.h"
 #include "rom_io.h"
 
 namespace common
@@ -22,28 +23,60 @@ enum class LoadRomsetError
 
     // loaded roms will be available through `loaded`
     RomLoadFailed,
+
+    // user requested a romset family, but there are multiple suitable romsets in the rom directory
+    AmbiguousRomset,
 };
 
 // `error`: error code to convert to string
 const char* ToCString(LoadRomsetError error);
 
+struct LoaderRegistries
+{
+    HashedFileRegistry hashes;
+    RomsetRegistry     romsets;
+};
+
 struct LoadRomsetResult
 {
     Romset romset;
 
+    // on successful load, this field contains the paths and data for each rom location
+    RomsetInfo romset_info;
+
     RomLoadStatusSet       loaded;
     RomCompletionStatusSet completion;
+
+    LoaderRegistries registries;
+
+    std::string picked_name;
+
+    // Frees any allocated buffers from loading roms and hashing files. This happens automatically when the result
+    // object goes out of scope, but it is useful in cases where we keep the result object around and no longer need
+    // the data.
+    void Purge();
 };
 
-// `romset_info`: receives rom paths and rom data
+enum class RomLoader
+{
+    // takes the SHA256 hash of files in the rom directory and locates roms to load regardless of filename
+    Hashing,
+
+    // load specific filenames using the same logic as nukeykt/Nuked-SC55
+    Legacy,
+};
+
 // `rom_directory`: directory containing complete romset(s)
-// `desired_romset`: romset the user wants to load; if empty string the first romset in the directory will be returned
-// `legacy_loader`: use the same logic as nukeykt/Nuked-SC55
-// `result`: receives the loaded romset and information about which roms were loaded
-LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
-                           const std::filesystem::path& rom_directory,
+// `desired_romset`: romset the user wants to load; if empty this defaults to mk2 for the legacy loader and the first
+//                   detected romset in `rom_directory` for the hashing loader
+// `loader`: which loader to use
+// `overrides`: overrides for specific roms in the romset
+// `result`: receives the results of loading `desired_romset`
+//
+// Returns `LoadRomsetError{}` on success.
+LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
-                           bool                         legacy_loader,
+                           RomLoader                    loader,
                            const RomOverrides&          overrides,
                            LoadRomsetResult&            result);
 
@@ -53,10 +86,6 @@ void PrintRomsets(FILE* output);
 // `output`: where to write diagnostics to
 // `error`: error to write diagnostics for
 // `results`: results object to take diagnostics information from
-// `info`: romset info passed to `LoadRomset`
-void PrintLoadRomsetDiagnostics(FILE*                   output,
-                                LoadRomsetError         error,
-                                const LoadRomsetResult& result,
-                                const AllRomsetInfo&    info);
+void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result);
 
 } // namespace common

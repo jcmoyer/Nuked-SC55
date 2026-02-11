@@ -15,6 +15,22 @@
   CTF-patched roms thanks to @akse0435. (#58, #59)
 - Fixed a bug that caused `--legacy-romset-detection` to fail loading any roms.
   (#60)
+- Fixed the hash based rom loader incorrectly mixing and matching roms from
+  different romset versions.
+- Reduced the amount of hashing done when loading roms by hash.
+- Added the ability to load specific versions of romsets when loading roms by
+  hash. Pass `--help` to see the list of accepted names.
+
+## Notes for developers
+
+This release contains a large breaking refactor of hash based rom loader.
+`AllRomsetInfo` has been removed because there is not a 1:1 mapping between the
+`Romset` and versions of that romset. Many functions in `rom_io` have been
+changed to operate on `RomsetInfo` instead. To deal with this new requirement,
+`DetectRomsetsByHash` was removed and replaced with two types:
+`HashedFileRegistry` for storing file hashes and `RomsetHashRegistry` for
+storing rom hashes per romset. These provide more control over how roms are
+located and are easier to use.
 
 # Version 0.6.1 (2025-07-30)
 
@@ -25,13 +41,13 @@
   decibels or as a scalar value. See documentation for details. (#46)
 - Added basic support for dumping EMIDI loop points. Currently, this includes
   the following control changes:
-
   - CC 116 (track loop start)
   - CC 117 (track loop end)
   - CC 118 (global loop start)
   - CC 119 (global loop end)
 
   Pass `--dump-emidi-loop-points` to the renderer to enable this feature. (#47)
+
 - Completed the SCC-1A romset hashes thanks to @Karmeck. (#49)
 - Added hashes for mk2 roms with a CTF patch applied from
   [shingo45endo/sc55mk2-ctf-patcher](https://github.com/shingo45endo/sc55mk2-ctf-patcher).
@@ -57,7 +73,7 @@ This release contains bugfixes and a couple quality of life enhancements.
 - Added new command line parameters to override specific roms. These are meant
   for advanced users who have roms with unknown hashes. The parameters are:
   `--override-rom1 <path>`, `--override-rom2 <path>`, `--override-smrom
-  <path>`, `--override-waverom1 <path>`, `--override-waverom2 <path>`,
+<path>`, `--override-waverom1 <path>`, `--override-waverom2 <path>`,
   `--override-waverom3 <path>`, `--override-waverom-card <path>`,
   `--override-waverom-exp <path>`. Each parameter takes the rom filename to
   load.

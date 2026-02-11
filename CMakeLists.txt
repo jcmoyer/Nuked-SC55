@@ -58,14 +58,17 @@ target_sources(nuked-sc55-backend
     src/backend/config.cpp
     src/backend/diagnostics.cpp
     src/backend/emu.cpp
+    src/backend/file_hashing.cpp
+    src/backend/file_io.cpp
     src/backend/lcd.cpp
-    src/backend/mcu.cpp
     src/backend/mcu_interrupt.cpp
     src/backend/mcu_opcodes.cpp
     src/backend/mcu_timer.cpp
+    src/backend/mcu.cpp
     src/backend/pcm.cpp
-    src/backend/rom.cpp
     src/backend/rom_io.cpp
+    src/backend/rom.cpp
+    src/backend/standard_romsets.cpp
     src/backend/submcu.cpp
 
     src/backend/sha/sha-private.h
@@ -83,18 +86,24 @@ target_sources(nuked-sc55-backend
     src/backend/cast.h
     src/backend/diagnostics.h
     src/backend/emu.h
-    src/backend/lcd.h
+    src/backend/file_hashing.h
+    src/backend/file_io.h
     src/backend/lcd_back.h
     src/backend/lcd_font.h
+    src/backend/lcd.h
     src/backend/math_util.h
-    src/backend/mcu.h
     src/backend/mcu_interrupt.h
     src/backend/mcu_opcodes.h
     src/backend/mcu_timer.h
+    src/backend/mcu.h
     src/backend/pcm.h
     src/backend/ringbuffer.h
-    src/backend/rom.h
     src/backend/rom_io.h
+    src/backend/rom.h
+    src/backend/sha256.h
+    src/backend/standard_romsets.h
+    src/backend/string_map.h
+    src/backend/string_vector.h
     src/backend/submcu.h
 )
 target_include_directories(nuked-sc55-backend PUBLIC "src/backend" "${CMAKE_CURRENT_BINARY_DIR}/backend")

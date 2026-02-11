@@ -48,21 +48,18 @@ bool Application::Initialize(const CliParameters& params)
 
     common::LoadRomsetResult load_result;
 
-    common::LoadRomsetError err = common::LoadRomset(m_romset_info,
-                                                     rom_directory,
-                                                     params.romset_name,
-                                                     params.legacy_romset_detection,
-                                                     params.adv.rom_overrides,
-                                                     load_result);
+    common::LoadRomsetError err =
+        common::LoadRomset(rom_directory, params.romset_name, params.rom_loader, params.adv.rom_overrides, load_result);
 
-    common::PrintLoadRomsetDiagnostics(stderr, err, load_result, m_romset_info);
+    common::PrintLoadRomsetDiagnostics(stderr, err, load_result);
 
     if (err != common::LoadRomsetError{})
     {
         return false;
     }
 
-    m_romset = load_result.romset;
+    m_romset      = load_result.romset;
+    m_romset_info = std::move(load_result.romset_info);
 
     EMU_SystemReset reset = EMU_SystemReset::NONE;
     if (params.reset)
@@ -87,7 +84,7 @@ bool Application::Initialize(const CliParameters& params)
         }
     }
 
-    m_romset_info.PurgeRomData();
+    load_result.Purge();
 
     for (Instance& inst : m_instances)
     {

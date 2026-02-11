@@ -88,8 +88,18 @@ the emulator will look for roms in these locations:
 
 ### `--romset <name>`
 
-If provided, this will set the romset to load. Otherwise, the renderer will
-autodetect the romset based on what filenames it finds in the rom directory.
+If provided, this will set the romset to load. Otherwise, the romset will be
+automatically detected based on the contents of the rom directory.
+
+By default, files in the rom directory will be hashed to determine which ones
+should be loaded automatically. See [supported_romsets.md] for more
+information.
+
+### `--legacy-romset-detection`
+
+Behave like upstream when selecting roms to load. This feature is only provided
+for compatibility and its use is discouraged. See [supported_romsets.md]
+for more information.
 
 Run `nuked-sc55-render --help` to see a list of accepted romset names.
 
