@@ -417,7 +417,7 @@ static constexpr KnownHash ROM_HASHES[] = {
     {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
-    // SCC-1A
+    // SCC-1A (v1.30)
     ///////////////////////////////////////////////////////////////////////////
 
     // R00128523 (H8/532 mcu)
@@ -432,12 +432,29 @@ static constexpr KnownHash ROM_HASHES[] = {
     {ToDigest("5b753f6cef4cfc7fcafe1430fecbb94a739b874e55356246a46abe24097ee491"), Romset::CM300, RomLocation::WAVEROM3},
 
     ///////////////////////////////////////////////////////////////////////////
-    // JV-880 (v1.0.1)
+    // JV-880 (v1.0.0)
     ///////////////////////////////////////////////////////////////////////////
 
     // R15199810 (H8/532 mcu)
     {ToDigest("aabfcf883b29060198566440205f2fae1ce689043ea0fc7074842aaa4fd4823e"), Romset::JV880, RomLocation::ROM1},
     // R15209386 (H8/532 extra code)
+    {ToDigest("11852e60ff597633c754c5441c1e3e06793bcd951fcea2c4969ac3041d130fce"), Romset::JV880, RomLocation::ROM2},
+    // R15209312 (WAVE A)
+    {ToDigest("aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4"), Romset::JV880, RomLocation::WAVEROM1},
+    // R15209313 (WAVE B)
+    {ToDigest("a7b50bb47734ee9117fa16df1f257990a9a1a0b5ed420337ae4310eb80df75c8"), Romset::JV880, RomLocation::WAVEROM2},
+    // R00000000 (placeholder)
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, RomLocation::WAVEROM_CARD},
+    // R00000000 (placeholder)
+    {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), Romset::JV880, RomLocation::WAVEROM_EXP},
+
+    ///////////////////////////////////////////////////////////////////////////
+    // JV-880 (v1.0.1)
+    ///////////////////////////////////////////////////////////////////////////
+
+    // R15199810 (H8/532 mcu)
+    {ToDigest("aabfcf883b29060198566440205f2fae1ce689043ea0fc7074842aaa4fd4823e"), Romset::JV880, RomLocation::ROM1},
+    // R15209481 (H8/532 extra code)
     {ToDigest("ed437f1bc75cc558f174707bcfeb45d5e03483efd9bfd0a382ca57c0edb2a40c"), Romset::JV880, RomLocation::ROM2},
     // R15209312 (WAVE A)
     {ToDigest("aa3101a76d57992246efeda282a2cb0c0f8fdb441c2eed2aa0b0fad4d81f3ad4"), Romset::JV880, RomLocation::WAVEROM1},
