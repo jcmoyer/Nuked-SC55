@@ -261,27 +261,27 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
     return hash;
 }
 
-struct KnownHash
+struct RomHash
 {
     SHA256Digest hash;
     RomLocation  location;
 
-    auto operator<=>(const KnownHash&) const = default;
+    auto operator<=>(const RomHash&) const = default;
 };
 
-constexpr KnownHash NULL_HASH{{}, {}};
+constexpr RomHash NULL_HASH{{}, {}};
 
 struct RomsetHashes
 {
-    Romset    romset;
-    KnownHash hashes[ROMLOCATION_COUNT];
+    Romset  romset;
+    RomHash hashes[ROMLOCATION_COUNT];
 
-    const KnownHash* begin() const
+    const RomHash* begin() const
     {
         return &hashes[0];
     }
 
-    const KnownHash* end() const
+    const RomHash* end() const
     {
         for (const auto& h : hashes)
         {
