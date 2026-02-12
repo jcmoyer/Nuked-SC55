@@ -767,7 +767,6 @@ bool DetectRomsetsByHash(const std::filesystem::path& base_path,
 
 bool IsCompleteRomset(const AllRomsetInfo& all_info, Romset romset, RomCompletionStatusSet* status)
 {
-
     if (status)
     {
         status->fill(RomCompletionStatus::Unused);
