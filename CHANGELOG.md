@@ -15,6 +15,8 @@
   CTF-patched roms thanks to @akse0435. (#58, #59)
 - Fixed a bug that caused `--legacy-romset-detection` to fail loading any roms.
   (#60)
+- Fixed the hash based rom loader incorrectly mixing and matching roms from
+  different romset versions.
 
 # Version 0.6.1 (2025-07-30)
 
