@@ -316,7 +316,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     },
 
     {
-        .romset = Romset::MK2,
+        .romset = Romset::SC155MK2,
         .hashes = {
             // R15199858 (H8/532 mcu)
             {ToDigest("8a1eb33c7599b746c0c50283e4349a1bb1773b5c0ec0e9661219bf6c067d2042"), RomLocation::ROM1},
