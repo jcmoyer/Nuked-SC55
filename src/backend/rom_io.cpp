@@ -1,13 +1,13 @@
 #include "rom_io.h"
 #include "cast.h"
+#include <filesystem>
 #include <fstream>
+#include <utility>
 
 extern "C"
 {
 #include "sha/sha.h"
 }
-
-using SHA256Digest = std::array<uint8_t, SHA256HashSize>;
 
 const char* legacy_rom_names[(size_t)ROMSET_COUNT][ROMLOCATION_COUNT] = {
     // MK2
@@ -261,45 +261,13 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
     return hash;
 }
 
-struct RomHash
-{
-    SHA256Digest hash;
-    RomLocation  location;
-
-    auto operator<=>(const RomHash&) const = default;
-};
-
-constexpr RomHash NULL_HASH{{}, {}};
-
-struct RomsetHashes
-{
-    Romset  romset;
-    RomHash hashes[ROMLOCATION_COUNT];
-
-    const RomHash* begin() const
-    {
-        return &hashes[0];
-    }
-
-    const RomHash* end() const
-    {
-        for (const auto& h : hashes)
-        {
-            if (h == NULL_HASH)
-            {
-                return &h;
-            }
-        }
-        return &hashes[ROMLOCATION_COUNT];
-    }
-};
-
 // clang-format off
 static constexpr RomsetHashes ROMSET_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
     // SC-55mk2/SC-155mk2 (v1.01)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "mk2-v1.01",
         .romset = Romset::MK2,
         .hashes = {
             // R15199858 (H8/532 mcu)
@@ -316,6 +284,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     },
 
     {
+        .name = "sc155mk2-v1.01",
         .romset = Romset::SC155MK2,
         .hashes = {
             // R15199858 (H8/532 mcu)
@@ -335,6 +304,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-55st (v1.01)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "st-v1.01",
         .romset = Romset::ST,
         .hashes = {
             // R15199858 (H8/532 mcu)
@@ -354,6 +324,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-55 (v1.00)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "mk1-v1.00",
         .romset = Romset::MK1,
         .hashes = {
             // R15199748 (H8/532 mcu)
@@ -373,6 +344,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-55 (v1.10)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "mk1-v1.10",
         .romset = Romset::MK1,
         .hashes = {
             // R15199736 (H8/532 mcu)
@@ -392,6 +364,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-55 (v1.20)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "mk1-v1.20",
         .romset = Romset::MK1,
         .hashes = {
             // R15199778 (H8/532 mcu)
@@ -411,6 +384,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-55 (v1.21)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "mk1-v1.21",
         .romset = Romset::MK1,
         .hashes = {
             // R15199778 (H8/532 mcu)
@@ -430,6 +404,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-55 (v2.00)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "mk1-v2.00",
         .romset = Romset::MK1,
         .hashes = {
             // R15199799 (H8/532 mcu)
@@ -449,6 +424,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // CM-300/SCC-1 (v1.10)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "cm300-v1.10",
         .romset = Romset::CM300,
         .hashes = {
             // R15199774 (H8/532 mcu)
@@ -468,6 +444,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // CM-300/SCC-1 (v1.20)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "cm300-v1.20",
         .romset = Romset::CM300,
         .hashes = {
             // R15199774 (H8/532 mcu)
@@ -487,6 +464,8 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SCC-1A (v1.30)
     ///////////////////////////////////////////////////////////////////////////
     {
+        // TODO: check header comment and revise name
+        .name = "cm300-v1.30",
         .romset = Romset::CM300,
         .hashes = {
             // R00128523 (H8/532 mcu)
@@ -506,6 +485,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // JV-880 (v1.0.0)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "jv880-v1.0.0",
         .romset = Romset::JV880,
         .hashes = {
             // R15199810 (H8/532 mcu)
@@ -523,6 +503,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // JV-880 (v1.0.1)
     ///////////////////////////////////////////////////////////////////////////
     {
+        .name = "jv880-v1.0.1",
         .romset = Romset::JV880,
         .hashes = {
             // R15199810 (H8/532 mcu)
@@ -542,6 +523,8 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SCB-55/RLP-3194
     ///////////////////////////////////////////////////////////////////////////
     {
+        // TODO: version information available?
+        .name = "scb55-*",
         .romset = Romset::SCB55,
         .hashes = {
             // R15199827 (H8/532 mcu)
@@ -560,6 +543,8 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // RLP-3237
     ///////////////////////////////////////////////////////////////////////////
     {
+        // TODO: version information available?
+        .name = "rlp3237-*",
         .romset = Romset::RLP3237,
         .hashes = {
             // R15199827 (H8/532 mcu)
@@ -575,6 +560,8 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-155 (rev 1)
     ///////////////////////////////////////////////////////////////////////////
     {
+        // TODO: version number available?
+        .name = "sc155-rev1",
         .romset = Romset::SC155,
         .hashes = {
             // R15199799 (H8/532 mcu)
@@ -594,6 +581,8 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-155 (rev 2)
     ///////////////////////////////////////////////////////////////////////////
     {
+        // TODO: version number available?
+        .name = "sc155-rev2",
         .romset = Romset::SC155,
         .hashes = {
             // R15199799 (H8/532 mcu)
@@ -614,7 +603,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
 
     // CTF patched roms from https://github.com/shingo45endo/sc55mk2-ctf-patcher
-    
+
     // TODO: these need to be expanded into 12 romset entries
 
     // MK2
@@ -657,10 +646,107 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
 };
 // clang-format on
 
+bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry)
+{
+    using namespace std::filesystem;
+
+    // std::fileystem cannot guarantee exceptions won't be thrown even for the error code overloads
+    try
+    {
+        std::vector<uint8_t> buffer;
+
+        for (directory_iterator dir_iter(base_path); dir_iter != directory_iterator{}; ++dir_iter)
+        {
+            if (!dir_iter->is_regular_file())
+            {
+                continue;
+            }
+
+            const uintmax_t file_size = dir_iter->file_size();
+
+            // Skip files larger than 4MB
+            if (file_size > (uintmax_t)(4 * 1024 * 1024))
+            {
+                continue;
+            }
+
+            ReadAllBytes(dir_iter->path(), buffer);
+
+            SHA256Context ctx;
+            SHA256Digest  digest_bytes;
+
+            SHA256Reset(&ctx);
+            SHA256Input(&ctx, buffer.data(), (unsigned int)buffer.size());
+            SHA256Result(&ctx, digest_bytes.data());
+
+            registry.AddFile(digest_bytes, HashedFile{
+                .path = dir_iter->path(),
+                .data = std::move(buffer),
+            });
+        }
+    }
+    catch (const std::exception& e)
+    {
+        fprintf(stderr, "Failed to hash roms: %s\n", e.what());
+        return false;
+    }
+    return true;
+}
+
+void HashedFileRegistry::AddFile(SHA256Digest hash, HashedFile file)
+{
+    const size_t next_index = m_files.size();
+    m_hash_map.emplace(std::make_pair(hash, next_index));
+    m_files.emplace_back(std::move(file));
+}
+
+bool HashedFileRegistry::Contains(SHA256Digest hash) const
+{
+    return m_hash_map.contains(hash);
+}
+
+void RomsetHashRegistry::AddRomset(const RomsetHashes& romset)
+{
+    const size_t index = m_romsets.size();
+    m_name_map.insert(std::make_pair(romset.name, index));
+    m_romsets.push_back(romset);
+}
+
+void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names)
+{
+    for (const auto& romset : m_romsets)
+    {
+        bool is_complete = true;
+        for (const auto& hash : romset.hashes)
+        {
+            if (!hashed_files.Contains(hash.hash))
+            {
+                is_complete = false;
+                break;
+            }
+        }
+        if (is_complete)
+        {
+            out_names.push_back(romset.name);
+        }
+    }
+}
+
+RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
+{
+    RomsetHashRegistry registry;
+
+    for (auto& hash : ROMSET_HASHES)
+    {
+        registry.AddRomset(hash);
+    }
+
+    return registry;
+}
 
 bool DetectRomsetsByHash(const std::filesystem::path& base_path,
-                             AllRomsetInfo&           all_info,
-                             RomLocationSet*          desired)
+                         AllRomsetInfo&           all_info,
+                         RomLocationSet*          desired)
 {
     std::error_code ec;
 

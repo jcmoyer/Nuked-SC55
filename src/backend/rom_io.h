@@ -1,8 +1,30 @@
 #pragma once
 
-#include "rom.h"
+#include <array>
+#include <cstring>
 #include <filesystem>
+#include <unordered_map>
 #include <vector>
+
+#include "rom.h"
+
+using SHA256Digest = std::array<uint8_t, 32>;
+
+template <>
+struct std::hash<SHA256Digest>
+{
+    size_t operator()(const SHA256Digest& digest) const
+    {
+        size_t result = 0;
+        for (size_t i = 0; i < sizeof(SHA256Digest) / sizeof(size_t); ++i)
+        {
+            size_t block;
+            memcpy(&block, &digest[i * sizeof(size_t)], sizeof(size_t));
+            result ^= block;
+        }
+        return result;
+    }
+};
 
 enum class RomLoadStatus
 {
@@ -56,6 +78,82 @@ struct AllRomsetInfo
 
     // Release all rom_data for all romsets.
     void PurgeRomData();
+};
+
+// The first step for rom detection is to hash all the files in the rom directory under 4MB and retain their contents in
+// memory until we've decided which ones to keep.
+struct HashedFile
+{
+    std::filesystem::path path;
+    std::vector<uint8_t>  data;
+};
+
+class HashedFileRegistry
+{
+public:
+    void AddFile(SHA256Digest hash, HashedFile file);
+    bool Contains(SHA256Digest hash) const;
+
+    void Purge();
+
+private:
+    std::vector<HashedFile> m_files;
+    // SHA256 to index in `files`
+    std::unordered_map<SHA256Digest, size_t> m_hash_map;
+};
+
+bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry);
+
+struct RomHash
+{
+    SHA256Digest hash;
+    RomLocation  location;
+
+    auto operator<=>(const RomHash&) const = default;
+};
+
+constexpr RomHash NULL_HASH{{}, {}};
+
+struct RomsetHashes
+{
+    const char* name;
+    Romset      romset;
+    RomHash     hashes[ROMLOCATION_COUNT];
+
+    const RomHash* begin() const
+    {
+        return &hashes[0];
+    }
+
+    const RomHash* end() const
+    {
+        for (const auto& h : hashes)
+        {
+            if (h == NULL_HASH)
+            {
+                return &h;
+            }
+        }
+        return &hashes[ROMLOCATION_COUNT];
+    }
+};
+
+using StringVector = std::vector<std::string>;
+
+class RomsetHashRegistry
+{
+public:
+    RomsetHashRegistry() = default;
+
+    void AddRomset(const RomsetHashes& romset);
+    void GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names);
+
+    static RomsetHashRegistry CreateWithDefaultHashes();
+
+private:
+    std::vector<RomsetHashes> m_romsets;
+    // Maps romset identifiers to index in `m_romsets`
+    std::unordered_map<std::string, size_t> m_name_map;
 };
 
 // Scans files in `base_path` for specific rom filenames. Consult the `legacy_rom_names` constant in `emu.cpp` for the
