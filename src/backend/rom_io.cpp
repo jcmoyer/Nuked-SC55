@@ -751,7 +751,7 @@ bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_fi
 
     bool is_complete = true;
 
-    for (const auto& pair : m_romsets[index].hashes)
+    for (const auto& pair : m_romsets[index])
     {
         if (!hashed_files.Contains(pair.hash))
         {
