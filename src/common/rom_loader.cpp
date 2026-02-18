@@ -2,6 +2,7 @@
 
 #include <cstdio>
 
+#include "rom.h"
 #include "rom_io.h"
 
 namespace common
@@ -40,14 +41,24 @@ LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
                            const RomOverrides&          overrides,
                            LoadRomsetResult&            result)
 {
+    RomLocationSet desired = ROMLOCATION_ALL;
+
+    // exclude roms with overrides - it doesn't matter if they're not on disk because the user has a different file to
+    // put there
+    for (size_t location = 0; location < ROMLOCATION_COUNT; ++location)
+    {
+        if (!overrides[location].empty())
+        {
+            desired[location] = false;
+        }
+    }
+
     if (desired_romset.size())
     {
         if (!ParseRomsetName(desired_romset, result.romset))
         {
             return LoadRomsetError::InvalidRomsetName;
         }
-
-        RomLocationSet desired{};
 
         if (legacy_loader)
         {
@@ -74,7 +85,7 @@ LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
                 return LoadRomsetError::DetectionFailed;
             }
 
-            if (!rh_reg.ContainsRomsetFiles(hf_reg, desired_romset))
+            if (!rh_reg.ContainsRomsetFiles(hf_reg, desired_romset, desired))
             {
                 fprintf(stderr, "romset `%s` not found in rom directory\n", std::string(desired_romset).c_str());
                 return LoadRomsetError::DetectionFailed;

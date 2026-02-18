@@ -49,6 +49,8 @@ const char* ToCString(RomLocation location);
 // Set of rom locations. Indexed by RomLocation.
 using RomLocationSet = std::array<bool, ROMLOCATION_COUNT>;
 
+constexpr RomLocationSet ROMLOCATION_ALL{true, true, true, true, true, true, true, true};
+
 // Returns true if `location` represents a waverom location.
 bool IsWaverom(RomLocation location);
 

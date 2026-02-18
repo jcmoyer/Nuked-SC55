@@ -705,6 +705,18 @@ bool HashedFileRegistry::Contains(SHA256Digest hash) const
     return m_hash_map.contains(hash);
 }
 
+const HashedFile* HashedFileRegistry::GetFile(SHA256Digest hash) const
+{
+    const auto it = m_hash_map.find(hash);
+
+    if (it == m_hash_map.end())
+    {
+        return nullptr;
+    }
+
+    return &m_files[it->second];
+}
+
 void RomsetHashRegistry::AddRomset(const RomsetHashes& romset)
 {
     const size_t index = m_romsets.size();
@@ -738,7 +750,9 @@ bool RomsetHashRegistry::ContainsRomsetMetadata(std::string_view name) const
     return m_name_map.contains(name);
 }
 
-bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_files, std::string_view name) const
+bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_files,
+                                             std::string_view          name,
+                                             const RomLocationSet&     location_mask) const
 {
     const auto it = m_name_map.find(name);
 
@@ -753,7 +767,7 @@ bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_fi
 
     for (const auto& pair : m_romsets[index])
     {
-        if (!hashed_files.Contains(pair.hash))
+        if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
         {
             is_complete = false;
             break;

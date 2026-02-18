@@ -95,6 +95,9 @@ public:
     void AddFile(SHA256Digest hash, HashedFile file);
     bool Contains(SHA256Digest hash) const;
 
+    // The returned pointer is invalidated when the registry is modified.
+    const HashedFile* GetFile(SHA256Digest hash) const;
+
     void Purge();
 
 private:
@@ -175,8 +178,14 @@ public:
     // was located on disk. For that functionality, use `ContainsRomsetFiles`.
     bool ContainsRomsetMetadata(std::string_view name) const;
 
-    // Returns true if a romset called `name` is in `hashed_files`.
-    bool ContainsRomsetFiles(const HashedFileRegistry& hashed_files, std::string_view name) const;
+    // Returns true if all the roms in the romset named `name` is in `hashed_files`.
+    //
+    // `location_mask` allows the caller to control which roms will be tested. For rom locations used by the romset, a
+    // value of `true` enables the test and a value of `false` disables the test. The test succeeds if the hash for that
+    // location is in `hashed_files`. If a rom location is not used by the romset, the value is ignored.
+    bool ContainsRomsetFiles(const HashedFileRegistry& hashed_files,
+                             std::string_view          name,
+                             const RomLocationSet&     location_mask) const;
 
     // Creates a registry containing standard, supported romsets.
     static RomsetHashRegistry CreateWithDefaultHashes();
