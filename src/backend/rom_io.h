@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 #include <filesystem>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -140,20 +141,50 @@ struct RomsetHashes
 
 using StringVector = std::vector<std::string>;
 
+// Allows using string_view with unordered_map<string, ...>
+struct TransparentStringHash
+{
+    using is_transparent = void;
+
+    size_t operator()(const std::string& s) const
+    {
+        return std::hash<std::string>{}(s);
+    }
+
+    size_t operator()(std::string_view s) const
+    {
+        return std::hash<std::string_view>{}(s);
+    }
+};
+
+// Contains metadata for romsets. Romset metadata is registered with instances of this type, after which this type can
+// used to efficiently query which of those romsets exist on disk.
 class RomsetHashRegistry
 {
 public:
+    // Constructs an empty registry.
     RomsetHashRegistry() = default;
 
+    // Adds `romset` to the registry.
     void AddRomset(const RomsetHashes& romset);
-    void GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names);
 
+    // Returns romsets identifiers that are contained in `hashed_files`.
+    void GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names) const;
+
+    // Returns true if there is metadata associated with `name`. Note that this does NOT return whether or not the file
+    // was located on disk. For that functionality, use `ContainsRomsetFiles`.
+    bool ContainsRomsetMetadata(std::string_view name) const;
+
+    // Returns true if a romset called `name` is in `hashed_files`.
+    bool ContainsRomsetFiles(const HashedFileRegistry& hashed_files, std::string_view name) const;
+
+    // Creates a registry containing standard, supported romsets.
     static RomsetHashRegistry CreateWithDefaultHashes();
 
 private:
     std::vector<RomsetHashes> m_romsets;
     // Maps romset identifiers to index in `m_romsets`
-    std::unordered_map<std::string, size_t> m_name_map;
+    std::unordered_map<std::string, size_t, TransparentStringHash, std::equal_to<void>> m_name_map;
 };
 
 // Scans files in `base_path` for specific rom filenames. Consult the `legacy_rom_names` constant in `emu.cpp` for the
@@ -173,6 +204,7 @@ bool DetectRomsetsByFilename(const std::filesystem::path& base_path,
 //
 // If `desired` is non-null, this function will use it as a hint to determine what hashes to consider. This function may
 // also load `rom_data` for desired roms.
+[[deprecated("use RomsetHashRegistry instead")]]
 bool DetectRomsetsByHash(const std::filesystem::path& base_path,
                          AllRomsetInfo&               all_info,
                          RomLocationSet*              desired = nullptr);

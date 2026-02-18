@@ -17,6 +17,9 @@
   (#60)
 - Fixed the hash based rom loader incorrectly mixing and matching roms from
   different romset versions.
+- Reduced the amount of hashing done when loading roms by hash.
+- Added the ability to load specific versions of romsets when loading roms by
+  hash. Pass `--help` to see the list of accepted names.
 
 # Version 0.6.1 (2025-07-30)
 

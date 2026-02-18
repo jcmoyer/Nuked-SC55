@@ -712,14 +712,15 @@ void RomsetHashRegistry::AddRomset(const RomsetHashes& romset)
     m_romsets.push_back(romset);
 }
 
-void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names)
+void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names) const
 {
+    out_names.clear();
     for (const auto& romset : m_romsets)
     {
         bool is_complete = true;
-        for (const auto& hash : romset.hashes)
+        for (const auto& pair : romset)
         {
-            if (!hashed_files.Contains(hash.hash))
+            if (!hashed_files.Contains(pair.hash))
             {
                 is_complete = false;
                 break;
@@ -730,6 +731,36 @@ void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed
             out_names.push_back(romset.name);
         }
     }
+}
+
+bool RomsetHashRegistry::ContainsRomsetMetadata(std::string_view name) const
+{
+    return m_name_map.contains(name);
+}
+
+bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_files, std::string_view name) const
+{
+    const auto it = m_name_map.find(name);
+
+    if (it == m_name_map.end())
+    {
+        return false;
+    }
+
+    const size_t index = it->second;
+
+    bool is_complete = true;
+
+    for (const auto& pair : m_romsets[index].hashes)
+    {
+        if (!hashed_files.Contains(pair.hash))
+        {
+            is_complete = false;
+            break;
+        }
+    }
+
+    return is_complete;
 }
 
 RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
@@ -745,8 +776,8 @@ RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
 }
 
 bool DetectRomsetsByHash(const std::filesystem::path& base_path,
-                         AllRomsetInfo&           all_info,
-                         RomLocationSet*          desired)
+                         AllRomsetInfo&               all_info,
+                         RomLocationSet*              desired)
 {
     std::error_code ec;
 

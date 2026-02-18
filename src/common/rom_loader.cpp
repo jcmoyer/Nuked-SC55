@@ -1,5 +1,9 @@
 #include "rom_loader.h"
 
+#include <cstdio>
+
+#include "rom_io.h"
+
 namespace common
 {
 
@@ -54,8 +58,25 @@ LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
         }
         else
         {
-            if (!DetectRomsetsByHash(rom_directory, romset_info, &desired))
+            HashedFileRegistry hf_reg;
+
+            // TODO: this function prints its own diagnostics - we should return a richer error object
+            if (!HashAllFiles(rom_directory, hf_reg))
             {
+                return LoadRomsetError::DetectionFailed;
+            }
+
+            RomsetHashRegistry rh_reg = RomsetHashRegistry::CreateWithDefaultHashes();
+
+            if (!rh_reg.ContainsRomsetMetadata(desired_romset))
+            {
+                fprintf(stderr, "romset `%s` not in configuration\n", std::string(desired_romset).c_str());
+                return LoadRomsetError::DetectionFailed;
+            }
+
+            if (!rh_reg.ContainsRomsetFiles(hf_reg, desired_romset))
+            {
+                fprintf(stderr, "romset `%s` not found in rom directory\n", std::string(desired_romset).c_str());
                 return LoadRomsetError::DetectionFailed;
             }
         }
@@ -72,9 +93,21 @@ LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
         }
         else
         {
-            if (!DetectRomsetsByHash(rom_directory, romset_info))
+            HashedFileRegistry hf_reg;
+
+            // TODO: this function prints its own diagnostics - we should return a richer error object
+            if (!HashAllFiles(rom_directory, hf_reg))
             {
                 return LoadRomsetError::DetectionFailed;
+            }
+
+            RomsetHashRegistry rh_reg = RomsetHashRegistry::CreateWithDefaultHashes();
+
+            StringVector names;
+            rh_reg.GetCompleteRomsetNames(hf_reg, names);
+            for (auto& n : names)
+            {
+                fprintf(stderr, "* %s\n", n.c_str());
             }
         }
 
