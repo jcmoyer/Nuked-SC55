@@ -724,6 +724,14 @@ void RomsetHashRegistry::AddRomset(const RomsetHashes& romset)
     m_romsets.push_back(romset);
 }
 
+void RomsetHashRegistry::GetAllRomsetNames(StringVector& out_names) const
+{
+    for (const auto& romset : m_romsets)
+    {
+        out_names.emplace_back(romset.name);
+    }
+}
+
 void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
                                                 StringVector&             out_names,
                                                 const RomLocationSet&     location_mask) const

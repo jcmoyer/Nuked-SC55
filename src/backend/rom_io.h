@@ -161,6 +161,8 @@ public:
     // Adds `romset` to the registry.
     void AddRomset(const RomsetHashes& romset);
 
+    void GetAllRomsetNames(StringVector& out_names) const;
+
     // Returns romsets identifiers that are contained in `hashed_files`. `location_mask` can be used to filter which
     // roms are considered for the completeness of the romset. The test logic works the same as in
     // `ContainsRomsetFiles`.

@@ -168,6 +168,17 @@ void PrintRomsets(FILE* output)
     {
         fprintf(output, "%s ", name);
     }
+    fprintf(output, "\n");
+
+    RomsetHashRegistry romsets = RomsetHashRegistry::CreateWithDefaultHashes();
+    StringVector specific_names;
+    romsets.GetAllRomsetNames(specific_names);
+
+    fprintf(output, "  ");
+    for (const auto& name : specific_names)
+    {
+        fprintf(output, "%s ", name.c_str());
+    }
     fprintf(output, "\n\n");
 }
 
