@@ -71,16 +71,6 @@ struct RomsetInfo
     bool HasRom(RomLocation location) const;
 };
 
-// Contains RomsetInfo for all supported romsets.
-struct AllRomsetInfo
-{
-    // Array indexed by Romset
-    RomsetInfo romsets[ROMSET_COUNT]{};
-
-    // Release all rom_data for all romsets.
-    void PurgeRomData();
-};
-
 // The first step for rom detection is to hash all the files in the rom directory under 4MB and retain their contents in
 // memory until we've decided which ones to keep.
 struct HashedFile
@@ -228,16 +218,6 @@ bool SetRomsetFilenames(RomsetInfo&                  romset_info,
 bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatusSet* status = nullptr);
 
 size_t CountPresent(const RomCompletionStatusSet& status);
-
-// For each `rom` in `romset`, this function loads the file referenced by `all_info.romsets[romset].rom_paths[rom]` into
-// the corresponding `rom_data`. Waveroms will be unscrambled at this point.
-//
-// `rom` will only be loaded when `rom_data` is empty and `rom_path` is non-empty.
-//
-// To automatically determine rom_paths, call `DetectRomsetsByHash` with a directory containing roms.
-//
-// Roms that were loaded successfully will be marked as true in `loaded`.
-bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded = nullptr);
 
 // For each `rom` in `info` this function loads the file referenced by `info.rom_paths[rom]` into `info.rom_data[rom]`.
 // If `info.rom_data[rom]` is already populated, no data will be loaded from disk.

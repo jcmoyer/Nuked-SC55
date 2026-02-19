@@ -951,14 +951,6 @@ bool RomsetInfo::HasRom(RomLocation location) const
     return !(rom_paths[(size_t)location].empty() && rom_data[(size_t)location].empty());
 }
 
-void AllRomsetInfo::PurgeRomData()
-{
-    for (auto& romset : romsets)
-    {
-        romset.PurgeRomData();
-    }
-}
-
 bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded)
 {
     bool all_loaded = true;
@@ -1023,12 +1015,6 @@ bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded)
     }
 
     return all_loaded;
-}
-
-bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded)
-{
-    RomsetInfo& info = all_info.romsets[(size_t)romset];
-    return LoadRomset(info, loaded);
 }
 
 const char* ToCString(RomLoadStatus status)
