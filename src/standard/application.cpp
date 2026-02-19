@@ -51,7 +51,7 @@ bool Application::Initialize(const CliParameters& params)
     common::LoadRomsetError err = common::LoadRomset(m_romset_info,
                                                      rom_directory,
                                                      params.romset_name,
-                                                     params.legacy_romset_detection,
+                                                     params.rom_loader,
                                                      params.adv.rom_overrides,
                                                      load_result);
 

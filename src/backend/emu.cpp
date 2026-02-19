@@ -102,7 +102,7 @@ void Emulator::SetSampleCallback(mcu_sample_callback callback, void* userdata)
     m_mcu->sample_callback = callback;
 }
 
-bool Emulator::LoadRoms(Romset romset, const AllRomsetInfo& all_info, RomLocationSet* loaded)
+bool Emulator::LoadRoms(Romset romset, const RomsetInfo& info, RomLocationSet* loaded)
 {
     if (loaded)
     {
@@ -110,8 +110,6 @@ bool Emulator::LoadRoms(Romset romset, const AllRomsetInfo& all_info, RomLocatio
     }
 
     MCU_SetRomset(GetMCU(), romset);
-
-    const RomsetInfo& info = all_info.romsets[(size_t)romset];
 
     for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
     {

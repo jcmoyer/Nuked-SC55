@@ -59,7 +59,7 @@ struct R_Parameters
     bool debug = false;
     R_EndBehavior end_behavior = R_EndBehavior::Cut;
     std::filesystem::path nvram_filename;
-    bool legacy_romset_detection = false;
+    common::RomLoader rom_loader = common::RomLoader::Hashing;
     bool dump_emidi_loop_points = false;
     float gain = 1.0f;
     R_AdvancedParameters adv;
@@ -260,7 +260,7 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
         }
         else if (reader.Any("--legacy-romset-detection"))
         {
-            result.legacy_romset_detection = true;
+            result.rom_loader = common::RomLoader::Legacy;
         }
         else if (reader.Any("--end"))
         {
@@ -1270,14 +1270,14 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
     // Then create a track specifically for each emulator instance
     const R_TrackList split_tracks = R_SplitTrackModulo(merged_track, instances);
 
-    AllRomsetInfo romset_info;
+    RomsetInfo romset_info;
 
     common::LoadRomsetResult load_result;
 
     common::LoadRomsetError err = common::LoadRomset(romset_info,
                                                      params.rom_directory,
                                                      params.romset_name,
-                                                     params.legacy_romset_detection,
+                                                     params.rom_loader,
                                                      params.adv.rom_overrides,
                                                      load_result);
 

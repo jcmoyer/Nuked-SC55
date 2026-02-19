@@ -724,7 +724,9 @@ void RomsetHashRegistry::AddRomset(const RomsetHashes& romset)
     m_romsets.push_back(romset);
 }
 
-void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files, StringVector& out_names) const
+void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
+                                                StringVector&             out_names,
+                                                const RomLocationSet&     location_mask) const
 {
     out_names.clear();
     for (const auto& romset : m_romsets)
@@ -732,7 +734,7 @@ void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed
         bool is_complete = true;
         for (const auto& pair : romset)
         {
-            if (!hashed_files.Contains(pair.hash))
+            if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
             {
                 is_complete = false;
                 break;
@@ -777,6 +779,54 @@ bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_fi
     return is_complete;
 }
 
+bool RomsetHashRegistry::GetRomsetFamily(std::string_view name, Romset& out_family) const
+{
+    const auto it = m_name_map.find(name);
+
+    if (it == m_name_map.end())
+    {
+        return false;
+    }
+
+    const size_t index = it->second;
+
+    out_family = m_romsets[index].romset;
+    return true;
+}
+
+bool RomsetHashRegistry::GetRomsetInfo(const HashedFileRegistry& hashed_files,
+                                       std::string_view          name,
+                                       const RomLocationSet&     location_mask,
+                                       RomsetInfo&               out_info) const
+{
+    const auto it = m_name_map.find(name);
+
+    if (it == m_name_map.end())
+    {
+        return false;
+    }
+
+    const size_t index = it->second;
+
+    for (const auto& pair : m_romsets[index])
+    {
+        const HashedFile* hf = hashed_files.GetFile(pair.hash);
+
+        if (!hf)
+        {
+            return false;
+        }
+
+        if (location_mask[(size_t)pair.location])
+        {
+            out_info.rom_paths[(size_t)pair.location] = hf->path;
+            out_info.rom_data[(size_t)pair.location] = hf->data;
+        }
+    }
+
+    return true;
+}
+
 RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
 {
     RomsetHashRegistry registry;
@@ -789,121 +839,12 @@ RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
     return registry;
 }
 
-bool DetectRomsetsByHash(const std::filesystem::path& base_path,
-                         AllRomsetInfo&               all_info,
-                         RomLocationSet*              desired)
-{
-    std::error_code ec;
-
-    std::filesystem::directory_iterator dir_iter(base_path, ec);
-
-    if (ec)
-    {
-        Diag_Printf(Diag_Category::Error, "Failed to walk rom directory: %s\n", ec.message().c_str());
-        return false;
-    }
-
-    std::vector<uint8_t> buffer;
-
-    while (dir_iter != std::filesystem::directory_iterator{})
-    {
-        const bool is_file = dir_iter->is_regular_file(ec);
-        if (ec)
-        {
-            Diag_Printf(Diag_Category::Error,
-                        "Failed to check file type of `%s`: %s\n",
-                        dir_iter->path().generic_string().c_str(),
-                        ec.message().c_str());
-            return false;
-        }
-
-        if (!is_file)
-        {
-            dir_iter.increment(ec);
-            if (ec)
-            {
-                Diag_Printf(Diag_Category::Error, "Failed to get next file: %s\n", ec.message().c_str());
-                return false;
-            }
-            continue;
-        }
-
-        const uintmax_t file_size = dir_iter->file_size(ec);
-        if (ec)
-        {
-            Diag_Printf(Diag_Category::Error,
-                        "Failed to get file size of `%s`: %s\n",
-                        dir_iter->path().generic_string().c_str(),
-                        ec.message().c_str());
-            return false;
-        }
-
-        // Skip files larger than 4MB
-        if (file_size > (uintmax_t)(4 * 1024 * 1024))
-        {
-            dir_iter.increment(ec);
-            if (ec)
-            {
-                Diag_Printf(Diag_Category::Error, "Failed to get next file: %s\n", ec.message().c_str());
-                return false;
-            }
-            continue;
-        }
-
-        ReadAllBytes(dir_iter->path(), buffer);
-
-        SHA256Context ctx;
-        SHA256Digest  digest_bytes;
-
-        SHA256Reset(&ctx);
-        SHA256Input(&ctx, buffer.data(), (unsigned int)buffer.size());
-        SHA256Result(&ctx, digest_bytes.data());
-
-        for (const auto& romset : ROMSET_HASHES)
-        {
-            for (const auto& known : romset)
-            {
-                if (known.hash == digest_bytes && !all_info.romsets[(size_t)romset.romset].HasRom(known.location))
-                {
-                    all_info.romsets[(size_t)romset.romset].rom_paths[(size_t)known.location] = dir_iter->path();
-
-                    if (desired && (*desired)[(size_t)known.location])
-                    {
-                        auto& rom_data = all_info.romsets[(size_t)romset.romset].rom_data[(size_t)known.location];
-                        if (IsWaverom(known.location))
-                        {
-                            rom_data.resize(buffer.size());
-                            unscramble(rom_data.data(), buffer.data(), (int)buffer.size());
-                        }
-                        else
-                        {
-                            rom_data = std::move(buffer);
-                            buffer   = {};
-                        }
-                    }
-                }
-            }
-        }
-
-        dir_iter.increment(ec);
-        if (ec)
-        {
-            Diag_Printf(Diag_Category::Error, "Failed to get next file: %s\n", ec.message().c_str());
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool IsCompleteRomset(const AllRomsetInfo& all_info, Romset romset, RomCompletionStatusSet* status)
+bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatusSet* status)
 {
     if (status)
     {
         status->fill(RomCompletionStatus::Unused);
     }
-
-    const auto& info = all_info.romsets[(size_t)romset];
 
     for (const auto& known_romset : ROMSET_HASHES)
     {
@@ -954,38 +895,24 @@ size_t CountPresent(const RomCompletionStatusSet& status)
     return count;
 }
 
-bool PickCompleteRomset(const AllRomsetInfo& all_info, Romset& out_romset)
+bool SetRomsetFilenames(RomsetInfo&                  romset_info,
+                        const std::filesystem::path& base_path,
+                        Romset                       romset,
+                        const RomLocationSet&        location_mask)
 {
-    for (size_t i = 0; i < ROMSET_COUNT; ++i)
+    for (size_t rom = 0; rom < ROMLOCATION_COUNT; ++rom)
     {
-        if (IsCompleteRomset(all_info, (Romset)i))
+        if (legacy_rom_names[(size_t)romset][rom][0] == '\0')
         {
-            out_romset = (Romset)i;
-            return true;
+            continue;
         }
-    }
-    return false;
-}
 
-bool DetectRomsetsByFilename(const std::filesystem::path& base_path,
-                             AllRomsetInfo&               all_info,
-                             RomLocationSet*              desired)
-{
-    (void)desired;
-
-    for (size_t romset = 0; romset < ROMSET_COUNT; ++romset)
-    {
-        for (size_t rom = 0; rom < ROMLOCATION_COUNT; ++rom)
+        if (!location_mask[rom])
         {
-            if (legacy_rom_names[romset][rom][0] == '\0')
-            {
-                continue;
-            }
-
-            std::filesystem::path rom_path = base_path / legacy_rom_names[romset][rom];
-
-            all_info.romsets[romset].rom_paths[rom] = std::move(rom_path);
+            continue;
         }
+
+        romset_info.rom_paths[rom] = base_path / legacy_rom_names[(size_t)romset][rom];
     }
 
     return true;
@@ -1032,14 +959,12 @@ void AllRomsetInfo::PurgeRomData()
     }
 }
 
-bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded)
+bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded)
 {
     bool all_loaded = true;
 
     // We cannot unscramble in-place.
     std::vector<uint8_t> on_demand_buffer;
-
-    RomsetInfo& info = all_info.romsets[(size_t)romset];
 
     for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
     {
@@ -1083,6 +1008,13 @@ bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded
         }
         else if (!info.rom_data[i].empty())
         {
+            if (IsWaverom(location))
+            {
+                on_demand_buffer.resize(info.rom_data[i].size());
+                unscramble(info.rom_data[i].data(), on_demand_buffer.data(), (int)on_demand_buffer.size());
+                std::swap(info.rom_data[i], on_demand_buffer);
+            }
+
             if (loaded)
             {
                 (*loaded)[i] = RomLoadStatus::Loaded;
@@ -1091,6 +1023,12 @@ bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded
     }
 
     return all_loaded;
+}
+
+bool LoadRomset(Romset romset, AllRomsetInfo& all_info, RomLoadStatusSet* loaded)
+{
+    RomsetInfo& info = all_info.romsets[(size_t)romset];
+    return LoadRomset(info, loaded);
 }
 
 const char* ToCString(RomLoadStatus status)

@@ -95,7 +95,7 @@ public:
     //
     // It is recommended to check if the romset has all the necessary roms by first calling
     // `IsCompleteRomset(all_info, romset)`.
-    bool LoadRoms(Romset romset, const AllRomsetInfo& all_info, RomLocationSet* loaded = nullptr);
+    bool LoadRoms(Romset romset, const RomsetInfo& info, RomLocationSet* loaded = nullptr);
 
     void PostMIDI(uint8_t data_byte);
     void PostMIDI(std::span<const uint8_t> data);
@@ -124,4 +124,3 @@ private:
     std::unique_ptr<pcm_t>       m_pcm;
     EMU_Options                  m_options;
 };
-

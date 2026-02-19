@@ -43,7 +43,7 @@ struct CliParameters
     // Rom management options
     std::optional<std::filesystem::path> rom_directory;
     std::string_view                     romset_name;
-    bool                                 legacy_romset_detection = false;
+    common::RomLoader                    rom_loader = common::RomLoader::Hashing;
 
     // ASIO options
     std::optional<uint32_t> asio_sample_rate;
@@ -119,8 +119,8 @@ private:
 
     BoundedVector<Instance, MAX_INSTANCES> m_instances;
 
-    AllRomsetInfo m_romset_info;
-    Romset        m_romset;
+    RomsetInfo m_romset_info;
+    Romset     m_romset;
 
     AudioOutput m_audio_output{};
 

@@ -2,6 +2,7 @@
 
 #include "common/command_line.h"
 #include "common/gain.h"
+#include "common/rom_loader.h"
 
 const char* ParseErrorStr(CliParseError err)
 {
@@ -223,7 +224,7 @@ CliParseError ParseCommandLine(int argc, char* argv[], CliParameters& result)
         }
         else if (reader.Any("--legacy-romset-detection"))
         {
-            result.legacy_romset_detection = true;
+            result.rom_loader = common::RomLoader::Legacy;
         }
         else if (reader.Any("--override-rom1"))
         {

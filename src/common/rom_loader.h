@@ -22,6 +22,9 @@ enum class LoadRomsetError
 
     // loaded roms will be available through `loaded`
     RomLoadFailed,
+
+    // user requested a romset family, but there are multiple suitable romsets in the rom directory
+    AmbiguousRomset,
 };
 
 // `error`: error code to convert to string
@@ -35,15 +38,25 @@ struct LoadRomsetResult
     RomCompletionStatusSet completion;
 };
 
+enum class RomLoader
+{
+    // takes the SHA256 hash of files in the rom directory and locates roms to load regardless of filename
+    Hashing,
+
+    // load specific filenames using the same logic as nukeykt/Nuked-SC55
+    Legacy,
+};
+
 // `romset_info`: receives rom paths and rom data
 // `rom_directory`: directory containing complete romset(s)
 // `desired_romset`: romset the user wants to load; if empty string the first romset in the directory will be returned
-// `legacy_loader`: use the same logic as nukeykt/Nuked-SC55
+// `loader`: which loader to use
+// `overrides`: overrides for specific roms in the romset
 // `result`: receives the loaded romset and information about which roms were loaded
-LoadRomsetError LoadRomset(AllRomsetInfo&               romset_info,
+LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
                            const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
-                           bool                         legacy_loader,
+                           RomLoader                    loader,
                            const RomOverrides&          overrides,
                            LoadRomsetResult&            result);
 
@@ -57,6 +70,6 @@ void PrintRomsets(FILE* output);
 void PrintLoadRomsetDiagnostics(FILE*                   output,
                                 LoadRomsetError         error,
                                 const LoadRomsetResult& result,
-                                const AllRomsetInfo&    info);
+                                const RomsetInfo&       info);
 
 } // namespace common
