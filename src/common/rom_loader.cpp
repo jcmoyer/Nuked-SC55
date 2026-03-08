@@ -139,6 +139,11 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
+            // convert specific name to family name
+            if (!romsets.GetRomsetFamily(desired_romset, result.romset))
+            {
+                return LoadRomsetError::InvalidRomsetName;
+            }
         }
         else if (!is_romset_given)
         {
@@ -149,10 +154,10 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
                 // Use the first returned name. The loaded romset will be essentially random if there is more than one
                 // in the rom directory.
                 // TODO: We may want to make this deterministic or an error in the future.
-                if (!romsets.GetRomsetInfo(hashed_files, romset_names.front(), desired, romset_info))
-                {
-                    return LoadRomsetError::InvalidRomsetName;
-                }
+
+                // ignored returns: these names were returned by GetCompleteRomsetNames so the lookup cannot fail
+                (void)romsets.GetRomsetInfo(hashed_files, romset_names.front(), desired, romset_info);
+                (void)romsets.GetRomsetFamily(romset_names.front(), result.romset);
             }
             else
             {
