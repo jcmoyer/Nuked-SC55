@@ -4,7 +4,10 @@
 #include <span>
 #include <string_view>
 
-enum class Romset {
+// A Romset represents a family of roms. Each Romset may have multiple valid sets of roms. This is the case when a
+// Romset has multiple versions.
+enum class Romset
+{
     MK2,
     ST,
     MK1,
@@ -24,7 +27,8 @@ bool ParseRomsetName(std::string_view name, Romset& romset);
 
 std::span<const char*> GetParsableRomsetNames();
 
-// Symbolic name for the various roms used by the emulator.
+// Symbolic name for the various roms used by the emulator. A Romset consists of several roms each at a distinct
+// RomLocation. A Romset does not require all RomLocations to be populated.
 enum class RomLocation
 {
     // MCU roms

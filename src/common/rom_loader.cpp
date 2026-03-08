@@ -56,8 +56,8 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
         }
     }
 
-    bool is_romset_given = desired_romset.size() > 0;
-    bool is_romset_family = ParseRomsetName(desired_romset, result.romset);
+    const bool is_romset_given  = desired_romset.size() > 0;
+    const bool is_romset_family = ParseRomsetName(desired_romset, result.romset);
 
     switch (loader)
     {
@@ -81,11 +81,14 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
         {
             return LoadRomsetError::DetectionFailed;
         }
-
         break;
+
     case RomLoader::Hashing: {
         HashedFileRegistry hashed_files;
-        HashAllFiles(rom_directory, hashed_files);
+        if (!HashAllFiles(rom_directory, hashed_files))
+        {
+            return LoadRomsetError::DetectionFailed;
+        }
         RomsetHashRegistry romsets = RomsetHashRegistry::CreateWithDefaultHashes();
         StringVector       romset_names;
 
@@ -98,12 +101,14 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
                 return LoadRomsetError::NoCompleteRomsets;
             }
 
-            bool did_find_romset = false;
+            bool        did_find_romset = false;
             std::string picked_name;
 
             for (const auto& name : romset_names)
             {
                 Romset rs_family;
+                // ignored return: this function cannot fail because the name comes from GetCompleteRomsetNames, so it
+                // must be in the registry
                 (void)romsets.GetRomsetFamily(name, rs_family);
                 if (rs_family == result.romset)
                 {
@@ -112,7 +117,7 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
                         return LoadRomsetError::AmbiguousRomset;
                     }
                     did_find_romset = true;
-                    picked_name = name;
+                    picked_name     = name;
                     break;
                 }
             }
@@ -137,9 +142,22 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
         }
         else if (!is_romset_given)
         {
-            // upstream defaults to mk2
-            // TODO
-            return LoadRomset(romset_info, rom_directory, "mk2", loader, overrides, result);
+            romsets.GetCompleteRomsetNames(hashed_files, romset_names, ROMLOCATION_ALL);
+
+            if (romset_names.size())
+            {
+                // Use the first returned name. The loaded romset will be essentially random if there is more than one
+                // in the rom directory.
+                // TODO: We may want to make this deterministic or an error in the future.
+                if (!romsets.GetRomsetInfo(hashed_files, romset_names.front(), desired, romset_info))
+                {
+                    return LoadRomsetError::InvalidRomsetName;
+                }
+            }
+            else
+            {
+                return LoadRomsetError::NoCompleteRomsets;
+            }
         }
         break;
     }
@@ -147,6 +165,8 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
         return LoadRomsetError::DetectionFailed;
     }
 
+    // TODO: this function consults the hardcoded romset list. This is awkward and probably slower than it needs to be.
+    // We should know which rom locations are necessary given only a Romset.
     if (!IsCompleteRomset(romset_info, result.romset, &result.completion))
     {
         return LoadRomsetError::IncompleteRomset;
@@ -171,7 +191,7 @@ void PrintRomsets(FILE* output)
     fprintf(output, "\n");
 
     RomsetHashRegistry romsets = RomsetHashRegistry::CreateWithDefaultHashes();
-    StringVector specific_names;
+    StringVector       specific_names;
     romsets.GetAllRomsetNames(specific_names);
 
     fprintf(output, "  ");
@@ -272,10 +292,8 @@ void PrintLoadRomsetDiagnostics(FILE*                   output,
         {
             if (result.loaded[i] == RomLoadStatus::Loaded)
             {
-                fprintf(output,
-                        "  * %-12s %s\n",
-                        ToCString((RomLocation)i),
-                        info.rom_paths[i].generic_string().c_str());
+                fprintf(
+                    output, "  * %-12s %s\n", ToCString((RomLocation)i), info.rom_paths[i].generic_string().c_str());
             }
         }
     }

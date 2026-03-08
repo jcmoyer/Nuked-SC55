@@ -71,14 +71,14 @@ struct RomsetInfo
     bool HasRom(RomLocation location) const;
 };
 
-// The first step for rom detection is to hash all the files in the rom directory under 4MB and retain their contents in
-// memory until we've decided which ones to keep.
+// Contains the path and contents of a hashed file.
 struct HashedFile
 {
     std::filesystem::path path;
     std::vector<uint8_t>  data;
 };
 
+// Contains a list of hashed files and provides constant-time lookup by hash.
 class HashedFileRegistry
 {
 public:
@@ -86,6 +86,7 @@ public:
     bool Contains(SHA256Digest hash) const;
 
     // The returned pointer is invalidated when the registry is modified.
+    // This function returns `nullptr` when `hash` is not in the registry.
     const HashedFile* GetFile(SHA256Digest hash) const;
 
     void Purge();
@@ -161,6 +162,7 @@ public:
     // Adds `romset` to the registry.
     void AddRomset(const RomsetHashes& romset);
 
+    // Returns all the names registered with the romset.
     void GetAllRomsetNames(StringVector& out_names) const;
 
     // Returns romsets identifiers that are contained in `hashed_files`. `location_mask` can be used to filter which
