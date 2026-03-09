@@ -59,3 +59,4 @@ constexpr RomLocationSet ROMLOCATION_ALL{true, true, true, true, true, true, tru
 bool IsWaverom(RomLocation location);
 
 bool IsOptionalRom(Romset romset, RomLocation location);
+bool IsRequiredRom(Romset romset, RomLocation location);

@@ -170,8 +170,6 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
         return LoadRomsetError::DetectionFailed;
     }
 
-    // TODO: this function consults the hardcoded romset list. This is awkward and probably slower than it needs to be.
-    // We should know which rom locations are necessary given only a Romset.
     if (!IsCompleteRomset(romset_info, result.romset, &result.completion))
     {
         return LoadRomsetError::IncompleteRomset;

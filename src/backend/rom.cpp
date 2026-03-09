@@ -24,6 +24,28 @@ const char* rs_name_simple[ROMSET_COUNT] = {
     "sc155mk2"
 };
 
+// This is a matrix where each row is a romset, and each column is a RomLocation
+constexpr RomLocationSet REQUIRED_ROMS[ROMSET_COUNT] = {
+    // MK2
+    {true, true, true, true, true, false, false, false},
+    // ST
+    {true, true, true, true, true, false, false, false},
+    // MK1
+    {true, true, false, true, true, true, false, false},
+    // CM300
+    {true, true, false, true, true, true, false, false},
+    // JV880
+    {true, true, false, true, true, false, false, false},
+    // SCB55
+    {true, true, false, true, false, true, false, false},
+    // RLP3237
+    {true, true, false, true, false, false, false, false},
+    // SC155
+    {true, true, false, true, true, true, false, false},
+    // SC155MK2
+    {true, true, true, true, true, false, false, false},
+};
+
 const char* RomsetName(Romset romset)
 {
     return rs_name[(size_t)romset];
@@ -90,4 +112,9 @@ bool IsOptionalRom(Romset romset, RomLocation location)
 {
     return romset == Romset::JV880 &&
            (location == RomLocation::WAVEROM_CARD || location == RomLocation::WAVEROM_EXP);
+}
+
+bool IsRequiredRom(Romset romset, RomLocation location)
+{
+    return REQUIRED_ROMS[(size_t)romset][(size_t)location];
 }

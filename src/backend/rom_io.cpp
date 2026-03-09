@@ -1,5 +1,6 @@
 #include "rom_io.h"
 #include "cast.h"
+#include "rom.h"
 #include <filesystem>
 #include <fstream>
 #include <utility>
@@ -854,40 +855,23 @@ bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatus
         status->fill(RomCompletionStatus::Unused);
     }
 
-    for (const auto& known_romset : ROMSET_HASHES)
+    bool is_complete = true;
+
+    for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
     {
-        if (known_romset.romset != romset)
+        const RomLocation location = (RomLocation)i;
+        if (IsRequiredRom(romset, location) && info.HasRom(location))
         {
-            continue;
+            (*status)[i] = RomCompletionStatus::Present;
         }
-
-        bool is_complete = true;
-        for (const auto& known : known_romset)
+        else if (IsRequiredRom(romset, location) && info.HasRom(location))
         {
-            if (!info.HasRom(known.location) && !IsOptionalRom(romset, known.location))
-            {
-                is_complete = false;
-                if (status)
-                {
-                    (*status)[(size_t)known.location] = RomCompletionStatus::Missing;
-                }
-            }
-            else if (info.HasRom(known.location))
-            {
-                if (status)
-                {
-                    (*status)[(size_t)known.location] = RomCompletionStatus::Present;
-                }
-            }
-        }
-
-        if (is_complete)
-        {
-            return true;
+            (*status)[i] = RomCompletionStatus::Missing;
+            is_complete  = false;
         }
     }
 
-    return false;
+    return is_complete;
 }
 
 size_t CountPresent(const RomCompletionStatusSet& status)
