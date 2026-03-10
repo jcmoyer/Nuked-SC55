@@ -77,10 +77,8 @@ LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
             result.romset = Romset::MK2;
         }
 
-        if (!SetRomsetFilenames(romset_info, rom_directory, result.romset, desired))
-        {
-            return LoadRomsetError::DetectionFailed;
-        }
+        SetRomsetFilenames(romset_info, rom_directory, result.romset, desired);
+
         break;
 
     case RomLoader::Hashing: {

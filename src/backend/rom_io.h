@@ -212,7 +212,7 @@ private:
 //
 // `location_mask` can be used to control which rom locations are populated. A value of `true` sets the corresponding
 // path if it is used by the romset; otherwise that path will be skipped.
-bool SetRomsetFilenames(RomsetInfo&                  romset_info,
+void SetRomsetFilenames(RomsetInfo&                  romset_info,
                         const std::filesystem::path& base_path,
                         Romset                       romset,
                         const RomLocationSet&        location_mask);

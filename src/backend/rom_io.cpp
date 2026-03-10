@@ -887,7 +887,7 @@ size_t CountPresent(const RomCompletionStatusSet& status)
     return count;
 }
 
-bool SetRomsetFilenames(RomsetInfo&                  romset_info,
+void SetRomsetFilenames(RomsetInfo&                  romset_info,
                         const std::filesystem::path& base_path,
                         Romset                       romset,
                         const RomLocationSet&        location_mask)
@@ -906,8 +906,6 @@ bool SetRomsetFilenames(RomsetInfo&                  romset_info,
 
         romset_info.rom_paths[rom] = base_path / legacy_rom_names[(size_t)romset][rom];
     }
-
-    return true;
 }
 
 bool ReadStreamExact(std::ifstream& s, void* into, std::streamsize byte_count)
