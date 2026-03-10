@@ -82,18 +82,18 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         break;
 
     case RomLoader::Hashing: {
-        HashedFileRegistry hashed_files;
-        if (!HashAllFiles(rom_directory, hashed_files))
+        if (!HashAllFiles(rom_directory, result.registries.hashes))
         {
             return LoadRomsetError::DetectionFailed;
         }
-        RomsetHashRegistry romsets = RomsetHashRegistry::CreateWithDefaultHashes();
-        StringVector       romset_names;
+        result.registries.romsets = RomsetHashRegistry::CreateWithDefaultHashes();
+
+        StringVector romset_names;
 
         if (is_romset_given && is_romset_family)
         {
             // we were given a family, so we need to pick a specific version from that family
-            romsets.GetCompleteRomsetNames(hashed_files, romset_names, desired);
+            result.registries.romsets.GetCompleteRomsetNames(result.registries.hashes, romset_names, desired);
             if (romset_names.size() == 0)
             {
                 return LoadRomsetError::NoCompleteRomsets;
@@ -107,7 +107,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                 Romset rs_family;
                 // ignored return: this function cannot fail because the name comes from GetCompleteRomsetNames, so it
                 // must be in the registry
-                (void)romsets.GetRomsetFamily(name, rs_family);
+                (void)result.registries.romsets.GetRomsetFamily(name, rs_family);
                 if (rs_family == result.romset)
                 {
                     if (did_find_romset)
@@ -125,7 +125,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                 return LoadRomsetError::NoCompleteRomsets;
             }
 
-            if (!romsets.GetRomsetInfo(hashed_files, picked_name, desired, romset_info))
+            if (!result.registries.romsets.GetRomsetInfo(result.registries.hashes, picked_name, desired, romset_info))
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
@@ -133,19 +133,20 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         else if (is_romset_given && !is_romset_family)
         {
             // we were given a specific name
-            if (!romsets.GetRomsetInfo(hashed_files, desired_romset, desired, romset_info))
+            if (!result.registries.romsets.GetRomsetInfo(
+                    result.registries.hashes, desired_romset, desired, romset_info))
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
             // convert specific name to family name
-            if (!romsets.GetRomsetFamily(desired_romset, result.romset))
+            if (!result.registries.romsets.GetRomsetFamily(desired_romset, result.romset))
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
         }
         else if (!is_romset_given)
         {
-            romsets.GetCompleteRomsetNames(hashed_files, romset_names, ROMLOCATION_ALL);
+            result.registries.romsets.GetCompleteRomsetNames(result.registries.hashes, romset_names, ROMLOCATION_ALL);
 
             if (romset_names.size())
             {
@@ -154,8 +155,9 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                 // TODO: We may want to make this deterministic or an error in the future.
 
                 // ignored returns: these names were returned by GetCompleteRomsetNames so the lookup cannot fail
-                (void)romsets.GetRomsetInfo(hashed_files, romset_names.front(), desired, romset_info);
-                (void)romsets.GetRomsetFamily(romset_names.front(), result.romset);
+                (void)result.registries.romsets.GetRomsetInfo(
+                    result.registries.hashes, romset_names.front(), desired, romset_info);
+                (void)result.registries.romsets.GetRomsetFamily(romset_names.front(), result.romset);
             }
             else
             {
@@ -216,36 +218,44 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
         fprintf(output, "error: %s\n", ToCString(error));
         PrintRomsets(output);
         break;
-    case LoadRomsetError::NoCompleteRomsets:
+    case LoadRomsetError::NoCompleteRomsets: {
         fprintf(output, "No complete romsets found.\n");
-        for (size_t rs = 0; rs < ROMSET_COUNT; ++rs)
+
+        StringVector partial_names;
+        result.registries.romsets.GetPartialRomsetNames(result.registries.hashes, partial_names, ROMLOCATION_ALL);
+
+        for (const auto& name : partial_names)
         {
+            Romset                 family;
+            RomsetInfo             info;
             RomCompletionStatusSet completion;
 
-            (void)IsCompleteRomset(info, (Romset)rs, &completion);
+            (void)result.registries.romsets.GetRomsetFamily(name, family);
+            (void)result.registries.romsets.GetRomsetInfo(result.registries.hashes, name, ROMLOCATION_ALL, info);
 
-            if (CountPresent(completion))
+            (void)IsCompleteRomset(info, family, &completion);
+
+            fprintf(output, "Romset %s (%s) partially complete:\n", name.c_str(), RomsetName(family));
+            for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
             {
-                fprintf(output, "Romset %s partially complete:\n", RomsetName((Romset)rs));
-                for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
+                if (completion[i] != RomCompletionStatus::Unused)
                 {
-                    if (completion[i] != RomCompletionStatus::Unused)
-                    {
-                        fprintf(output, "  * %7s: %-12s", ToCString(completion[i]), ToCString((RomLocation)i));
+                    fprintf(output, "  * %7s: %-12s", ToCString(completion[i]), ToCString((RomLocation)i));
 
-                        if (completion[i] == RomCompletionStatus::Present)
-                        {
-                            fprintf(output, "%s\n", info.rom_paths[i].generic_string().c_str());
-                        }
-                        else
-                        {
-                            fprintf(output, "\n");
-                        }
+                    if (completion[i] == RomCompletionStatus::Present)
+                    {
+                        fprintf(output, "%s\n", info.rom_paths[i].generic_string().c_str());
+                    }
+                    else
+                    {
+                        fprintf(output, "\n");
                     }
                 }
             }
         }
+
         break;
+    }
     case LoadRomsetError::IncompleteRomset:
         fprintf(output, "Romset %s is incomplete:\n", RomsetName(result.romset));
         for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)

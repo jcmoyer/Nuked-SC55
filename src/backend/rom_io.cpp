@@ -754,6 +754,29 @@ void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed
     }
 }
 
+void RomsetHashRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_files,
+                                               StringVector&             out_names,
+                                               const RomLocationSet&     location_mask) const
+{
+    out_names.clear();
+    for (const auto& romset : m_romsets)
+    {
+        bool is_partial = false;
+        for (const auto& pair : romset)
+        {
+            if (location_mask[(size_t)pair.location] && hashed_files.Contains(pair.hash))
+            {
+                is_partial = true;
+                break;
+            }
+        }
+        if (is_partial)
+        {
+            out_names.push_back(romset.name);
+        }
+    }
+}
+
 bool RomsetHashRegistry::ContainsRomsetMetadata(std::string_view name) const
 {
     return m_name_map.contains(name);

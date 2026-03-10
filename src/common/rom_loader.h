@@ -30,6 +30,12 @@ enum class LoadRomsetError
 // `error`: error code to convert to string
 const char* ToCString(LoadRomsetError error);
 
+struct LoaderRegistries
+{
+    HashedFileRegistry hashes;
+    RomsetHashRegistry romsets;
+};
+
 struct LoadRomsetResult
 {
     Romset romset;
@@ -39,6 +45,8 @@ struct LoadRomsetResult
 
     RomLoadStatusSet       loaded;
     RomCompletionStatusSet completion;
+
+    LoaderRegistries registries;
 };
 
 enum class RomLoader
