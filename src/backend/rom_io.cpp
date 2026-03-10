@@ -524,8 +524,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SCB-55/RLP-3194
     ///////////////////////////////////////////////////////////////////////////
     {
-        // TODO: version information available?
-        .name = "scb55-*",
+        .name = "scb55-v2.00",
         .romset = Romset::SCB55,
         .hashes = {
             // R15199827 (H8/532 mcu)
@@ -545,7 +544,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
     {
         // TODO: version information available?
-        .name = "rlp3237-*",
+        .name = "rlp3237-?",
         .romset = Romset::RLP3237,
         .hashes = {
             // R15199827 (H8/532 mcu)
@@ -561,7 +560,6 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     // SC-155 (rev 1)
     ///////////////////////////////////////////////////////////////////////////
     {
-        // TODO: version number available?
         .name = "sc155-rev1",
         .romset = Romset::SC155,
         .hashes = {
@@ -581,23 +579,23 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
     // SC-155 (rev 2)
     ///////////////////////////////////////////////////////////////////////////
-    {
-        // TODO: version number available?
-        .name = "sc155-rev2",
-        .romset = Romset::SC155,
-        .hashes = {
-            // R15199799 (H8/532 mcu)
-            {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), RomLocation::ROM1},
-            // R15209400 (H8/532 extra code)
-            {ToDigest("ceb7b9d3d9d264efe5dc3ba992b94f3be35eb6d0451abc574b6f6b5dc3db237b"), RomLocation::ROM2},
-            // R15209276 (WAVE A)
-            {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), RomLocation::WAVEROM1},
-            // R15209277 (WAVE B)
-            {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), RomLocation::WAVEROM2},
-            // R15209281 (WAVE C)
-            {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), RomLocation::WAVEROM3},
-        },
-    },
+    // TODO: ROM2 hash missing
+    // {
+    //     .name = "sc155-rev2",
+    //     .romset = Romset::SC155,
+    //     .hashes = {
+    //         // R15199799 (H8/532 mcu)
+    //         {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), RomLocation::ROM1},
+    //         // R15209400 (H8/532 extra code)
+    //         {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), RomLocation::ROM2},
+    //         // R15209276 (WAVE A)
+    //         {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), RomLocation::WAVEROM1},
+    //         // R15209277 (WAVE B)
+    //         {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), RomLocation::WAVEROM2},
+    //         // R15209281 (WAVE C)
+    //         {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), RomLocation::WAVEROM3},
+    //     },
+    // },
 
     ///////////////////////////////////////////////////////////////////////////
     // Extra/modified roms
