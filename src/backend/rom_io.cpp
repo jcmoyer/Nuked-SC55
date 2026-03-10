@@ -864,7 +864,7 @@ bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatus
         {
             (*status)[i] = RomCompletionStatus::Present;
         }
-        else if (IsRequiredRom(romset, location) && info.HasRom(location))
+        else if (IsRequiredRom(romset, location) && !info.HasRom(location))
         {
             (*status)[i] = RomCompletionStatus::Missing;
             is_complete  = false;
