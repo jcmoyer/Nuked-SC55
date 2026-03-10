@@ -34,6 +34,9 @@ struct LoadRomsetResult
 {
     Romset romset;
 
+    // on successful load, this field contains the paths and data for each rom location
+    RomsetInfo romset_info;
+
     RomLoadStatusSet       loaded;
     RomCompletionStatusSet completion;
 };
@@ -47,14 +50,14 @@ enum class RomLoader
     Legacy,
 };
 
-// `romset_info`: receives rom paths and rom data
 // `rom_directory`: directory containing complete romset(s)
 // `desired_romset`: romset the user wants to load; if empty string the first romset in the directory will be returned
 // `loader`: which loader to use
 // `overrides`: overrides for specific roms in the romset
-// `result`: receives the loaded romset and information about which roms were loaded
-LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
-                           const std::filesystem::path& rom_directory,
+// `result`: receives the results of loading `desired_romset`
+//
+// Returns `LoadRomsetError{}` on success.
+LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
                            RomLoader                    loader,
                            const RomOverrides&          overrides,
@@ -66,10 +69,6 @@ void PrintRomsets(FILE* output);
 // `output`: where to write diagnostics to
 // `error`: error to write diagnostics for
 // `results`: results object to take diagnostics information from
-// `info`: romset info passed to `LoadRomset`
-void PrintLoadRomsetDiagnostics(FILE*                   output,
-                                LoadRomsetError         error,
-                                const LoadRomsetResult& result,
-                                const RomsetInfo&       info);
+void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result);
 
 } // namespace common

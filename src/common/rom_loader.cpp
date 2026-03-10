@@ -36,14 +36,14 @@ const char* ToCString(LoadRomsetError error)
     }
 }
 
-LoadRomsetError LoadRomset(RomsetInfo&                  romset_info,
-                           const std::filesystem::path& rom_directory,
+LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
                            RomLoader                    loader,
                            const RomOverrides&          overrides,
                            LoadRomsetResult&            result)
 {
-    RomLocationSet desired = ROMLOCATION_ALL;
+    RomsetInfo&    romset_info = result.romset_info;
+    RomLocationSet desired     = ROMLOCATION_ALL;
 
     // exclude roms with overrides - it doesn't matter if they're not on disk because the user has a different file to
     // put there
@@ -203,11 +203,10 @@ void PrintRomsets(FILE* output)
     fprintf(output, "\n\n");
 }
 
-void PrintLoadRomsetDiagnostics(FILE*                   output,
-                                LoadRomsetError         error,
-                                const LoadRomsetResult& result,
-                                const RomsetInfo&       info)
+void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result)
 {
+    const RomsetInfo& info = result.romset_info;
+
     switch (error)
     {
     case LoadRomsetError::DetectionFailed:
