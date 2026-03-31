@@ -129,6 +129,8 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
+
+            result.picked_name = picked_name;
         }
         else if (is_romset_given && !is_romset_family)
         {
@@ -143,6 +145,8 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
+
+            result.picked_name = desired_romset;
         }
         else if (!is_romset_given)
         {
@@ -154,10 +158,12 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                 // in the rom directory.
                 // TODO: We may want to make this deterministic or an error in the future.
 
+                result.picked_name = romset_names.front();
+
                 // ignored returns: these names were returned by GetCompleteRomsetNames so the lookup cannot fail
                 (void)result.registries.romsets.GetRomsetInfo(
-                    result.registries.hashes, romset_names.front(), desired, romset_info);
-                (void)result.registries.romsets.GetRomsetFamily(romset_names.front(), result.romset);
+                    result.registries.hashes, result.picked_name, desired, romset_info);
+                (void)result.registries.romsets.GetRomsetFamily(result.picked_name, result.romset);
             }
             else
             {
@@ -295,7 +301,14 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
 
     if (error == LoadRomsetError{})
     {
-        fprintf(output, "Using %s romset:\n", RomsetName(result.romset));
+        if (result.picked_name.size())
+        {
+            fprintf(output, "Using %s romset %s:\n", RomsetName(result.romset), result.picked_name.c_str());
+        }
+        else
+        {
+            fprintf(output, "Using %s romset:\n", RomsetName(result.romset));
+        }
         for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] == RomLoadStatus::Loaded)

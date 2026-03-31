@@ -47,6 +47,8 @@ struct LoadRomsetResult
     RomCompletionStatusSet completion;
 
     LoaderRegistries registries;
+
+    std::string picked_name;
 };
 
 enum class RomLoader
