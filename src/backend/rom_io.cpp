@@ -1,10 +1,11 @@
 #include "rom_io.h"
-#include "cast.h"
-#include "diagnostics.h"
-#include "rom.h"
+
 #include <filesystem>
-#include <fstream>
 #include <utility>
+
+#include "diagnostics.h"
+#include "file_io.h"
+#include "rom.h"
 
 extern "C"
 {
@@ -210,26 +211,6 @@ void unscramble(const uint8_t *src, uint8_t *dst, int len)
         }
         dst[i] = data;
     }
-}
-
-bool ReadAllBytes(const std::filesystem::path& filename, std::vector<uint8_t>& buffer)
-{
-    std::ifstream input(filename, std::ios::binary);
-
-    if (!input)
-    {
-        return false;
-    }
-
-    input.seekg(0, std::ios::end);
-    std::streamoff byte_count = input.tellg();
-    input.seekg(0, std::ios::beg);
-
-    buffer.resize(RangeCast<size_t>(byte_count));
-
-    input.read((char*)buffer.data(), RangeCast<std::streamsize>(byte_count));
-
-    return input.good();
 }
 
 constexpr uint8_t HexValue(char x)
@@ -647,7 +628,7 @@ bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& re
                 continue;
             }
 
-            ReadAllBytes(dir_iter->path(), buffer);
+            FIO_ReadAllBytes(dir_iter->path(), buffer);
 
             SHA256Context ctx;
             SHA256Digest  digest_bytes;
@@ -939,26 +920,6 @@ void SetRomsetFilenames(RomsetInfo&                  romset_info,
     }
 }
 
-bool ReadStreamExact(std::ifstream& s, void* into, std::streamsize byte_count)
-{
-    if (s.read((char*)into, byte_count))
-    {
-        return s.gcount() == byte_count;
-    }
-    return false;
-}
-
-bool ReadStreamExact(std::ifstream& s, std::span<uint8_t> into, std::streamsize byte_count)
-{
-    return ReadStreamExact(s, into.data(), byte_count);
-}
-
-std::streamsize ReadStreamUpTo(std::ifstream& s, void* into, std::streamsize byte_count)
-{
-    s.read((char*)into, byte_count);
-    return s.gcount();
-}
-
 void RomsetInfo::PurgeRomData()
 {
     for (auto& vec : rom_data)
@@ -993,7 +954,7 @@ bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded)
         }
         else if (!info.rom_paths[i].empty() && info.rom_data[i].empty())
         {
-            if (!ReadAllBytes(info.rom_paths[i], on_demand_buffer))
+            if (!FIO_ReadAllBytes(info.rom_paths[i], on_demand_buffer))
             {
                 all_loaded = false;
                 if (loaded)
