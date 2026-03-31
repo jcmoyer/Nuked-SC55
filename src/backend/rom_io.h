@@ -115,9 +115,26 @@ struct RomsetHashes
     Romset      romset;
     RomHash     hashes[ROMLOCATION_COUNT];
 
+    RomHash* begin()
+    {
+        return &hashes[0];
+    }
+
     const RomHash* begin() const
     {
         return &hashes[0];
+    }
+
+    RomHash* end()
+    {
+        for (auto& h : hashes)
+        {
+            if (h == NULL_HASH)
+            {
+                return &h;
+            }
+        }
+        return &hashes[ROMLOCATION_COUNT];
     }
 
     const RomHash* end() const
@@ -130,6 +147,17 @@ struct RomsetHashes
             }
         }
         return &hashes[ROMLOCATION_COUNT];
+    }
+
+    void ReplaceHash(RomLocation rom, SHA256Digest hash)
+    {
+        for (RomHash& h : *this)
+        {
+            if (h.location == rom)
+            {
+                h.hash = hash;
+            }
+        }
     }
 };
 

@@ -577,74 +577,51 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
         },
     },
 
-    ///////////////////////////////////////////////////////////////////////////
-    // SC-155 (rev 2)
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: ROM2 hash missing
-    // {
-    //     .name = "sc155-rev2",
-    //     .romset = Romset::SC155,
-    //     .hashes = {
-    //         // R15199799 (H8/532 mcu)
-    //         {ToDigest("24a65c97cdbaa847d6f59193523ce63c73394b4b693a6517ee79441f2fb8a3ee"), RomLocation::ROM1},
-    //         // R15209400 (H8/532 extra code)
-    //         {ToDigest("0000000000000000000000000000000000000000000000000000000000000000"), RomLocation::ROM2},
-    //         // R15209276 (WAVE A)
-    //         {ToDigest("5655509a531804f97ea2d7ef05b8fec20ebf46216b389a84c44169257a4d2007"), RomLocation::WAVEROM1},
-    //         // R15209277 (WAVE B)
-    //         {ToDigest("c655b159792d999b90df9e4fa782cf56411ba1eaa0bb3ac2bdaf09e1391006b1"), RomLocation::WAVEROM2},
-    //         // R15209281 (WAVE C)
-    //         {ToDigest("334b2d16be3c2362210fdbec1c866ad58badeb0f84fd9bf5d0ac599baf077cc2"), RomLocation::WAVEROM3},
-    //     },
-    // },
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Extra/modified roms
-    ///////////////////////////////////////////////////////////////////////////
-
-    // CTF patched roms from https://github.com/shingo45endo/sc55mk2-ctf-patcher
-
-    // TODO: these need to be expanded into 12 romset entries
-
-    // MK2
-    //{
-    //    .romset = Romset::MK2,
-    //    .hashes = {
-    //        // Tone: Strict SC-55 | Drum: SC-55 v1.21 or earlier
-    //        {ToDigest("64f8c9daf1021cf86ea4ddf03a29b81b5ea0c18e74f462833023436388bb9dc4"), RomLocation::ROM2},
-    //        // Tone: Strict SC-55 | Drum: SC-55 v2.00
-    //        {ToDigest("14d14778caf46ffa9e3d608aa8e9c1a60c32bd4a536c26af3b2e1d81784c60f9"), RomLocation::ROM2},
-    //        // Tone: SC-55 | Drum: SC-55 v1.21 or earlier
-    //        {ToDigest("10b3f09485a74bb014f1a940d5c67f380c7979b62891d540d788154c83f17430"), RomLocation::ROM2},
-    //        // Tone: SC-55 | Drum: SC-55 v2.00
-    //        {ToDigest("a2c720be1ab9115930d27f821a413c0366b7bf0c4ddfe0dadc5086136a1a4345"), RomLocation::ROM2},
-    //        // Tone: SC-55mkII | Drum: SC-55 v1.21 or earlier
-    //        {ToDigest("16cec615da10089beffe6de5129ba8ba33fa1bf017a5e6b78ad1d6d15cf4708e"), RomLocation::ROM2},
-    //        // Tone: SC-55mkII | Drum: SC-55 v2.00
-    //        {ToDigest("c22bf7d34a3406530924d750b007bbdb470f3216c65086edb6e53023383ee907"), RomLocation::ROM2},
-    //    },
-    //},
-
-    //// SC155MK2
-    //{
-    //    .romset = Romset::SC155MK2,
-    //    .hashes = {
-    //        // Tone: Strict SC-55 | Drum: SC-55 v1.21 or earlier
-    //        {ToDigest("64f8c9daf1021cf86ea4ddf03a29b81b5ea0c18e74f462833023436388bb9dc4"), RomLocation::ROM2},
-    //        // Tone: Strict SC-55 | Drum: SC-55 v2.00
-    //        {ToDigest("14d14778caf46ffa9e3d608aa8e9c1a60c32bd4a536c26af3b2e1d81784c60f9"), RomLocation::ROM2},
-    //        // Tone: SC-55 | Drum: SC-55 v1.21 or earlier
-    //        {ToDigest("10b3f09485a74bb014f1a940d5c67f380c7979b62891d540d788154c83f17430"), RomLocation::ROM2},
-    //        // Tone: SC-55 | Drum: SC-55 v2.00
-    //        {ToDigest("a2c720be1ab9115930d27f821a413c0366b7bf0c4ddfe0dadc5086136a1a4345"), RomLocation::ROM2},
-    //        // Tone: SC-55mkII | Drum: SC-55 v1.21 or earlier
-    //        {ToDigest("16cec615da10089beffe6de5129ba8ba33fa1bf017a5e6b78ad1d6d15cf4708e"), RomLocation::ROM2},
-    //        // Tone: SC-55mkII | Drum: SC-55 v2.00
-    //        {ToDigest("c22bf7d34a3406530924d750b007bbdb470f3216c65086edb6e53023383ee907"), RomLocation::ROM2},
-    //    },
-    //},
+    // SC-155 (rev 2) omitted because ROM2 hash not available.
 };
 // clang-format on
+
+// CTF patched roms from https://github.com/shingo45endo/sc55mk2-ctf-patcher
+//
+// To register these hashes we copy either the MK2 or SC155MK2 romset-hashes
+// pair above and replace ROM2 with one of the following hashes.
+constexpr std::array<SHA256Digest, 6> CTF_ROM2_HASHES = {
+    // Tone: Strict SC-55 | Drum: SC-55 v1.21 or earlier
+    ToDigest("64f8c9daf1021cf86ea4ddf03a29b81b5ea0c18e74f462833023436388bb9dc4"),
+    // Tone: Strict SC-55 | Drum: SC-55 v2.00
+    ToDigest("14d14778caf46ffa9e3d608aa8e9c1a60c32bd4a536c26af3b2e1d81784c60f9"),
+    // Tone: SC-55 | Drum: SC-55 v1.21 or earlier
+    ToDigest("10b3f09485a74bb014f1a940d5c67f380c7979b62891d540d788154c83f17430"),
+    // Tone: SC-55 | Drum: SC-55 v2.00
+    ToDigest("a2c720be1ab9115930d27f821a413c0366b7bf0c4ddfe0dadc5086136a1a4345"),
+    // Tone: SC-55mkII | Drum: SC-55 v1.21 or earlier
+    ToDigest("16cec615da10089beffe6de5129ba8ba33fa1bf017a5e6b78ad1d6d15cf4708e"),
+    // Tone: SC-55mkII | Drum: SC-55 v2.00
+    ToDigest("c22bf7d34a3406530924d750b007bbdb470f3216c65086edb6e53023383ee907"),
+};
+
+// 0 - MK2
+// 1 - SC155MK2
+//
+// See AddCtfPatchedHashes function.
+constexpr const char* CTF_ROMSET_NAMES[2][CTF_ROM2_HASHES.size()] = {
+    {
+        "mk2-ctf-strict-sc55-drum-sc55-v1.21",
+        "mk2-ctf-strict-sc55-drum-sc55-v2.00",
+        "mk2-ctf-sc55-drum-sc55-v1.21",
+        "mk2-ctf-sc55-drum-sc55-v2.00",
+        "mk2-ctf-mk2-drum-sc55-v1.21",
+        "mk2-ctf-mk2-drum-sc55-v2.00",
+    },
+    {
+        "sc155mk2-ctf-strict-sc55-drum-sc55-v1.21",
+        "sc155mk2-ctf-strict-sc55-drum-sc55-v2.00",
+        "sc155mk2-ctf-sc55-drum-sc55-v1.21",
+        "sc155mk2-ctf-sc55-drum-sc55-v2.00",
+        "sc155mk2-ctf-mk2-drum-sc55-v1.21",
+        "sc155mk2-ctf-mk2-drum-sc55-v2.00",
+    },
+};
 
 bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry)
 {
@@ -858,13 +835,45 @@ bool RomsetHashRegistry::GetRomsetInfo(const HashedFileRegistry& hashed_files,
     return true;
 }
 
+void AddCtfPatchedHashes(RomsetHashRegistry& registry, RomsetHashes base_hashes)
+{
+    size_t which_table;
+    switch (base_hashes.romset)
+    {
+    case Romset::MK2:
+        which_table = 0;
+        break;
+    case Romset::SC155MK2:
+        which_table = 1;
+        break;
+    default:
+        Diag_Printf(Diag_Category::Error, "AddCtfPatchedHashes called with invalid romset\n");
+        return;
+    }
+
+    for (size_t hash_index = 0; hash_index < CTF_ROM2_HASHES.size(); ++hash_index)
+    {
+        RomsetHashes h = base_hashes;
+        h.ReplaceHash(RomLocation::ROM2, CTF_ROM2_HASHES[hash_index]);
+        h.name = CTF_ROMSET_NAMES[which_table][hash_index];
+        registry.AddRomset(h);
+    }
+}
+
 RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
 {
     RomsetHashRegistry registry;
 
-    for (auto& hash : ROMSET_HASHES)
+    for (auto& hashes : ROMSET_HASHES)
     {
-        registry.AddRomset(hash);
+        registry.AddRomset(hashes);
+
+        // Manually add the CTF patched roms since they only differ by one hash.
+        // Eventually these will become non-default hashes.
+        if (hashes.romset == Romset::MK2 || hashes.romset == Romset::SC155MK2)
+        {
+            AddCtfPatchedHashes(registry, hashes);
+        }
     }
 
     return registry;
