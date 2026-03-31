@@ -240,7 +240,7 @@ constexpr SHA256Digest ToDigest(const char (&s)[N])
 }
 
 // clang-format off
-static constexpr RomsetHashes ROMSET_HASHES[] = {
+static constexpr RomsetDefinition ROMSET_DEFS[] = {
     ///////////////////////////////////////////////////////////////////////////
     // SC-55mk2/SC-155mk2 (v1.01)
     ///////////////////////////////////////////////////////////////////////////
@@ -599,14 +599,14 @@ constexpr const char* CTF_ROMSET_NAMES[2][CTF_ROM2_HASHES.size()] = {
     },
 };
 
-void RomsetHashRegistry::AddRomset(const RomsetHashes& romset)
+void RomsetRegistry::AddRomset(const RomsetDefinition& romset)
 {
     const size_t index = m_romsets.size();
     m_name_map.insert(std::make_pair(romset.name, index));
     m_romsets.push_back(romset);
 }
 
-void RomsetHashRegistry::GetAllRomsetNames(StringVector& out_names) const
+void RomsetRegistry::GetAllRomsetNames(StringVector& out_names) const
 {
     for (const auto& romset : m_romsets)
     {
@@ -614,9 +614,9 @@ void RomsetHashRegistry::GetAllRomsetNames(StringVector& out_names) const
     }
 }
 
-void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
-                                                StringVector&             out_names,
-                                                const RomLocationSet&     location_mask) const
+void RomsetRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
+                                            StringVector&             out_names,
+                                            const RomLocationSet&     location_mask) const
 {
     out_names.clear();
     for (const auto& romset : m_romsets)
@@ -637,9 +637,9 @@ void RomsetHashRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed
     }
 }
 
-void RomsetHashRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_files,
-                                               StringVector&             out_names,
-                                               const RomLocationSet&     location_mask) const
+void RomsetRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_files,
+                                           StringVector&             out_names,
+                                           const RomLocationSet&     location_mask) const
 {
     out_names.clear();
     for (const auto& romset : m_romsets)
@@ -660,14 +660,14 @@ void RomsetHashRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_
     }
 }
 
-bool RomsetHashRegistry::ContainsRomsetMetadata(std::string_view name) const
+bool RomsetRegistry::ContainsRomsetMetadata(std::string_view name) const
 {
     return m_name_map.contains(name);
 }
 
-bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_files,
-                                             std::string_view          name,
-                                             const RomLocationSet&     location_mask) const
+bool RomsetRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_files,
+                                         std::string_view          name,
+                                         const RomLocationSet&     location_mask) const
 {
     const auto it = m_name_map.find(name);
 
@@ -692,7 +692,7 @@ bool RomsetHashRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_fi
     return is_complete;
 }
 
-bool RomsetHashRegistry::GetRomsetFamily(std::string_view name, Romset& out_family) const
+bool RomsetRegistry::GetRomsetFamily(std::string_view name, Romset& out_family) const
 {
     const auto it = m_name_map.find(name);
 
@@ -707,10 +707,10 @@ bool RomsetHashRegistry::GetRomsetFamily(std::string_view name, Romset& out_fami
     return true;
 }
 
-bool RomsetHashRegistry::GetRomsetInfo(const HashedFileRegistry& hashed_files,
-                                       std::string_view          name,
-                                       const RomLocationSet&     location_mask,
-                                       RomsetInfo&               out_info) const
+bool RomsetRegistry::GetRomsetInfo(const HashedFileRegistry& hashed_files,
+                                   std::string_view          name,
+                                   const RomLocationSet&     location_mask,
+                                   RomsetInfo&               out_info) const
 {
     const auto it = m_name_map.find(name);
 
@@ -733,17 +733,17 @@ bool RomsetHashRegistry::GetRomsetInfo(const HashedFileRegistry& hashed_files,
         if (location_mask[(size_t)pair.location])
         {
             out_info.rom_paths[(size_t)pair.location] = hf->path;
-            out_info.rom_data[(size_t)pair.location] = hf->data;
+            out_info.rom_data[(size_t)pair.location]  = hf->data;
         }
     }
 
     return true;
 }
 
-void AddCtfPatchedHashes(RomsetHashRegistry& registry, RomsetHashes base_hashes)
+void AddCtfPatchedHashes(RomsetRegistry& registry, RomsetDefinition base_def)
 {
     size_t which_table;
-    switch (base_hashes.romset)
+    switch (base_def.romset)
     {
     case Romset::MK2:
         which_table = 0;
@@ -758,26 +758,26 @@ void AddCtfPatchedHashes(RomsetHashRegistry& registry, RomsetHashes base_hashes)
 
     for (size_t hash_index = 0; hash_index < CTF_ROM2_HASHES.size(); ++hash_index)
     {
-        RomsetHashes h = base_hashes;
-        h.ReplaceHash(RomLocation::ROM2, CTF_ROM2_HASHES[hash_index]);
-        h.name = CTF_ROMSET_NAMES[which_table][hash_index];
-        registry.AddRomset(h);
+        RomsetDefinition def = base_def;
+        def.ReplaceHash(RomLocation::ROM2, CTF_ROM2_HASHES[hash_index]);
+        def.name = CTF_ROMSET_NAMES[which_table][hash_index];
+        registry.AddRomset(def);
     }
 }
 
-RomsetHashRegistry RomsetHashRegistry::CreateWithDefaultHashes()
+RomsetRegistry RomsetRegistry::CreateWithDefaultHashes()
 {
-    RomsetHashRegistry registry;
+    RomsetRegistry registry;
 
-    for (auto& hashes : ROMSET_HASHES)
+    for (auto& def : ROMSET_DEFS)
     {
-        registry.AddRomset(hashes);
+        registry.AddRomset(def);
 
         // Manually add the CTF patched roms since they only differ by one hash.
         // Eventually these will become non-default hashes.
-        if (hashes.romset == Romset::MK2 || hashes.romset == Romset::SC155MK2)
+        if (def.romset == Romset::MK2 || def.romset == Romset::SC155MK2)
         {
-            AddCtfPatchedHashes(registry, hashes);
+            AddCtfPatchedHashes(registry, def);
         }
     }
 

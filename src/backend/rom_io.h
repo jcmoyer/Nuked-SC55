@@ -64,7 +64,7 @@ struct RomHash
 
 constexpr RomHash NULL_HASH{{}, {}};
 
-struct RomsetHashes
+struct RomsetDefinition
 {
     const char* name;
     Romset      romset;
@@ -136,14 +136,14 @@ struct TransparentStringHash
 
 // Contains metadata for romsets. Romset metadata is registered with instances of this type, after which this type can
 // used to efficiently query which of those romsets exist on disk.
-class RomsetHashRegistry
+class RomsetRegistry
 {
 public:
     // Constructs an empty registry.
-    RomsetHashRegistry() = default;
+    RomsetRegistry() = default;
 
     // Adds `romset` to the registry.
-    void AddRomset(const RomsetHashes& romset);
+    void AddRomset(const RomsetDefinition& romset);
 
     // Returns all the names registered with the romset.
     void GetAllRomsetNames(StringVector& out_names) const;
@@ -189,10 +189,10 @@ public:
                        RomsetInfo&               out_info) const;
 
     // Creates a registry containing standard, supported romsets.
-    static RomsetHashRegistry CreateWithDefaultHashes();
+    static RomsetRegistry CreateWithDefaultHashes();
 
 private:
-    std::vector<RomsetHashes> m_romsets;
+    std::vector<RomsetDefinition> m_romsets;
     // Maps romset identifiers to index in `m_romsets`
     std::unordered_map<std::string, size_t, TransparentStringHash, std::equal_to<void>> m_name_map;
 };
@@ -221,6 +221,6 @@ size_t CountPresent(const RomCompletionStatusSet& status);
 //
 // `rom` will only be loaded when `rom_data` is empty and `rom_path` is non-empty.
 //
-// To automatically determine elements of `rom_path`, populate a `HashedFileRegistry` and `RomsetHashRegistry` then
-// use the `RomsetHashRegistry` to look up a specific romset in the `HashedFileRegistry`.
+// To automatically determine elements of `rom_path`, populate a `HashedFileRegistry` and `RomsetRegistry` then
+// use the `RomsetRegistry` to look up a specific romset in the `HashedFileRegistry`.
 bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded);

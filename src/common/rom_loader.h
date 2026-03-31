@@ -33,7 +33,7 @@ const char* ToCString(LoadRomsetError error);
 struct LoaderRegistries
 {
     HashedFileRegistry hashes;
-    RomsetHashRegistry romsets;
+    RomsetRegistry     romsets;
 };
 
 struct LoadRomsetResult

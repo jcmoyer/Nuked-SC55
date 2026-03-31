@@ -86,7 +86,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         {
             return LoadRomsetError::DetectionFailed;
         }
-        result.registries.romsets = RomsetHashRegistry::CreateWithDefaultHashes();
+        result.registries.romsets = RomsetRegistry::CreateWithDefaultHashes();
 
         StringVector romset_names;
 
@@ -199,8 +199,8 @@ void PrintRomsets(FILE* output)
     }
     fprintf(output, "\n");
 
-    RomsetHashRegistry romsets = RomsetHashRegistry::CreateWithDefaultHashes();
-    StringVector       specific_names;
+    RomsetRegistry romsets = RomsetRegistry::CreateWithDefaultHashes();
+    StringVector   specific_names;
     romsets.GetAllRomsetNames(specific_names);
 
     fprintf(output, "  ");
