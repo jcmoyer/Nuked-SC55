@@ -1,5 +1,6 @@
 #include "rom_io.h"
 #include "cast.h"
+#include "diagnostics.h"
 #include "rom.h"
 #include <filesystem>
 #include <fstream>
@@ -686,7 +687,7 @@ bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& re
     }
     catch (const std::exception& e)
     {
-        fprintf(stderr, "Failed to hash roms: %s\n", e.what());
+        Diag_Printf(Diag_Category::Error, "Failed to hash roms: %s\n", e.what());
         return false;
     }
     return true;
