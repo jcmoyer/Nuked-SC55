@@ -267,5 +267,5 @@ size_t CountPresent(const RomCompletionStatusSet& status);
 // `rom` will only be loaded when `rom_data` is empty and `rom_path` is non-empty.
 //
 // To automatically determine elements of `rom_path`, populate a `HashedFileRegistry` and `RomsetHashRegistry` then
-// use the `RomsetHashRegistry` to query
+// use the `RomsetHashRegistry` to look up a specific romset in the `HashedFileRegistry`.
 bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded);
