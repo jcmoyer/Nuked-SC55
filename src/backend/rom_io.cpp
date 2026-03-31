@@ -545,7 +545,7 @@ static constexpr RomsetHashes ROMSET_HASHES[] = {
     ///////////////////////////////////////////////////////////////////////////
     {
         // TODO: version information available?
-        .name = "rlp3237-?",
+        .name = "rlp3237",
         .romset = Romset::RLP3237,
         .hashes = {
             // R15199827 (H8/532 mcu)
