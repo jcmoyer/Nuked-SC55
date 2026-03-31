@@ -32,7 +32,12 @@ bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& re
                 continue;
             }
 
-            FIO_ReadAllBytes(dir_iter->path(), buffer);
+            if (!FIO_ReadAllBytes(dir_iter->path(), buffer))
+            {
+                Diag_Printf(
+                    Diag_Category::Error, "Failed to read file: %s\n", dir_iter->path().generic_string().c_str());
+                return false;
+            }
 
             SHA256Context ctx;
             SHA256Digest  digest_bytes;
