@@ -148,6 +148,9 @@ public:
     // Returns all the names registered with the romset.
     void GetAllRomsetNames(StringVector& out_names) const;
 
+    // Returns all the names under a specific romset family.
+    void GetNamesForFamily(Romset romset, StringVector& out_names) const;
+
     // Returns romsets identifiers whose complete romsets are contained in `hashed_files`. `location_mask` can be used
     // to filter which roms are considered for the completeness of the romset. The test logic works the same as in
     // `ContainsRomsetFiles`.

@@ -51,6 +51,11 @@ const char* RomsetName(Romset romset)
     return rs_name[(size_t)romset];
 }
 
+const char* ParsableRomsetName(Romset romset)
+{
+    return rs_name_simple[(size_t)romset];
+}
+
 bool ParseRomsetName(std::string_view name, Romset& romset)
 {
     for (size_t i = 0; i < ROMSET_COUNT; ++i)

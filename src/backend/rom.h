@@ -21,7 +21,12 @@ enum class Romset
 
 constexpr size_t ROMSET_COUNT = 9;
 
+// Returns a formatted romset name suitable for displaying to users.
 const char* RomsetName(Romset romset);
+
+// Returns a parsable romset name. Parsable romset names are also the canonical
+// representation for a romset family.
+const char* ParsableRomsetName(Romset romset);
 
 bool ParseRomsetName(std::string_view name, Romset& romset);
 

@@ -191,24 +191,27 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
 
 void PrintRomsets(FILE* output)
 {
-    fprintf(output, "Accepted romset names:\n");
-    fprintf(output, "  ");
-    for (const char* name : GetParsableRomsetNames())
-    {
-        fprintf(output, "%s ", name);
-    }
-    fprintf(output, "\n");
-
     RomsetRegistry romsets = RomsetRegistry::CreateWithDefaultHashes();
     StringVector   specific_names;
-    romsets.GetAllRomsetNames(specific_names);
 
-    fprintf(output, "  ");
-    for (const auto& name : specific_names)
+    fprintf(output, "Accepted romset names:\n");
+    for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
-        fprintf(output, "%s ", name.c_str());
+        Romset romset = (Romset)i;
+        fprintf(output, "  %s\n", ParsableRomsetName(romset));
+
+        romsets.GetNamesForFamily(romset, specific_names);
+        for (const auto& spec_name : specific_names)
+        {
+            // deduplicate - some romset families only have one specific romset
+            // in that case we give them the same name
+            if (spec_name != ParsableRomsetName(romset))
+            {
+                fprintf(output, "      %s\n", spec_name.c_str());
+            }
+        }
     }
-    fprintf(output, "\n\n");
+    fprintf(output, "\n");
 }
 
 void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result)

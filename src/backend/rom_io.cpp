@@ -608,9 +608,23 @@ void RomsetRegistry::AddRomset(const RomsetDefinition& romset)
 
 void RomsetRegistry::GetAllRomsetNames(StringVector& out_names) const
 {
+    out_names.clear();
     for (const auto& romset : m_romsets)
     {
         out_names.emplace_back(romset.name);
+    }
+}
+
+// Returns all the names under a specific romset family.
+void RomsetRegistry::GetNamesForFamily(Romset romset, StringVector& out_names) const
+{
+    out_names.clear();
+    for (const auto& def : m_romsets)
+    {
+        if (def.romset == romset)
+        {
+            out_names.emplace_back(def.name);
+        }
     }
 }
 
