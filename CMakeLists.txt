@@ -58,6 +58,7 @@ target_sources(nuked-sc55-backend
     src/backend/config.cpp
     src/backend/diagnostics.cpp
     src/backend/emu.cpp
+    src/backend/file_hashing.cpp
     src/backend/file_io.cpp
     src/backend/lcd.cpp
     src/backend/mcu_interrupt.cpp
@@ -84,6 +85,7 @@ target_sources(nuked-sc55-backend
     src/backend/cast.h
     src/backend/diagnostics.h
     src/backend/emu.h
+    src/backend/file_hashing.h
     src/backend/file_io.h
     src/backend/lcd_back.h
     src/backend/lcd_font.h

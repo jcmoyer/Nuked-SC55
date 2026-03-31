@@ -7,25 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "file_hashing.h"
 #include "rom.h"
-
-using SHA256Digest = std::array<uint8_t, 32>;
-
-template <>
-struct std::hash<SHA256Digest>
-{
-    size_t operator()(const SHA256Digest& digest) const
-    {
-        size_t result = 0;
-        for (size_t i = 0; i < sizeof(SHA256Digest) / sizeof(size_t); ++i)
-        {
-            size_t block;
-            memcpy(&block, &digest[i * sizeof(size_t)], sizeof(size_t));
-            result ^= block;
-        }
-        return result;
-    }
-};
 
 enum class RomLoadStatus
 {
@@ -70,34 +53,6 @@ struct RomsetInfo
     // Returns true if at least one of `rom_path` or `rom_data` is populated for `location`.
     bool HasRom(RomLocation location) const;
 };
-
-// Contains the path and contents of a hashed file.
-struct HashedFile
-{
-    std::filesystem::path path;
-    std::vector<uint8_t>  data;
-};
-
-// Contains a list of hashed files and provides constant-time lookup by hash.
-class HashedFileRegistry
-{
-public:
-    void AddFile(SHA256Digest hash, HashedFile file);
-    bool Contains(SHA256Digest hash) const;
-
-    // The returned pointer is invalidated when the registry is modified.
-    // This function returns `nullptr` when `hash` is not in the registry.
-    const HashedFile* GetFile(SHA256Digest hash) const;
-
-    void Purge();
-
-private:
-    std::vector<HashedFile> m_files;
-    // SHA256 to index in `files`
-    std::unordered_map<SHA256Digest, size_t> m_hash_map;
-};
-
-bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry);
 
 struct RomHash
 {
