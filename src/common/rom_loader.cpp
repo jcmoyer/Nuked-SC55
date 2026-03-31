@@ -207,8 +207,6 @@ void PrintRomsets(FILE* output)
 
 void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result)
 {
-    const RomsetInfo& info = result.romset_info;
-
     switch (error)
     {
     case LoadRomsetError::DetectionFailed:
@@ -266,7 +264,7 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
 
                 if (result.completion[i] == RomCompletionStatus::Present)
                 {
-                    fprintf(output, "%s\n", info.rom_paths[i].generic_string().c_str());
+                    fprintf(output, "%s\n", result.romset_info.rom_paths[i].generic_string().c_str());
                 }
                 else
                 {
@@ -285,7 +283,7 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
                         "  * %s: %-12s %s\n",
                         ToCString(result.loaded[i]),
                         ToCString((RomLocation)i),
-                        info.rom_paths[i].generic_string().c_str());
+                        result.romset_info.rom_paths[i].generic_string().c_str());
             }
         }
         break;
@@ -302,8 +300,10 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
         {
             if (result.loaded[i] == RomLoadStatus::Loaded)
             {
-                fprintf(
-                    output, "  * %-12s %s\n", ToCString((RomLocation)i), info.rom_paths[i].generic_string().c_str());
+                fprintf(output,
+                        "  * %-12s %s\n",
+                        ToCString((RomLocation)i),
+                        result.romset_info.rom_paths[i].generic_string().c_str());
             }
         }
     }
