@@ -8,7 +8,7 @@ extern "C"
 #include "sha/sha.h"
 }
 
-bool HashDirectoryFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry, FileFilter filter)
+bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistry& registry, FileFilter filter)
 {
     using namespace std::filesystem;
 
@@ -17,7 +17,7 @@ bool HashDirectoryFiles(const std::filesystem::path& base_path, HashedFileRegist
     {
         std::vector<uint8_t> buffer;
 
-        for (directory_iterator dir_iter(base_path); dir_iter != directory_iterator{}; ++dir_iter)
+        for (directory_iterator dir_iter(dir_path); dir_iter != directory_iterator{}; ++dir_iter)
         {
             if (!dir_iter->is_regular_file())
             {
