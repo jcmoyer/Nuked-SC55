@@ -1,5 +1,6 @@
 #include "rom_loader.h"
 
+#include <cstddef>
 #include <cstdio>
 
 #include "rom.h"
@@ -82,7 +83,13 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         break;
 
     case RomLoader::Hashing: {
-        if (!HashAllFiles(rom_directory, result.registries.hashes))
+        constexpr uintmax_t MAX_ROM_FILESIZE = (uintmax_t)(4 * 1024 * 1024);
+
+        constexpr auto FILTER_FILESIZE = [](const std::filesystem::directory_entry& ent) {
+            return ent.file_size() <= MAX_ROM_FILESIZE;
+        };
+
+        if (!HashDirectoryFiles(rom_directory, result.registries.hashes, FILTER_FILESIZE))
         {
             return LoadRomsetError::DetectionFailed;
         }

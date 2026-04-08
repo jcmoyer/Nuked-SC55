@@ -8,7 +8,7 @@ extern "C"
 #include "sha/sha.h"
 }
 
-bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry)
+bool HashDirectoryFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry, FileFilter filter)
 {
     using namespace std::filesystem;
 
@@ -24,10 +24,7 @@ bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& re
                 continue;
             }
 
-            const uintmax_t file_size = dir_iter->file_size();
-
-            // Skip files larger than 4MB
-            if (file_size > (uintmax_t)(4 * 1024 * 1024))
+            if (!filter(*dir_iter))
             {
                 continue;
             }

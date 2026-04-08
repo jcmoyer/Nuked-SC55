@@ -51,4 +51,7 @@ private:
     std::unordered_map<SHA256Digest, size_t> m_hash_map;
 };
 
-bool HashAllFiles(const std::filesystem::path& base_path, HashedFileRegistry& registry);
+using FileFilter = bool (*)(const std::filesystem::directory_entry&);
+
+// If `filter` returns true for a file, it will be hashed; otherwise it will be skipped.
+bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistry& registry, FileFilter filter);
