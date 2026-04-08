@@ -1,9 +1,14 @@
 # Supported romsets
 
-Romsets are identified by both a family and version. The emulator accepts names
-in either of these two formats: `family-version` or `family`. If `version` is
-omitted but the rom directory contains a complete romset for that family, it
-will be automatically selected.
+Romsets are identified by both a family and version. The family corresponds to
+a specific line of hardware, and the version identifies a specific revision of
+that hardware.
+
+The emulator accepts names in either of these two formats: `family-version` or
+`family`. If only `family` is present and there are one or more complete
+romsets for that family in the rom directory, one of those romsets will be
+randomly selected. If you want to load a specific romset version, you must
+provide both fields.
 
 Supported family names and the hardware they correspond to:
 
@@ -17,8 +22,7 @@ Supported family names and the hardware they correspond to:
 - `sc155`: SC-155
 - `sc155mk2`: SC-155mk2
 
-This file lists the supported list of romsets, their individual roms, and their
-SHA256 hashes.
+Supported romset names and the SHA256 hashes of each rom in the set:
 
 ```
 mk2-v1.01
