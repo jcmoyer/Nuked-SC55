@@ -151,7 +151,7 @@ public:
 
     // Returns true if there is metadata associated with `name`. Note that this does NOT return whether or not the file
     // was located on disk. For that functionality, use `ContainsRomsetFiles`.
-    bool ContainsRomsetMetadata(std::string_view name) const;
+    bool ContainsRomset(std::string_view name) const;
 
     // Returns true if all the roms in the romset named `name` is in `hashed_files`.
     //

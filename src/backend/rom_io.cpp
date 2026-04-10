@@ -643,7 +643,7 @@ void RomsetRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_file
     }
 }
 
-bool RomsetRegistry::ContainsRomsetMetadata(std::string_view name) const
+bool RomsetRegistry::ContainsRomset(std::string_view name) const
 {
     return m_name_map.contains(name);
 }
