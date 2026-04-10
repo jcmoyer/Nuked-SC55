@@ -629,8 +629,8 @@ void RomsetRegistry::GetNamesForFamily(Romset romset, StringVector& out_names) c
 }
 
 void RomsetRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
-                                            StringVector&             out_names,
-                                            const RomLocationSet&     location_mask) const
+                                            const RomLocationSet&     location_mask,
+                                            StringVector&             out_names) const
 {
     out_names.clear();
     for (const auto& romset : m_romsets)
@@ -652,8 +652,8 @@ void RomsetRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_fil
 }
 
 void RomsetRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_files,
-                                           StringVector&             out_names,
-                                           const RomLocationSet&     location_mask) const
+                                           const RomLocationSet&     location_mask,
+                                           StringVector&             out_names) const
 {
     out_names.clear();
     for (const auto& romset : m_romsets)
