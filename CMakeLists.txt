@@ -100,6 +100,7 @@ target_sources(nuked-sc55-backend
     src/backend/rom_io.h
     src/backend/rom.h
     src/backend/string_map.h
+    src/backend/string_vector.h
     src/backend/submcu.h
 )
 target_include_directories(nuked-sc55-backend PUBLIC "src/backend" "${CMAKE_CURRENT_BINARY_DIR}/backend")
