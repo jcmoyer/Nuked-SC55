@@ -4,7 +4,7 @@
 #include <cstring>
 #include <filesystem>
 #include <string_view>
-#include <unordered_map>
+#include "string_map.h"
 #include <vector>
 
 #include "file_hashing.h"
@@ -118,22 +118,6 @@ struct RomsetDefinition
 
 using StringVector = std::vector<std::string>;
 
-// Allows using string_view with unordered_map<string, ...>
-struct TransparentStringHash
-{
-    using is_transparent = void;
-
-    size_t operator()(const std::string& s) const
-    {
-        return std::hash<std::string>{}(s);
-    }
-
-    size_t operator()(std::string_view s) const
-    {
-        return std::hash<std::string_view>{}(s);
-    }
-};
-
 // Contains metadata for romsets. Romset metadata is registered with instances of this type, after which this type can
 // used to efficiently query which of those romsets exist on disk.
 class RomsetRegistry
@@ -197,7 +181,7 @@ public:
 private:
     std::vector<RomsetDefinition> m_romsets;
     // Maps romset identifiers to index in `m_romsets`
-    std::unordered_map<std::string, size_t, TransparentStringHash, std::equal_to<void>> m_name_map;
+    StringMap<size_t> m_name_map;
 };
 
 // Sets `romset_info.rom_paths` relative to `base_path` using filenames for `romset`. Consult the `legacy_rom_names`
