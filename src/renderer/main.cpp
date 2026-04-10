@@ -1350,7 +1350,7 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
         render_states[i].thread = std::thread(R_RenderOne, std::cref(data), std::ref(render_states[i]));
     }
 
-    load_result.romset_info.PurgeRomData();
+    load_result.Purge();
 
     WAV_Handle render_output;
     if (params.output_stdout)

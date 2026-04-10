@@ -84,7 +84,7 @@ bool Application::Initialize(const CliParameters& params)
         }
     }
 
-    m_romset_info.PurgeRomData();
+    load_result.Purge();
 
     for (Instance& inst : m_instances)
     {

@@ -37,6 +37,13 @@ const char* ToCString(LoadRomsetError error)
     }
 }
 
+void LoadRomsetResult::Purge()
+{
+
+    romset_info.PurgeRomData();
+    registries.hashes.Purge();
+}
+
 LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                            std::string_view             desired_romset,
                            RomLoader                    loader,

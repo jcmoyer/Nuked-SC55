@@ -81,3 +81,9 @@ const HashedFile* HashedFileRegistry::GetFile(SHA256Digest hash) const
 
     return &m_files[it->second];
 }
+
+void HashedFileRegistry::Purge()
+{
+    m_files.clear();
+    m_hash_map.clear();
+}

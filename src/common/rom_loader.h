@@ -49,6 +49,11 @@ struct LoadRomsetResult
     LoaderRegistries registries;
 
     std::string picked_name;
+
+    // Frees any allocated buffers from loading roms and hashing files. This happens automatically when the result
+    // object goes out of scope, but it is useful in cases where we keep the result object around and no longer need
+    // the data.
+    void Purge();
 };
 
 enum class RomLoader
