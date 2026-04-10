@@ -4,11 +4,11 @@
 #include <cstring>
 #include <filesystem>
 #include <string_view>
-#include "string_map.h"
 #include <vector>
 
 #include "file_hashing.h"
 #include "rom.h"
+#include "string_map.h"
 
 enum class RomLoadStatus
 {
@@ -118,8 +118,9 @@ struct RomsetDefinition
 
 using StringVector = std::vector<std::string>;
 
-// Contains metadata for romsets. Romset metadata is registered with instances of this type, after which this type can
-// used to efficiently query which of those romsets exist on disk.
+// Contains metadata for romsets. Romsets are registered with instances of this type by name (e.g. "mk1-v1.00") along
+// with the hashes of any roms in that romset. After registration, this type can be used to efficiently query which of
+// those romsets exist on disk.
 class RomsetRegistry
 {
 public:
