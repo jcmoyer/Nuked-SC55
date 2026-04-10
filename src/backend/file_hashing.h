@@ -25,6 +25,40 @@ struct std::hash<SHA256Digest>
     }
 };
 
+namespace detail
+{
+consteval uint8_t HexValue(char x)
+{
+    if (x >= '0' && x <= '9')
+    {
+        return (uint8_t)(x - '0');
+    }
+    else if (x >= 'a' && x <= 'f')
+    {
+        return 10 + (uint8_t)(x - 'a');
+    }
+    else
+    {
+        throw "character out of range";
+    }
+}
+} // namespace detail
+
+// Compile time string-to-SHA256Digest
+template <size_t N>
+consteval SHA256Digest ToDigest(const char (&s)[N])
+{
+    static_assert(N == 65); // 64 + null terminator
+
+    SHA256Digest hash;
+    for (size_t i = 0; i < N / 2; ++i)
+    {
+        hash[i] = (uint8_t)((detail::HexValue(s[2 * i + 0]) << 4) | detail::HexValue(s[2 * i + 1]));
+    }
+
+    return hash;
+}
+
 // Contains the path and contents of a hashed file.
 struct HashedFile
 {

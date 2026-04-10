@@ -208,37 +208,6 @@ void unscramble(const uint8_t *src, uint8_t *dst, int len)
     }
 }
 
-constexpr uint8_t HexValue(char x)
-{
-    if (x >= '0' && x <= '9')
-    {
-        return (uint8_t)(x - '0');
-    }
-    else if (x >= 'a' && x <= 'f')
-    {
-        return 10 + (uint8_t)(x - 'a');
-    }
-    else
-    {
-        throw "character out of range";
-    }
-}
-
-// Compile time string-to-SHA256Digest
-template <size_t N>
-constexpr SHA256Digest ToDigest(const char (&s)[N])
-{
-    static_assert(N == 65); // 64 + null terminator
-
-    SHA256Digest hash;
-    for (size_t i = 0; i < N / 2; ++i)
-    {
-        hash[i] = (uint8_t)((HexValue(s[2 * i + 0]) << 4) | HexValue(s[2 * i + 1]));
-    }
-
-    return hash;
-}
-
 // clang-format off
 static constexpr RomsetDefinition ROMSET_DEFS[] = {
     ///////////////////////////////////////////////////////////////////////////
