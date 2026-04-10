@@ -39,7 +39,6 @@ const char* ToCString(LoadRomsetError error)
 
 void LoadRomsetResult::Purge()
 {
-
     romset_info.PurgeRomData();
     registries.hashes.Purge();
 }
