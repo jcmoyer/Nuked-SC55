@@ -648,8 +648,8 @@ bool RomsetRegistry::ContainsRomset(std::string_view name) const
     return m_name_map.contains(name);
 }
 
-bool RomsetRegistry::ContainsRomsetFiles(const HashedFileRegistry& hashed_files,
-                                         std::string_view          name,
+bool RomsetRegistry::ContainsRomsetFiles(std::string_view          name,
+                                         const HashedFileRegistry& hashed_files,
                                          const RomLocationSet&     location_mask) const
 {
     const auto it = m_name_map.find(name);
@@ -690,8 +690,8 @@ bool RomsetRegistry::GetRomsetFamily(std::string_view name, Romset& out_family) 
     return true;
 }
 
-bool RomsetRegistry::GetRomsetInfo(const HashedFileRegistry& hashed_files,
-                                   std::string_view          name,
+bool RomsetRegistry::GetRomsetInfo(std::string_view          name,
+                                   const HashedFileRegistry& hashed_files,
                                    const RomLocationSet&     location_mask,
                                    RomsetInfo&               out_info) const
 {

@@ -158,8 +158,8 @@ public:
     // `location_mask` allows the caller to control which roms will be tested. For rom locations used by the romset, a
     // value of `true` enables the test and a value of `false` disables the test. The test succeeds if the hash for
     // that location is in `hashed_files`. If a rom location is not used by the romset, the value is ignored.
-    bool ContainsRomsetFiles(const HashedFileRegistry& hashed_files,
-                             std::string_view          name,
+    bool ContainsRomsetFiles(std::string_view          name,
+                             const HashedFileRegistry& hashed_files,
                              const RomLocationSet&     location_mask) const;
 
     // Returns true if the romset given by `name` exists and `out_family` receives the romset family.
@@ -170,8 +170,8 @@ public:
     //
     // `location_mask` allows the caller to control which roms will be returned. The test logic works the same way as
     // in `ContainsRomsetFiles`.
-    bool GetRomsetInfo(const HashedFileRegistry& hashed_files,
-                       std::string_view          name,
+    bool GetRomsetInfo(std::string_view          name,
+                       const HashedFileRegistry& hashed_files,
                        const RomLocationSet&     location_mask,
                        RomsetInfo&               out_info) const;
 

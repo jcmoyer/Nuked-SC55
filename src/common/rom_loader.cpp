@@ -138,7 +138,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                 return LoadRomsetError::NoCompleteRomsets;
             }
 
-            if (!result.registries.romsets.GetRomsetInfo(result.registries.hashes, picked_name, desired, romset_info))
+            if (!result.registries.romsets.GetRomsetInfo(picked_name, result.registries.hashes, desired, romset_info))
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
@@ -149,7 +149,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         {
             // we were given a specific name
             if (!result.registries.romsets.GetRomsetInfo(
-                    result.registries.hashes, desired_romset, desired, romset_info))
+                    desired_romset, result.registries.hashes, desired, romset_info))
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
@@ -175,7 +175,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
 
                 // ignored returns: these names were returned by GetCompleteRomsetNames so the lookup cannot fail
                 (void)result.registries.romsets.GetRomsetInfo(
-                    result.registries.hashes, result.picked_name, desired, romset_info);
+                    result.picked_name, result.registries.hashes, desired, romset_info);
                 (void)result.registries.romsets.GetRomsetFamily(result.picked_name, result.romset);
             }
             else
@@ -251,7 +251,7 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
             RomCompletionStatusSet completion;
 
             (void)result.registries.romsets.GetRomsetFamily(name, family);
-            (void)result.registries.romsets.GetRomsetInfo(result.registries.hashes, name, ROMLOCATION_ALL, info);
+            (void)result.registries.romsets.GetRomsetInfo(name, result.registries.hashes, ROMLOCATION_ALL, info);
 
             (void)IsCompleteRomset(info, family, &completion);
 
