@@ -99,6 +99,7 @@ target_sources(nuked-sc55-backend
     src/backend/ringbuffer.h
     src/backend/rom_io.h
     src/backend/rom.h
+    src/backend/sha256.h
     src/backend/string_map.h
     src/backend/string_vector.h
     src/backend/submcu.h

@@ -1,72 +1,14 @@
 #pragma once
 
-#include <array>
 #include <concepts>
 #include <cstdint>
-#include <cstring>
 #include <filesystem>
 #include <unordered_map>
 #include <vector>
 
 #include "diagnostics.h"
 #include "file_io.h"
-
-extern "C"
-{
-#include "sha/sha.h"
-}
-
-using SHA256Digest = std::array<uint8_t, 32>;
-
-template <>
-struct std::hash<SHA256Digest>
-{
-    size_t operator()(const SHA256Digest& digest) const
-    {
-        size_t result = 0;
-        for (size_t i = 0; i < sizeof(SHA256Digest) / sizeof(size_t); ++i)
-        {
-            size_t block;
-            memcpy(&block, &digest[i * sizeof(size_t)], sizeof(size_t));
-            result ^= block;
-        }
-        return result;
-    }
-};
-
-namespace detail
-{
-consteval uint8_t HexValue(char x)
-{
-    if (x >= '0' && x <= '9')
-    {
-        return (uint8_t)(x - '0');
-    }
-    else if (x >= 'a' && x <= 'f')
-    {
-        return 10 + (uint8_t)(x - 'a');
-    }
-    else
-    {
-        throw "character out of range";
-    }
-}
-} // namespace detail
-
-// Compile time string-to-SHA256Digest
-template <size_t N>
-consteval SHA256Digest ToDigest(const char (&s)[N])
-{
-    static_assert(N == 65); // 64 + null terminator
-
-    SHA256Digest hash;
-    for (size_t i = 0; i < N / 2; ++i)
-    {
-        hash[i] = (uint8_t)((detail::HexValue(s[2 * i + 0]) << 4) | detail::HexValue(s[2 * i + 1]));
-    }
-
-    return hash;
-}
+#include "sha256.h"
 
 // Contains the path and contents of a hashed file.
 struct HashedFile
@@ -124,12 +66,12 @@ bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistr
                 return false;
             }
 
-            SHA256Context ctx;
-            SHA256Digest  digest_bytes;
+            SHA256Digest digest_bytes;
 
-            SHA256Reset(&ctx);
-            SHA256Input(&ctx, buffer.data(), (unsigned int)buffer.size());
-            SHA256Result(&ctx, digest_bytes.data());
+            if (!HashBytes(buffer, digest_bytes))
+            {
+                return false;
+            }
 
             registry.AddFile(digest_bytes,
                              HashedFile{
