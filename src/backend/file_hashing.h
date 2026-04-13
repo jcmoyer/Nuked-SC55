@@ -1,11 +1,20 @@
 #pragma once
 
 #include <array>
+#include <concepts>
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <unordered_map>
 #include <vector>
+
+#include "diagnostics.h"
+#include "file_io.h"
+
+extern "C"
+{
+#include "sha/sha.h"
+}
 
 using SHA256Digest = std::array<uint8_t, 32>;
 
@@ -85,7 +94,54 @@ private:
     std::unordered_map<SHA256Digest, size_t> m_hash_map;
 };
 
-using FileFilter = bool (*)(const std::filesystem::directory_entry&);
-
 // If `filter` returns true for a file, it will be hashed; otherwise it will be skipped.
-bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistry& registry, FileFilter filter);
+template <std::invocable<const std::filesystem::directory_entry&> FileFilter>
+bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistry& registry, FileFilter filter)
+{
+    using namespace std::filesystem;
+
+    // std::fileystem cannot guarantee exceptions won't be thrown even for the error code overloads
+    try
+    {
+        std::vector<uint8_t> buffer;
+
+        for (directory_iterator dir_iter(dir_path); dir_iter != directory_iterator{}; ++dir_iter)
+        {
+            if (!dir_iter->is_regular_file())
+            {
+                continue;
+            }
+
+            if (!filter(*dir_iter))
+            {
+                continue;
+            }
+
+            if (!FIO_ReadAllBytes(dir_iter->path(), buffer))
+            {
+                Diag_Printf(
+                    Diag_Category::Error, "Failed to read file: %s\n", dir_iter->path().generic_string().c_str());
+                return false;
+            }
+
+            SHA256Context ctx;
+            SHA256Digest  digest_bytes;
+
+            SHA256Reset(&ctx);
+            SHA256Input(&ctx, buffer.data(), (unsigned int)buffer.size());
+            SHA256Result(&ctx, digest_bytes.data());
+
+            registry.AddFile(digest_bytes,
+                             HashedFile{
+                                 .path = dir_iter->path(),
+                                 .data = std::move(buffer),
+                             });
+        }
+    }
+    catch (const std::exception& e)
+    {
+        Diag_Printf(Diag_Category::Error, "Failed to hash roms: %s\n", e.what());
+        return false;
+    }
+    return true;
+}
