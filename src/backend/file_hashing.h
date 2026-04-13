@@ -21,19 +21,19 @@ struct HashedFile
 class HashedFileRegistry
 {
 public:
-    void AddFile(SHA256Digest hash, HashedFile file);
-    bool Contains(SHA256Digest hash) const;
+    void AddFile(SHA256_Digest hash, HashedFile file);
+    bool Contains(SHA256_Digest hash) const;
 
     // The returned pointer is invalidated when the registry is modified.
     // This function returns `nullptr` when `hash` is not in the registry.
-    const HashedFile* GetFile(SHA256Digest hash) const;
+    const HashedFile* GetFile(SHA256_Digest hash) const;
 
     void Purge();
 
 private:
     std::vector<HashedFile> m_files;
     // SHA256 to index in `files`
-    std::unordered_map<SHA256Digest, size_t> m_hash_map;
+    std::unordered_map<SHA256_Digest, size_t> m_hash_map;
 };
 
 // If `filter` returns true for a file, it will be hashed; otherwise it will be skipped.
@@ -66,9 +66,9 @@ bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistr
                 return false;
             }
 
-            SHA256Digest digest_bytes;
+            SHA256_Digest digest_bytes;
 
-            if (!HashBytes(buffer, digest_bytes))
+            if (!SHA256_HashBytes(buffer, digest_bytes))
             {
                 return false;
             }

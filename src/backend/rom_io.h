@@ -57,7 +57,7 @@ struct RomsetInfo
 
 struct RomHash
 {
-    SHA256Digest hash;
+    SHA256_Digest hash;
     RomLocation  location;
 
     auto operator<=>(const RomHash&) const = default;
@@ -105,7 +105,7 @@ struct RomsetDefinition
         return &hashes[ROMLOCATION_COUNT];
     }
 
-    void ReplaceHash(RomLocation rom, const SHA256Digest& hash)
+    void ReplaceHash(RomLocation rom, const SHA256_Digest& hash)
     {
         for (RomHash& h : *this)
         {

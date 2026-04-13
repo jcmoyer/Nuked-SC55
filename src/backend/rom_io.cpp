@@ -209,6 +209,10 @@ void unscramble(const uint8_t *src, uint8_t *dst, int len)
 }
 
 // clang-format off
+
+// TODO: Backwards compat to avoid messy diff.
+#define ToDigest SHA256_ToDigest
+
 static constexpr RomsetDefinition ROMSET_DEFS[] = {
     ///////////////////////////////////////////////////////////////////////////
     // SC-55mk2/SC-155mk2 (v1.01)
@@ -530,7 +534,7 @@ static constexpr RomsetDefinition ROMSET_DEFS[] = {
 //
 // To register these hashes we copy either the MK2 or SC155MK2 romset-hashes
 // pair above and replace ROM2 with one of the following hashes.
-constexpr std::array<SHA256Digest, 6> CTF_ROM2_HASHES = {
+constexpr std::array<SHA256_Digest, 6> CTF_ROM2_HASHES = {
     // Tone: Strict SC-55 | Drum: SC-55 v1.21 or earlier
     ToDigest("64f8c9daf1021cf86ea4ddf03a29b81b5ea0c18e74f462833023436388bb9dc4"),
     // Tone: Strict SC-55 | Drum: SC-55 v2.00

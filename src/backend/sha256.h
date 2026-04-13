@@ -10,15 +10,15 @@ extern "C"
 #include "sha/sha.h"
 }
 
-using SHA256Digest = std::array<uint8_t, 32>;
+using SHA256_Digest = std::array<uint8_t, 32>;
 
 template <>
-struct std::hash<SHA256Digest>
+struct std::hash<SHA256_Digest>
 {
-    size_t operator()(const SHA256Digest& digest) const
+    size_t operator()(const SHA256_Digest& digest) const
     {
         size_t result = 0;
-        for (size_t i = 0; i < sizeof(SHA256Digest) / sizeof(size_t); ++i)
+        for (size_t i = 0; i < sizeof(SHA256_Digest) / sizeof(size_t); ++i)
         {
             size_t block;
             memcpy(&block, &digest[i * sizeof(size_t)], sizeof(size_t));
@@ -47,13 +47,13 @@ consteval uint8_t HexValue(char x)
 }
 } // namespace detail
 
-// Compile time string-to-SHA256Digest
+// Compile time string-to-SHA256_Digest
 template <size_t N>
-consteval SHA256Digest ToDigest(const char (&s)[N])
+consteval SHA256_Digest SHA256_ToDigest(const char (&s)[N])
 {
     static_assert(N == 65); // 64 + null terminator
 
-    SHA256Digest hash;
+    SHA256_Digest hash;
     for (size_t i = 0; i < N / 2; ++i)
     {
         hash[i] = (uint8_t)((detail::HexValue(s[2 * i + 0]) << 4) | detail::HexValue(s[2 * i + 1]));
@@ -62,7 +62,7 @@ consteval SHA256Digest ToDigest(const char (&s)[N])
     return hash;
 }
 
-inline bool HashBytes(std::span<uint8_t> bytes, SHA256Digest& out_digest)
+inline bool SHA256_HashBytes(std::span<uint8_t> bytes, SHA256_Digest& out_digest)
 {
     SHA256Context ctx;
 
