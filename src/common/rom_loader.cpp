@@ -89,7 +89,8 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         break;
 
     case RomLoader::Hashing: {
-        constexpr uintmax_t MAX_ROM_FILESIZE = (uintmax_t)(4 * 1024 * 1024);
+        // size of largest loadable rom (waverom expansion)
+        constexpr uintmax_t MAX_ROM_FILESIZE = (uintmax_t)0x800000;
 
         constexpr auto FILTER_FILESIZE = [](const std::filesystem::directory_entry& ent) {
             return ent.file_size() <= MAX_ROM_FILESIZE;
