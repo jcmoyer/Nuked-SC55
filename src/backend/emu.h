@@ -84,17 +84,16 @@ public:
 
     void SetSampleCallback(mcu_sample_callback callback, void* userdata);
 
-    // Loads roms from buffers referenced by `all_info`. If the slot for a rom in `all_info` has a non-empty `rom_data`,
-    // it will be loaded even if the romset doesn't require it.
+    // Loads roms from buffers referenced by `info`. If the slot for a rom in `info` has a non-empty `rom_data`, it
+    // will be loaded even if the romset doesn't require it.
     //
-    // It is unspecified whether or not the emulator will copy `rom_data`. `all_info` should outlive the emulator
-    // instance.
+    // It is unspecified whether or not the emulator will copy `rom_data`. `info` should outlive the emulator instance.
     //
     // For roms that were successfully loaded, this function will set their corresponding index in `loaded` to true if
     // `loaded` is non-null.
     //
-    // It is recommended to check if the romset has all the necessary roms by first calling
-    // `IsCompleteRomset(all_info, romset)`.
+    // It is recommended to check if the romset has all the necessary roms by first calling `IsCompleteRomset(info,
+    // romset)`.
     bool LoadRoms(Romset romset, const RomsetInfo& info, RomLocationSet* loaded = nullptr);
 
     void PostMIDI(uint8_t data_byte);
