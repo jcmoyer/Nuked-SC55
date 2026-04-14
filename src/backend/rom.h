@@ -132,9 +132,6 @@ struct RomsetDefinition
     }
 };
 
-class HashedFileRegistry;
-class RomsetInfo;
-
 // Contains metadata for romsets. Romsets are registered with instances of this type by name (e.g. "mk1-v1.00") along
 // with the hashes of any roms in that romset. After registration, this type can be used to efficiently query which of
 // those romsets exist on disk.
@@ -143,6 +140,10 @@ class RomsetRegistry
 public:
     // Constructs an empty registry.
     RomsetRegistry() = default;
+
+    // Returns the definition for `name` if it exists or `nullptr` otherwise.
+    // The returned pointer is invalidated if the registry is modified.
+    const RomsetDefinition* GetDefinition(std::string_view name) const;
 
     // Adds `romset` to the registry.
     void AddRomset(const RomsetDefinition& romset);
@@ -153,45 +154,23 @@ public:
     // Returns all of the names under a specific romset family. `out_names` will be cleared before receiving the names.
     void GetNamesForFamily(Romset romset, StringVector& out_names) const;
 
-    // Returns romsets identifiers whose complete romsets are contained in `hashed_files`. `location_mask` can be used
-    // to filter which roms are considered for the completeness of the romset. The test logic works the same as in
-    // `ContainsRomsetFiles`. `out_names` will be cleared before receiving the names.
-    void GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
-                                const RomLocationSet&     location_mask,
-                                StringVector&             out_names) const;
-
-    // Returns romsets identifiers whose partial romsets are contained in `hashed_files`. `location_mask` can be used
-    // to filter which roms are considered for the completeness of the romset. The test logic works the same as in
-    // `ContainsRomsetFiles`. `out_names` will be cleared before receiving the names.
-    void GetPartialRomsetNames(const HashedFileRegistry& hashed_files,
-                               const RomLocationSet&     location_mask,
-                               StringVector&             out_names) const;
-
     // Returns true if there is metadata associated with `name`. Note that this does NOT return whether or not the file
     // was located on disk. For that functionality, use `ContainsRomsetFiles`.
     bool ContainsRomset(std::string_view name) const;
 
-    // Returns true if all the roms in the romset named `name` is in `hashed_files`.
-    //
-    // `location_mask` allows the caller to control which roms will be tested. For rom locations used by the romset, a
-    // value of `true` enables the test and a value of `false` disables the test. The test succeeds if the hash for
-    // that location is in `hashed_files`. If a rom location is not used by the romset, the value is ignored.
-    bool ContainsRomsetFiles(std::string_view          name,
-                             const HashedFileRegistry& hashed_files,
-                             const RomLocationSet&     location_mask) const;
-
     // Returns true if the romset given by `name` exists and `out_family` receives the romset family.
     bool GetRomsetFamily(std::string_view name, Romset& out_family) const;
 
-    // If the romset given by `name` exists, `out_info` receives the paths and data contained for each rom in the
-    // romset.
-    //
-    // `location_mask` allows the caller to control which roms will be returned. The test logic works the same way as
-    // in `ContainsRomsetFiles`.
-    bool GetRomsetInfo(std::string_view          name,
-                       const HashedFileRegistry& hashed_files,
-                       const RomLocationSet&     location_mask,
-                       RomsetInfo&               out_info) const;
+    // Iterators over the contained definitions. Iterators are invalidated if the registry is modified.
+    const RomsetDefinition* begin() const
+    {
+        return m_romsets.data();
+    }
+
+    const RomsetDefinition* end() const
+    {
+        return m_romsets.data() + m_romsets.size();
+    }
 
     // Creates a registry containing standard, supported romsets.
     static RomsetRegistry CreateWithDefaultHashes();

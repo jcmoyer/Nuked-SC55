@@ -1,11 +1,12 @@
 #pragma once
 
 #include <array>
-#include <cstring>
 #include <filesystem>
 #include <vector>
 
 #include "rom.h"
+
+class HashedFileRegistry;
 
 enum class RomLoadStatus
 {
@@ -78,3 +79,40 @@ size_t CountPresent(const RomCompletionStatusSet& status);
 // To automatically determine elements of `rom_path`, populate a `HashedFileRegistry` and `RomsetRegistry` then
 // use the `RomsetRegistry` to look up a specific romset in the `HashedFileRegistry`.
 bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded);
+
+// Returns romsets identifiers whose complete romsets are contained in `hashed_files`. `location_mask` can be used
+// to filter which roms are considered for the completeness of the romset. The test logic works the same as in
+// `ContainsRomsetFiles`. `out_names` will be cleared before receiving the names.
+void GetCompleteRomsetNames(const RomsetRegistry&     romsets,
+                            const HashedFileRegistry& hashed_files,
+                            const RomLocationSet&     location_mask,
+                            StringVector&             out_names);
+
+// Returns romsets identifiers whose partial romsets are contained in `hashed_files`. `location_mask` can be used
+// to filter which roms are considered for the completeness of the romset. The test logic works the same as in
+// `ContainsRomsetFiles`. `out_names` will be cleared before receiving the names.
+void GetPartialRomsetNames(const RomsetRegistry&     romsets,
+                           const HashedFileRegistry& hashed_files,
+                           const RomLocationSet&     location_mask,
+                           StringVector&             out_names);
+
+// Returns true if all the roms in the romset named `name` is in `hashed_files`.
+//
+// `location_mask` allows the caller to control which roms will be tested. For rom locations used by the romset, a
+// value of `true` enables the test and a value of `false` disables the test. The test succeeds if the hash for
+// that location is in `hashed_files`. If a rom location is not used by the romset, the value is ignored.
+bool ContainsRomsetFiles(const RomsetRegistry&     romsets,
+                         std::string_view          name,
+                         const HashedFileRegistry& hashed_files,
+                         const RomLocationSet&     location_mask);
+
+// If the romset given by `name` exists, `out_info` receives the paths and data contained for each rom in the
+// romset.
+//
+// `location_mask` allows the caller to control which roms will be returned. The test logic works the same way as
+// in `ContainsRomsetFiles`.
+bool GetRomsetInfo(const RomsetRegistry&     romsets,
+                   std::string_view          name,
+                   const HashedFileRegistry& hashed_files,
+                   const RomLocationSet&     location_mask,
+                   RomsetInfo&               out_info);

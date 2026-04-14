@@ -3,9 +3,8 @@
 #include <filesystem>
 #include <utility>
 
-#include "diagnostics.h"
+#include "file_hashing.h"
 #include "file_io.h"
-#include "rom.h"
 
 const char* legacy_rom_names[(size_t)ROMSET_COUNT][ROMLOCATION_COUNT] = {
     // MK2
@@ -373,4 +372,118 @@ const char* ToCString(RomCompletionStatus status)
         return "Unused";
     }
     return "Unknown status";
+}
+
+void GetCompleteRomsetNames(const RomsetRegistry&     romsets,
+                            const HashedFileRegistry& hashed_files,
+                            const RomLocationSet&     location_mask,
+                            StringVector&             out_names)
+{
+    out_names.clear();
+    for (const auto& romset : romsets)
+    {
+        bool is_complete = true;
+        for (const auto& pair : romset)
+        {
+            if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
+            {
+                is_complete = false;
+                break;
+            }
+        }
+        if (is_complete)
+        {
+            out_names.push_back(romset.name);
+        }
+    }
+}
+
+void GetPartialRomsetNames(const RomsetRegistry&     romsets,
+                           const HashedFileRegistry& hashed_files,
+                           const RomLocationSet&     location_mask,
+                           StringVector&             out_names)
+{
+    out_names.clear();
+    for (const auto& romset : romsets)
+    {
+        bool is_partial = false;
+        for (const auto& pair : romset)
+        {
+            if (location_mask[(size_t)pair.location] && hashed_files.Contains(pair.hash))
+            {
+                is_partial = true;
+                break;
+            }
+        }
+        if (is_partial)
+        {
+            out_names.push_back(romset.name);
+        }
+    }
+}
+
+bool ContainsRomsetFiles(const RomsetRegistry&     romsets,
+                         std::string_view          name,
+                         const HashedFileRegistry& hashed_files,
+                         const RomLocationSet&     location_mask)
+{
+    const RomsetDefinition* def = romsets.GetDefinition(name);
+
+    if (!def)
+    {
+        return false;
+    }
+
+    bool is_complete = true;
+
+    for (const auto& pair : *def)
+    {
+        if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
+        {
+            is_complete = false;
+            break;
+        }
+    }
+
+    return is_complete;
+}
+
+bool GetRomsetInfo(const RomsetRegistry&     romsets,
+                   std::string_view          name,
+                   const HashedFileRegistry& hashed_files,
+                   const RomLocationSet&     location_mask,
+                   RomsetInfo&               out_info)
+{
+    const RomsetDefinition* def = romsets.GetDefinition(name);
+
+    if (!def)
+    {
+        return false;
+    }
+
+    for (const auto& pair : *def)
+    {
+        const HashedFile* hf = hashed_files.GetFile(pair.hash);
+
+        if (!hf)
+        {
+            return false;
+        }
+
+        if (location_mask[(size_t)pair.location])
+        {
+            out_info.rom_paths[(size_t)pair.location] = hf->path;
+            // TODO: This is a large buffer copy. In practice this probably doesn't matter because we should only have
+            // ~5 roms on average and most of them will be small. It is difficult to avoid this for two reasons: 1) we
+            // need to unscramble waveroms which needs a second buffer allocation anyways, and 2) RomsetInfo is also
+            // acting as storage for roms which will likely be shared between emulator instances in the future. We will
+            // not be able to point into the file registry when sharing is enabled, because again, we need to
+            // unscramble waveroms. The final design should probably allocate one contiguous buffer to hold all roms
+            // for better locality. Then we copy all of the roms into that buffer, unscrambling the waveroms at that
+            // point.
+            out_info.rom_data[(size_t)pair.location] = hf->data;
+        }
+    }
+
+    return true;
 }

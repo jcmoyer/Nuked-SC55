@@ -1,7 +1,6 @@
 #include "rom.h"
 
-#include "file_hashing.h"
-#include "rom_io.h"
+#include "diagnostics.h"
 
 const char* rs_name[ROMSET_COUNT] = {
     "SC-55mk2",
@@ -491,6 +490,18 @@ constexpr const char* CTF_ROMSET_NAMES[2][CTF_ROM2_HASHES.size()] = {
     },
 };
 
+const RomsetDefinition* RomsetRegistry::GetDefinition(std::string_view name) const
+{
+    const auto it = m_name_map.find(name);
+
+    if (it == m_name_map.end())
+    {
+        return nullptr;
+    }
+
+    return &m_romsets[it->second];
+}
+
 void RomsetRegistry::AddRomset(const RomsetDefinition& romset)
 {
     const size_t index = m_romsets.size();
@@ -520,82 +531,9 @@ void RomsetRegistry::GetNamesForFamily(Romset romset, StringVector& out_names) c
     }
 }
 
-void RomsetRegistry::GetCompleteRomsetNames(const HashedFileRegistry& hashed_files,
-                                            const RomLocationSet&     location_mask,
-                                            StringVector&             out_names) const
-{
-    out_names.clear();
-    for (const auto& romset : m_romsets)
-    {
-        bool is_complete = true;
-        for (const auto& pair : romset)
-        {
-            if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
-            {
-                is_complete = false;
-                break;
-            }
-        }
-        if (is_complete)
-        {
-            out_names.push_back(romset.name);
-        }
-    }
-}
-
-void RomsetRegistry::GetPartialRomsetNames(const HashedFileRegistry& hashed_files,
-                                           const RomLocationSet&     location_mask,
-                                           StringVector&             out_names) const
-{
-    out_names.clear();
-    for (const auto& romset : m_romsets)
-    {
-        bool is_partial = false;
-        for (const auto& pair : romset)
-        {
-            if (location_mask[(size_t)pair.location] && hashed_files.Contains(pair.hash))
-            {
-                is_partial = true;
-                break;
-            }
-        }
-        if (is_partial)
-        {
-            out_names.push_back(romset.name);
-        }
-    }
-}
-
 bool RomsetRegistry::ContainsRomset(std::string_view name) const
 {
     return m_name_map.contains(name);
-}
-
-bool RomsetRegistry::ContainsRomsetFiles(std::string_view          name,
-                                         const HashedFileRegistry& hashed_files,
-                                         const RomLocationSet&     location_mask) const
-{
-    const auto it = m_name_map.find(name);
-
-    if (it == m_name_map.end())
-    {
-        return false;
-    }
-
-    const size_t index = it->second;
-
-    bool is_complete = true;
-
-    for (const auto& pair : m_romsets[index])
-    {
-        if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
-        {
-            is_complete = false;
-            break;
-        }
-    }
-
-    return is_complete;
 }
 
 bool RomsetRegistry::GetRomsetFamily(std::string_view name, Romset& out_family) const
@@ -613,48 +551,7 @@ bool RomsetRegistry::GetRomsetFamily(std::string_view name, Romset& out_family) 
     return true;
 }
 
-bool RomsetRegistry::GetRomsetInfo(std::string_view          name,
-                                   const HashedFileRegistry& hashed_files,
-                                   const RomLocationSet&     location_mask,
-                                   RomsetInfo&               out_info) const
-{
-    const auto it = m_name_map.find(name);
-
-    if (it == m_name_map.end())
-    {
-        return false;
-    }
-
-    const size_t index = it->second;
-
-    for (const auto& pair : m_romsets[index])
-    {
-        const HashedFile* hf = hashed_files.GetFile(pair.hash);
-
-        if (!hf)
-        {
-            return false;
-        }
-
-        if (location_mask[(size_t)pair.location])
-        {
-            out_info.rom_paths[(size_t)pair.location] = hf->path;
-            // TODO: This is a large buffer copy. In practice this probably doesn't matter because we should only have
-            // ~5 roms on average and most of them will be small. It is difficult to avoid this for two reasons: 1) we
-            // need to unscramble waveroms which needs a second buffer allocation anyways, and 2) RomsetInfo is also
-            // acting as storage for roms which will likely be shared between emulator instances in the future. We will
-            // not be able to point into the file registry when sharing is enabled, because again, we need to
-            // unscramble waveroms. The final design should probably allocate one contiguous buffer to hold all roms
-            // for better locality. Then we copy all of the roms into that buffer, unscrambling the waveroms at that
-            // point.
-            out_info.rom_data[(size_t)pair.location] = hf->data;
-        }
-    }
-
-    return true;
-}
-
-void AddCtfPatchedHashes(RomsetRegistry& registry, RomsetDefinition base_def)
+static void AddCtfPatchedHashes(RomsetRegistry& registry, RomsetDefinition base_def)
 {
     size_t which_table;
     switch (base_def.romset)
