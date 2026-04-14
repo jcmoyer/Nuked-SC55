@@ -86,17 +86,17 @@ struct RomsetDefinition
     Romset      romset;
     RomHash     hashes[ROMLOCATION_COUNT];
 
-    RomHash* begin()
+    constexpr RomHash* begin()
     {
         return &hashes[0];
     }
 
-    const RomHash* begin() const
+    constexpr const RomHash* begin() const
     {
         return &hashes[0];
     }
 
-    RomHash* end()
+    constexpr RomHash* end()
     {
         for (auto& h : hashes)
         {
@@ -108,7 +108,7 @@ struct RomsetDefinition
         return &hashes[ROMLOCATION_COUNT];
     }
 
-    const RomHash* end() const
+    constexpr const RomHash* end() const
     {
         for (const auto& h : hashes)
         {
@@ -120,7 +120,7 @@ struct RomsetDefinition
         return &hashes[ROMLOCATION_COUNT];
     }
 
-    void ReplaceHash(RomLocation rom, const SHA256_Digest& hash)
+    constexpr void ReplaceHash(RomLocation rom, const SHA256_Digest& hash)
     {
         for (RomHash& h : *this)
         {

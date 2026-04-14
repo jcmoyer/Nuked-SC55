@@ -68,6 +68,7 @@ target_sources(nuked-sc55-backend
     src/backend/pcm.cpp
     src/backend/rom_io.cpp
     src/backend/rom.cpp
+    src/backend/standard_romsets.cpp
     src/backend/submcu.cpp
 
     src/backend/sha/sha-private.h
@@ -100,6 +101,7 @@ target_sources(nuked-sc55-backend
     src/backend/rom_io.h
     src/backend/rom.h
     src/backend/sha256.h
+    src/backend/standard_romsets.h
     src/backend/string_map.h
     src/backend/string_vector.h
     src/backend/submcu.h
