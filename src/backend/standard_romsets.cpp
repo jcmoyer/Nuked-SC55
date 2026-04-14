@@ -83,6 +83,7 @@ consteval RomsetDefinition MakeCtf(Romset romset, size_t variant)
     RomsetDefinition result = CTF_TEMPLATE;
     result.ReplaceHash(RomLocation::ROM2, CTF_ROM2_HASHES[variant]);
     result.name = CTF_ROMSET_NAMES[which_table][variant];
+    result.romset = romset;
     return result;
 }
 
