@@ -66,7 +66,8 @@ enum class RomLoader
 };
 
 // `rom_directory`: directory containing complete romset(s)
-// `desired_romset`: romset the user wants to load; if empty string the first romset in the directory will be returned
+// `desired_romset`: romset the user wants to load; if empty this defaults to mk2 for the legacy loader and the first
+//                   detected romset in `rom_directory` for the hashing loader
 // `loader`: which loader to use
 // `overrides`: overrides for specific roms in the romset
 // `result`: receives the results of loading `desired_romset`
