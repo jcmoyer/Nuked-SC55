@@ -1,5 +1,6 @@
 #pragma once
 
+#include "file_hashing.h"
 #include "rom_io.h"
 
 namespace common
