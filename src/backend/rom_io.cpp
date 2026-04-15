@@ -383,9 +383,9 @@ void GetCompleteRomsetNames(const RomsetRegistry&     romsets,
     for (const auto& romset : romsets)
     {
         bool is_complete = true;
-        for (const auto& pair : romset)
+        for (RomLocation location : romset.GetValidLocations())
         {
-            if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
+            if (location_mask[(size_t)location] && !hashed_files.Contains(romset.GetHash(location)))
             {
                 is_complete = false;
                 break;
@@ -407,9 +407,9 @@ void GetPartialRomsetNames(const RomsetRegistry&     romsets,
     for (const auto& romset : romsets)
     {
         bool is_partial = false;
-        for (const auto& pair : romset)
+        for (RomLocation location : romset.GetValidLocations())
         {
-            if (location_mask[(size_t)pair.location] && hashed_files.Contains(pair.hash))
+            if (location_mask[(size_t)location] && hashed_files.Contains(romset.GetHash(location)))
             {
                 is_partial = true;
                 break;
@@ -436,9 +436,9 @@ bool ContainsRomsetFiles(const RomsetRegistry&     romsets,
 
     bool is_complete = true;
 
-    for (const auto& pair : *def)
+    for (RomLocation location : def->GetValidLocations())
     {
-        if (location_mask[(size_t)pair.location] && !hashed_files.Contains(pair.hash))
+        if (location_mask[(size_t)location] && !hashed_files.Contains(def->GetHash(location)))
         {
             is_complete = false;
             break;
@@ -461,18 +461,18 @@ bool GetRomsetInfo(const RomsetRegistry&     romsets,
         return false;
     }
 
-    for (const auto& pair : *def)
+    for (RomLocation location : def->GetValidLocations())
     {
-        const HashedFile* hf = hashed_files.GetFile(pair.hash);
+        const HashedFile* hf = hashed_files.GetFile(def->GetHash(location));
 
         if (!hf)
         {
             return false;
         }
 
-        if (location_mask[(size_t)pair.location])
+        if (location_mask[(size_t)location])
         {
-            out_info.rom_paths[(size_t)pair.location] = hf->path;
+            out_info.rom_paths[(size_t)location] = hf->path;
             // TODO: This is a large buffer copy. In practice this probably doesn't matter because we should only have
             // ~5 roms on average and most of them will be small. It is difficult to avoid this for two reasons: 1) we
             // need to unscramble waveroms which needs a second buffer allocation anyways, and 2) RomsetInfo is also
@@ -481,7 +481,7 @@ bool GetRomsetInfo(const RomsetRegistry&     romsets,
             // unscramble waveroms. The final design should probably allocate one contiguous buffer to hold all roms
             // for better locality. Then we copy all of the roms into that buffer, unscrambling the waveroms at that
             // point.
-            out_info.rom_data[(size_t)pair.location] = hf->data;
+            out_info.rom_data[(size_t)location] = hf->data;
         }
     }
 

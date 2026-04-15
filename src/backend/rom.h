@@ -70,65 +70,168 @@ bool IsWaverom(RomLocation location);
 bool IsOptionalRom(Romset romset, RomLocation location);
 bool IsRequiredRom(Romset romset, RomLocation location);
 
-struct RomHash
+// Helper type for constructing RomsetDefinitions at compile time. An array of
+// `RomHashLocationPair` has a dense representation, but can be converted to
+// the sparse representation required by `RomsetHashes` at compile time. This
+// is provided for convenience because writing arrays with holes is
+// error-prone.
+struct RomHashLocationPair
 {
     SHA256_Digest hash;
     RomLocation   location;
-
-    auto operator<=>(const RomHash&) const = default;
 };
 
-constexpr RomHash NULL_HASH{{}, {}};
+// This is a sparse array containing SHA256 hashes for each possible rom in a
+// romset. Most romsets will only use 5 slots in the array, so it is necessary
+// to check that a rom is present before attempting to use the hash for a rom
+// location. This can be done manually or by using `GetValidLocations` to skip
+// holes in the array.
+class RomsetHashes
+{
+public:
+    constexpr RomsetHashes() = default;
 
+    // Expands a `RomHashLocationPair` list into a `RomsetHashes`.
+    constexpr RomsetHashes(std::initializer_list<RomHashLocationPair> pairs)
+    {
+        for (const RomHashLocationPair& pair : pairs)
+        {
+            m_hashes[(size_t)pair.location] = pair.hash;
+        }
+    }
+
+    constexpr const SHA256_Digest& operator[](RomLocation index) const
+    {
+        return m_hashes[(size_t)index];
+    }
+
+    constexpr SHA256_Digest& operator[](RomLocation index)
+    {
+        return m_hashes[(size_t)index];
+    }
+
+    constexpr bool ContainsHash(RomLocation rom) const
+    {
+        return (*this)[rom] != SHA256_Digest{};
+    }
+
+    class LocationRange;
+
+    class LocationIterator
+    {
+    public:
+        constexpr LocationIterator& operator++()
+        {
+            m_raw_location = m_parent.FindNextLocation(m_raw_location + 1);
+            return *this;
+        }
+
+        constexpr bool operator==(const LocationIterator& rhs)
+        {
+            return &m_parent == &rhs.m_parent && m_raw_location == rhs.m_raw_location;
+        }
+
+        constexpr bool operator!=(const LocationIterator& rhs)
+        {
+            return !(*this == rhs);
+        }
+
+        constexpr RomLocation operator*() const
+        {
+            return (RomLocation)m_raw_location;
+        }
+
+    private:
+        friend class LocationRange;
+
+        constexpr LocationIterator(const RomsetHashes& parent)
+            : m_parent(parent),
+              m_raw_location(ROMLOCATION_COUNT)
+        {
+        }
+
+        constexpr LocationIterator(const RomsetHashes& parent, size_t pos)
+            : m_parent(parent),
+              m_raw_location(pos)
+        {
+        }
+
+        const RomsetHashes& m_parent;
+        size_t              m_raw_location;
+    };
+
+    class LocationRange
+    {
+    public:
+        constexpr LocationIterator begin() const
+        {
+            return m_first;
+        }
+
+        constexpr LocationIterator end() const
+        {
+            return m_last;
+        }
+
+    private:
+        friend class RomsetHashes;
+
+        constexpr LocationRange(const RomsetHashes& parent)
+            : m_first(parent, parent.FindNextLocation(0)),
+              m_last(parent)
+        {
+        }
+
+        LocationIterator m_first, m_last;
+    };
+
+    constexpr LocationRange GetValidLocations() const
+    {
+        return LocationRange(*this);
+    }
+
+private:
+    size_t FindNextLocation(size_t start) const
+    {
+        for (size_t i = start; i < ROMLOCATION_COUNT; ++i)
+        {
+            if (ContainsHash((RomLocation)i))
+            {
+                return i;
+            }
+        }
+        return ROMLOCATION_COUNT;
+    }
+
+    std::array<SHA256_Digest, ROMLOCATION_COUNT> m_hashes{};
+};
+
+// Contains a complete description of a romset.
 struct RomsetDefinition
 {
-    const char* name;
-    Romset      romset;
-    RomHash     hashes[ROMLOCATION_COUNT];
+    const char*  name;
+    Romset       romset;
+    RomsetHashes hashes;
 
-    constexpr RomHash* begin()
+    constexpr const SHA256_Digest& GetHash(RomLocation rom) const
     {
-        return &hashes[0];
+        return hashes[rom];
     }
 
-    constexpr const RomHash* begin() const
+    constexpr bool ContainsHash(RomLocation rom) const
     {
-        return &hashes[0];
-    }
-
-    constexpr RomHash* end()
-    {
-        for (auto& h : hashes)
-        {
-            if (h == NULL_HASH)
-            {
-                return &h;
-            }
-        }
-        return &hashes[ROMLOCATION_COUNT];
-    }
-
-    constexpr const RomHash* end() const
-    {
-        for (const auto& h : hashes)
-        {
-            if (h == NULL_HASH)
-            {
-                return &h;
-            }
-        }
-        return &hashes[ROMLOCATION_COUNT];
+        return hashes.ContainsHash(rom);
     }
 
     constexpr void ReplaceHash(RomLocation rom, const SHA256_Digest& hash)
     {
-        for (RomHash& h : *this)
-        {
-            if (h.location == rom)
-            {
-                h.hash = hash;
-            }
-        }
+        hashes[rom] = hash;
+    }
+
+    // Returns a range that iterates over only the RomLocations used by this set.
+    constexpr RomsetHashes::LocationRange GetValidLocations() const
+    {
+        return hashes.GetValidLocations();
     }
 };
 
