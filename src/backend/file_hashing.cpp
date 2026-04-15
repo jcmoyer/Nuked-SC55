@@ -1,10 +1,15 @@
 #include "file_hashing.h"
 
-void HashedFileRegistry::AddFile(SHA256_Digest hash, HashedFile file)
+bool HashedFileRegistry::AddFile(SHA256_Digest hash, HashedFile file)
 {
     const size_t next_index = m_files.size();
-    m_hash_map.emplace(std::make_pair(hash, next_index));
-    m_files.emplace_back(std::move(file));
+    auto [it, inserted]     = m_hash_map.emplace(std::make_pair(hash, next_index));
+    if (inserted)
+    {
+        m_files.emplace_back(std::move(file));
+        return true;
+    }
+    return false;
 }
 
 bool HashedFileRegistry::Contains(SHA256_Digest hash) const

@@ -21,7 +21,10 @@ struct HashedFile
 class HashedFileRegistry
 {
 public:
-    void AddFile(SHA256_Digest hash, HashedFile file);
+    // Returns true if the file was added, or false if there is already one
+    // with the same hash. Duplicate hashes is not an error condition.
+    bool AddFile(SHA256_Digest hash, HashedFile file);
+
     bool Contains(SHA256_Digest hash) const;
 
     // The returned pointer is invalidated when the registry is modified.
