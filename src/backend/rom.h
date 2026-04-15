@@ -145,8 +145,9 @@ public:
     // The returned pointer is invalidated if the registry is modified.
     const RomsetDefinition* GetDefinition(std::string_view name) const;
 
-    // Adds `romset` to the registry.
-    void AddRomset(const RomsetDefinition& romset);
+    // Adds `romset` to the registry. Returns true if successful and false if
+    // the registry already contains a definition with the same name.
+    bool AddRomset(const RomsetDefinition& romset);
 
     // Returns all of the names registered with the registry. `out_names` will be cleared before receiving the names.
     void GetAllRomsetNames(StringVector& out_names) const;

@@ -138,11 +138,15 @@ const RomsetDefinition* RomsetRegistry::GetDefinition(std::string_view name) con
     return &m_romsets[it->second];
 }
 
-void RomsetRegistry::AddRomset(const RomsetDefinition& romset)
+bool RomsetRegistry::AddRomset(const RomsetDefinition& romset)
 {
-    const size_t index = m_romsets.size();
-    m_name_map.insert(std::make_pair(romset.name, index));
-    m_romsets.push_back(romset);
+    const size_t index  = m_romsets.size();
+    auto [it, inserted] = m_name_map.insert(std::make_pair(romset.name, index));
+    if (inserted)
+    {
+        m_romsets.push_back(romset);
+    }
+    return inserted;
 }
 
 void RomsetRegistry::GetAllRomsetNames(StringVector& out_names) const
