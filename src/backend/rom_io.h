@@ -66,6 +66,13 @@ void SetRomsetFilenames(RomsetInfo&                  romset_info,
 // `missing`.
 bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatusSet* status = nullptr);
 
+// Similar to `IsCompleteRomset`, except this function operates on `RomsetDefinition` which may be known earlier than a
+// `RomsetInfo` is available.
+bool GetDefinitionCompletion(const RomsetDefinition&   def,
+                             const HashedFileRegistry& hashed_files,
+                             const RomLocationSet&     location_mask,
+                             RomCompletionStatusSet&   completion);
+
 size_t CountPresent(const RomCompletionStatusSet& status);
 
 // For each `rom` in `info` this function loads the file referenced by `info.rom_paths[rom]` into `info.rom_data[rom]`.

@@ -129,7 +129,6 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                     }
                     did_find_romset = true;
                     picked_name     = name;
-                    break;
                 }
             }
 
@@ -309,10 +308,44 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
             }
         }
         break;
-    case LoadRomsetError::AmbiguousRomset:
-        fprintf(output, "Requested romset `%s` is ambiguous:\n", RomsetName(result.romset));
-        // TODO: print candidates
-        break;
+    case LoadRomsetError::AmbiguousRomset: {
+        fprintf(output, "Requested romset `%s` is ambiguous:\n", ParsableRomsetName(result.romset));
+
+        StringVector names;
+        for (const RomsetDefinition& def : result.registries.romsets)
+        {
+            // Currently, ambiguity only happens when the user writes a family name but there are multiple romsets
+            // under that family in the rom directory. e.g. "--romset jv880" with the directory containing both
+            // "jv880-v1.0.0" and "jv880-v1.0.1"
+            //
+            // This may change in the future if we decide it is ambiguous to leave --romset unspecified when multiple
+            // romsets of any kind are present.
+            if (def.romset != result.romset)
+            {
+                continue;
+            }
+
+            RomCompletionStatusSet completion;
+            if (GetDefinitionCompletion(def, result.registries.hashes, ROMLOCATION_ALL, completion))
+            {
+                fprintf(output, "Found %s:\n", def.name);
+
+                for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
+                {
+                    if (completion[i] == RomCompletionStatus::Present)
+                    {
+                        fprintf(output,
+                                "  * %7s: %-12s %s\n",
+                                ToCString(completion[i]),
+                                ToCString((RomLocation)i),
+                                result.registries.hashes.GetFile(def.GetHash((RomLocation)i))
+                                    ->path.generic_string()
+                                    .c_str());
+                    }
+                }
+            }
+        }
+    }
     }
 
     if (error == LoadRomsetError{})

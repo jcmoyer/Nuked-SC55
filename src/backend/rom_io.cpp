@@ -233,6 +233,36 @@ bool IsCompleteRomset(const RomsetInfo& info, Romset romset, RomCompletionStatus
     return is_complete;
 }
 
+bool GetDefinitionCompletion(const RomsetDefinition&   def,
+                             const HashedFileRegistry& hashed_files,
+                             const RomLocationSet&     location_mask,
+                             RomCompletionStatusSet&   completion)
+{
+    completion.fill(RomCompletionStatus::Unused);
+
+    bool is_complete = true;
+
+    for (RomLocation rom : def.GetValidLocations())
+    {
+        if (!location_mask[(size_t)rom])
+        {
+            continue;
+        }
+
+        if (hashed_files.Contains(def.GetHash(rom)))
+        {
+            completion[(size_t)rom] = RomCompletionStatus::Present;
+        }
+        else
+        {
+            completion[(size_t)rom] = RomCompletionStatus::Missing;
+            is_complete             = false;
+        }
+    }
+
+    return is_complete;
+}
+
 size_t CountPresent(const RomCompletionStatusSet& status)
 {
     size_t count = 0;
