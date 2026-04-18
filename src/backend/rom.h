@@ -191,7 +191,7 @@ public:
     }
 
 private:
-    size_t FindNextLocation(size_t start) const
+    constexpr size_t FindNextLocation(size_t start) const
     {
         for (size_t i = start; i < ROMLOCATION_COUNT; ++i)
         {

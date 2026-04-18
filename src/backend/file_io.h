@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <vector>
+#include <span>
 
 bool FIO_ReadAllBytes(const std::filesystem::path& filename, std::vector<uint8_t>& buffer);
 
