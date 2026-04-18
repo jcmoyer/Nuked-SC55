@@ -238,7 +238,7 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
         PrintRomsets(output);
         break;
     case LoadRomsetError::NoCompleteRomsets: {
-        fprintf(output, "No complete romsets found.\n");
+        fprintf(output, "No complete romsets for %s found.\n", ParsableRomsetName(result.romset));
 
         StringVector partial_names;
         GetPartialRomsetNames(result.registries.romsets, result.registries.hashes, ROMLOCATION_ALL, partial_names);
@@ -252,9 +252,19 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
             (void)result.registries.romsets.GetRomsetFamily(name, family);
             (void)GetRomsetInfo(result.registries.romsets, name, result.registries.hashes, ROMLOCATION_ALL, info);
 
-            (void)IsCompleteRomset(info, family, &completion);
+            bool complete = IsCompleteRomset(info, family, &completion);
 
-            fprintf(output, "Romset %s (%s) partially complete:\n", name.c_str(), RomsetName(family));
+            const char* format;
+            if (complete)
+            {
+                format = "Romset %s (%s) complete:\n";
+            }
+            else
+            {
+                format = "Romset %s (%s) partially complete:\n";
+            }
+
+            fprintf(output, format, name.c_str(), RomsetName(family));
             for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
             {
                 if (completion[i] != RomCompletionStatus::Unused)

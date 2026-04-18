@@ -491,29 +491,33 @@ bool GetRomsetInfo(const RomsetRegistry&     romsets,
         return false;
     }
 
+    bool is_complete = true;
+
     for (RomLocation location : def->GetValidLocations())
     {
+        if (!location_mask[(size_t)location])
+        {
+            continue;
+        }
+
         const HashedFile* hf = hashed_files.GetFile(def->GetHash(location));
 
         if (!hf)
         {
-            return false;
+            is_complete = false;
+            continue;
         }
 
-        if (location_mask[(size_t)location])
-        {
-            out_info.rom_paths[(size_t)location] = hf->path;
-            // TODO: This is a large buffer copy. In practice this probably doesn't matter because we should only have
-            // ~5 roms on average and most of them will be small. It is difficult to avoid this for two reasons: 1) we
-            // need to unscramble waveroms which needs a second buffer allocation anyways, and 2) RomsetInfo is also
-            // acting as storage for roms which will likely be shared between emulator instances in the future. We will
-            // not be able to point into the file registry when sharing is enabled, because again, we need to
-            // unscramble waveroms. The final design should probably allocate one contiguous buffer to hold all roms
-            // for better locality. Then we copy all of the roms into that buffer, unscrambling the waveroms at that
-            // point.
-            out_info.rom_data[(size_t)location] = hf->data;
-        }
+        out_info.rom_paths[(size_t)location] = hf->path;
+        // TODO: This is a large buffer copy. In practice this probably doesn't matter because we should only have ~5
+        // roms on average and most of them will be small. It is difficult to avoid this for two reasons: 1) we need to
+        // unscramble waveroms which needs a second buffer allocation anyways, and 2) RomsetInfo is also acting as
+        // storage for roms which will likely be shared between emulator instances in the future. We will not be able
+        // to point into the file registry when sharing is enabled, because again, we need to unscramble waveroms. The
+        // final design should probably allocate one contiguous buffer to hold all roms for better locality. Then we
+        // copy all of the roms into that buffer, unscrambling the waveroms at that point.
+        out_info.rom_data[(size_t)location] = hf->data;
     }
 
-    return true;
+    return is_complete;
 }

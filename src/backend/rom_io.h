@@ -118,6 +118,9 @@ bool ContainsRomsetFiles(const RomsetRegistry&     romsets,
 //
 // `location_mask` allows the caller to control which roms will be returned. The test logic works the same way as
 // in `ContainsRomsetFiles`.
+//
+// Returns true if the definition exists and all the required roms exist in `hashed_files`. If this function returns
+// false, `out_info` will still be populated with the contents of any roms that were found.
 bool GetRomsetInfo(const RomsetRegistry&     romsets,
                    std::string_view          name,
                    const HashedFileRegistry& hashed_files,
