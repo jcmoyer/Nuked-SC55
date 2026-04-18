@@ -367,8 +367,7 @@ constexpr RomsetDefinition STANDARD_ROMSET_DEFS[] = {
     // RLP-3237
     ///////////////////////////////////////////////////////////////////////////
     {
-        // TODO: version information available?
-        .name = "rlp3237",
+        .name = "rlp3237-v2.01",
         .romset = Romset::RLP3237,
         .hashes = {
             // R15199827 (H8/532 mcu)
