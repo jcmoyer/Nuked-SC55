@@ -23,14 +23,14 @@
 
 ## Notes for developers
 
-This release contains a large breaking refactor of hash based rom loader.
-`AllRomsetInfo` has been removed because there is not a 1:1 mapping between the
-`Romset` and versions of that romset. Many functions in `rom_io` have been
-changed to operate on `RomsetInfo` instead. To deal with this new requirement,
-`DetectRomsetsByHash` was removed and replaced with two types:
+This release contains a large breaking refactor of the hash based rom loader.
+`AllRomsetInfo` has been removed because there is not a 1:1 mapping between
+`Romset`s and specific versions of that romset. Many functions in `rom_io` have
+been changed to operate on `RomsetInfo` instead. To deal with this new
+requirement, `DetectRomsetsByHash` has been replaced with two types:
 `HashedFileRegistry` for storing file hashes and `RomsetHashRegistry` for
-storing rom hashes per romset. These provide more control over how roms are
-located and are easier to use.
+storing romset hashes. These provide more control over how roms are located and
+are easier to use.
 
 # Version 0.6.1 (2025-07-30)
 
