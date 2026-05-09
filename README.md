@@ -52,3 +52,4 @@ and other contributors:
 - NikitaLita
 - Karmeck
 - Falcosoft
+- Michael Mouton: provided rom hashes and helped expand the test suite

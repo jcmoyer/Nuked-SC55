@@ -8,7 +8,7 @@
   using a JV880 romset.
 - Fixed a subtle timing bug that caused sample output for the JV880 to differ
   slightly from upstream.
-- Updated hashes for several romsets thanks to @zilch510. (#56)
+- Updated hashes for several romsets thanks to @michaelmouton. (#56)
 - Fixed a bug where `--disable-oversampling` with an mk1 romset would cause the
   renderer to run indefinitely. (#48)
 - Added rom hashes for MK1 versions 1.00, 1.10, and 1.20 as well as SC155MK2
