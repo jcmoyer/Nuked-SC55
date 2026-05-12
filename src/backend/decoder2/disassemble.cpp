@@ -3,11 +3,8 @@
 #include <utility>
 
 #include "address_modes.h"
-#include "decode_address.h"
-#include "decode_imm8.h"
-#include "decode_rn.h"
-#include "decode_short.h"
 #include "decoder_handlers.h"
+#include "decoders.h"
 
 std::string I_RenderFormatSuffix(I_Format format)
 {
