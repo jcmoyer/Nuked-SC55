@@ -1,14 +1,8 @@
 #include <cstdint>
 
 #include "dispatch.h"
-#include "dispatch_aa.h"
-#include "dispatch_arn.h"
-#include "dispatch_d8d16_rn.h"
 #include "dispatch_handlers.h"
-#include "dispatch_imm16.h"
-#include "dispatch_postinc_rn.h"
-#include "dispatch_predec_rn.h"
-#include "dispatch_rn.h"
+#include "dispatchers.h"
 #include "mcu.h"
 
 template <MCU_Operand_Size Sz, uint8_t Rn>
