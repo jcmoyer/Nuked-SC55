@@ -13,6 +13,9 @@
 #include "instruction_handlers.h"
 #include "mcu.h"
 
+namespace decoder2
+{
+
 //=============================================================================
 // General format instructions
 //=============================================================================
@@ -1181,3 +1184,5 @@ inline void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byt
         mcu.icache.DoCache(mcu, instr_start, I_MOV_S_W_Rs_aa8<Rn>, instr);
     }
 }
+
+} // namespace decoder2

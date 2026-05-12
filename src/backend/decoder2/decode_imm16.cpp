@@ -3,6 +3,9 @@
 
 #include "decoder_handlers.h"
 
+namespace decoder2
+{
+
 constexpr Decoder_Handler DIS_GENERAL_IMM8[256] = {
     Dis_InvalidInstruction, // 00000000
     Dis_InvalidInstruction, // 00000001
@@ -266,3 +269,5 @@ Decoder_Handler GetDecoderimm16(uint8_t byte)
 {
     return DIS_GENERAL_IMM8[byte];
 }
+
+} // namespace decoder2

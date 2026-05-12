@@ -5,6 +5,9 @@
 #include "dispatchers.h"
 #include "mcu.h"
 
+namespace decoder2
+{
+
 template <MCU_Operand_Size Sz, uint8_t Rn>
 void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
@@ -485,3 +488,5 @@ D_Handler GetDispatcherTop(uint8_t byte)
 {
     return DECODE_TABLE_0[byte];
 }
+
+} // namespace decoder2

@@ -3,6 +3,9 @@
 #include "dispatch.h"
 #include "dispatch_address.h"
 
+namespace decoder2
+{
+
 constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES_AA8{{
     DefineGenericTable<MCU_Operand_Size::BYTE, Mode_Aaa8>(),
     DefineGenericTable<MCU_Operand_Size::WORD, Mode_Aaa8>(),
@@ -22,3 +25,5 @@ D_OpcodeHandler GetDispatcherAaa16(uint8_t opcode, MCU_Operand_Size size)
 {
     return DECODE_TABLES_AA16[(size_t)size][opcode];
 }
+
+} // namespace decoder2

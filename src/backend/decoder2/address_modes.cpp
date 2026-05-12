@@ -2,6 +2,9 @@
 
 #include <utility>
 
+namespace decoder2
+{
+
 const char* ToCString(AddressMode mode)
 {
     switch (mode)
@@ -29,3 +32,5 @@ const char* ToCString(AddressMode mode)
     }
     std::unreachable();
 }
+
+} // namespace decoder2

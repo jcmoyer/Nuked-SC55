@@ -17,6 +17,9 @@
 #include <vector>
 #endif
 
+namespace decoder2
+{
+
 void WriteBin(std::string& s, uint8_t x)
 {
     for (int mask = 0x80; mask; mask >>= 1)
@@ -165,3 +168,5 @@ void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_Cach
     (void)instr;
     D_HardError(mcu);
 }
+
+} // namespace decoder2

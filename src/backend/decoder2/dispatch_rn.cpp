@@ -3,6 +3,9 @@
 #include "dispatch.h"
 #include "dispatch_handlers.h"
 
+namespace decoder2
+{
+
 // 1010[Sz][rrr] | xxxxxxxx [...]
 template <MCU_Operand_Size Sz>
 constexpr std::array<D_OpcodeHandler, 256> DefineTable()
@@ -276,3 +279,5 @@ D_OpcodeHandler GetDispatcherRn(uint8_t opcode, MCU_Operand_Size size)
 {
     return DECODE_TABLES[(size_t)size][opcode];
 }
+
+} // namespace decoder2

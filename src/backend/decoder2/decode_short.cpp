@@ -3,6 +3,9 @@
 
 #include "decoder_handlers.h"
 
+namespace decoder2
+{
+
 constexpr Decoder_Handler DIS_SHORT[256] = {
     Dis_NOP,              // 00000000
     Dis_SCB_F,            // 00000001
@@ -266,3 +269,5 @@ Decoder_Handler GetDecoderShort(uint8_t byte)
 {
     return DIS_SHORT[byte];
 }
+
+} // namespace decoder2

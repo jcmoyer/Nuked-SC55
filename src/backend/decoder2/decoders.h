@@ -2,6 +2,9 @@
 
 #include "disassemble.h"
 
+namespace decoder2
+{
+
 // Rn
 Decoder_Handler GetDecoderRn(uint8_t byte);
 
@@ -16,3 +19,5 @@ Decoder_Handler GetDecoderimm16(uint8_t byte);
 
 // Short-form instructions
 Decoder_Handler GetDecoderShort(uint8_t byte);
+
+} // namespace decoder2

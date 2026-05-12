@@ -7,6 +7,9 @@
 
 struct mcu_t;
 
+namespace decoder2
+{
+
 using D_Handler       = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte);
 using D_OpcodeHandler = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr);
 
@@ -23,3 +26,5 @@ void D_Fallback(mcu_t& mcu);
 void D_HardError(mcu_t&                      mcu,
                  const char*                 message  = nullptr,
                  const std::source_location& location = std::source_location::current());
+
+} // namespace decoder2

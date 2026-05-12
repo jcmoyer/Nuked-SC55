@@ -6,6 +6,9 @@
 
 struct mcu_t;
 
+namespace decoder2
+{
+
 // Contains all of the parameters for a fully decoded instruction.
 struct I_CachedInstruction
 {
@@ -67,3 +70,5 @@ public:
 private:
     std::unique_ptr<ArrayType> m_cache;
 };
+
+} // namespace decoder2

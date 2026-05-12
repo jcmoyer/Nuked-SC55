@@ -3,6 +3,9 @@
 
 #include "decoder_handlers.h"
 
+namespace decoder2
+{
+
 constexpr Decoder_Handler GENERIC_TABLE[256] = {
     nullptr,                // 00000000 TODO
     Dis_InvalidInstruction, // 00000001
@@ -266,3 +269,5 @@ Decoder_Handler GetDecoderGeneric(uint8_t byte)
 {
     return GENERIC_TABLE[byte];
 }
+
+} // namespace decoder2

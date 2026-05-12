@@ -2,6 +2,9 @@
 
 #include <cstdint>
 
+namespace decoder2
+{
+
 class I_Decoder;
 struct I_DecodedInstruction;
 
@@ -152,3 +155,5 @@ void Dis_PJMP_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr
 void Dis_PJSR_aa24(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_RTE(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
 void Dis_SLEEP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+
+} // namespace decoder2

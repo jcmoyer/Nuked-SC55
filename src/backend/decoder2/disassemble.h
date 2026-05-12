@@ -10,6 +10,9 @@
 
 #include "address_modes.h"
 
+namespace decoder2
+{
+
 enum I_InstructionType
 {
     Unknown,
@@ -260,3 +263,5 @@ using Decoder_Handler = void (*)(I_Decoder& decoder, uint8_t byte, I_DecodedInst
 bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedInstruction& result);
 
 void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result);
+
+} // namespace decoder2

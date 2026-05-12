@@ -3,6 +3,9 @@
 #include "dispatch.h"
 #include "dispatch_handlers.h"
 
+namespace decoder2
+{
+
 template <MCU_Operand_Size Sz>
 struct Size_To_Mode
 {
@@ -300,3 +303,5 @@ D_OpcodeHandler GetDispatcherImm16(uint8_t opcode)
 {
     return DECODE_TABLE_IMM16[opcode];
 }
+
+} // namespace decoder2

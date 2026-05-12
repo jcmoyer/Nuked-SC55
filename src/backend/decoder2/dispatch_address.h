@@ -4,6 +4,9 @@
 #include "dispatch_handlers.h"
 #include "mcu_opcodes.h"
 
+namespace decoder2
+{
+
 // Modes that refer to an address share the same instructions. These are:
 //
 // - @Rn
@@ -279,3 +282,5 @@ constexpr std::array<D_OpcodeHandler, 256> DefineGenericTable()
     t[0b11111111] = D_BTST_imm4_EAd<Sz, 15, Mode>;
     return t;
 }
+
+} // namespace decoder2

@@ -6,6 +6,9 @@
 #include "decoder_handlers.h"
 #include "decoders.h"
 
+namespace decoder2
+{
+
 std::string I_RenderFormatSuffix(I_Format format)
 {
     switch (format)
@@ -486,3 +489,5 @@ void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result
         result += op_str;
     }
 }
+
+} // namespace decoder2

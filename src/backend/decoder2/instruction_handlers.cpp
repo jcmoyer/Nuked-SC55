@@ -2,6 +2,9 @@
 
 #include "mcu.h"
 
+namespace decoder2
+{
+
 void I_NOP(mcu_t& mcu, const I_CachedInstruction&)
 {
     ++mcu.pc;
@@ -221,3 +224,5 @@ void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr)
     MCU_PushStack(mcu, instr.br_false);
     mcu.pc = instr.br_true;
 }
+
+} // namespace decoder2

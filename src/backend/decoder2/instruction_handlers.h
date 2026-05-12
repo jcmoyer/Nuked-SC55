@@ -9,6 +9,9 @@
 #include "mcu.h"
 #include "mcu_opcodes.h"
 
+namespace decoder2
+{
+
 constexpr uint16_t SX(uint8_t byte)
 {
     return (uint16_t)(int8_t)byte;
@@ -2152,3 +2155,5 @@ inline void I_TRAPA_imm4(mcu_t& mcu, const I_CachedInstruction& st)
 }
 
 void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr);
+
+} // namespace decoder2

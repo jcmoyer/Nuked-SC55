@@ -2,6 +2,9 @@
 
 #include "mcu.h"
 
+namespace decoder2
+{
+
 I_InstructionCache::I_InstructionCache()
 {
     m_cache = std::make_unique<ArrayType>();
@@ -51,3 +54,5 @@ size_t I_InstructionCache::CountCached() const
     }
     return count;
 }
+
+} // namespace decoder2

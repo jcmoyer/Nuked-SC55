@@ -1,6 +1,9 @@
 #include "decoder_handlers.h"
 #include "disassemble.h"
 
+namespace decoder2
+{
+
 constexpr Decoder_Handler DIS_GENERAL_RN[256] = {
     nullptr,                // 00000000 TODO
     Dis_InvalidInstruction, // 00000001
@@ -264,3 +267,5 @@ Decoder_Handler GetDecoderRn(uint8_t byte)
 {
     return DIS_GENERAL_RN[byte];
 }
+
+} // namespace decoder2

@@ -1,5 +1,8 @@
 #pragma once
 
+namespace decoder2
+{
+
 enum class AddressMode
 {
     // Register direct (Rn)
@@ -53,3 +56,5 @@ struct Mode_Aaa8{};
 struct Mode_Aaa16{};
 
 // clang-format on
+
+} // namespace decoder2

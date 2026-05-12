@@ -2,6 +2,9 @@
 
 #include "disassemble.h"
 
+namespace decoder2
+{
+
 void Dis_MOV_G_EAs_Rd(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
 {
     (void)decoder;
@@ -1235,3 +1238,5 @@ void Dis_SLEEP(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr)
     (void)byte;
     instr.instr = SLEEP;
 }
+
+} // namespace decoder2
