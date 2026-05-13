@@ -802,7 +802,7 @@ void MCU_Write16(mcu_t& mcu, uint32_t address, uint16_t value)
 void MCU_ReadInstruction(mcu_t& mcu)
 {
 #if NUKED_ENABLE_DECODER2
-    decoder2::D_FetchDecodeExecuteNext(mcu);
+    decoder2::FetchDecodeExecuteNext(mcu);
 #else
     uint8_t operand = MCU_ReadCodeAdvance(mcu);
     MCU_Operand_Table[operand](mcu, operand);

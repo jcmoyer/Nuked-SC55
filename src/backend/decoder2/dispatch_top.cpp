@@ -24,7 +24,7 @@ void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -44,7 +44,7 @@ void D_General_APreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -64,7 +64,7 @@ void D_General_APostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -84,7 +84,7 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -107,7 +107,7 @@ void D_General_Ad8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -130,7 +130,7 @@ void D_General_Ad16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -151,7 +151,7 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -172,7 +172,7 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -194,7 +194,7 @@ void D_General_Aaa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 
@@ -216,7 +216,7 @@ void D_General_Aaa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 }
 

@@ -72,14 +72,14 @@ std::unordered_map<uint32_t, uint64_t> hitcount;
 ///////////////////////////////////////////////////////////////////////////////
 
 // Backtrack and re-try using original decoder
-void D_Fallback(mcu_t& mcu)
+void Fallback(mcu_t& mcu)
 {
     // original decoder does not use coder
     const uint8_t byte = MCU_ReadCodeAdvance(mcu);
     MCU_Operand_Table[byte](mcu, byte);
 }
 
-void D_HardError(mcu_t& mcu, const char* message, const std::source_location& location)
+void FatalError(mcu_t& mcu, const char* message, const std::source_location& location)
 {
     const uint32_t base_addr = MCU_GetAddress(mcu.cp, mcu.pc);
 
@@ -114,7 +114,7 @@ void D_HardError(mcu_t& mcu, const char* message, const std::source_location& lo
     exit(1);
 }
 
-void D_FetchDecodeExecuteNext(mcu_t& mcu)
+void FetchDecodeExecuteNext(mcu_t& mcu)
 {
     uint32_t instr_start = MCU_GetAddress(mcu.cp, mcu.pc);
 
@@ -138,7 +138,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     }
     else
     {
-        D_HardError(mcu);
+        FatalError(mcu);
     }
 
 #if INSTRUCTION_HIT_TRACING
@@ -192,14 +192,6 @@ void DoCacheBranch(
     st.br_false = next_ip;
     cache.Write(instr_start, {.handler = func, .params = st});
     func(mcu, st);
-}
-
-void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)instr_start;
-    (void)byte;
-    (void)instr;
-    D_HardError(mcu);
 }
 
 } // namespace decoder2

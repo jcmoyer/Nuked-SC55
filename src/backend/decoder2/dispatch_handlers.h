@@ -18,6 +18,17 @@ namespace decoder2
 {
 
 //=============================================================================
+// Pseudo instructions
+//=============================================================================
+inline void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+{
+    (void)instr_start;
+    (void)byte;
+    (void)instr;
+    FatalError(mcu, "Invalid instruction");
+}
+
+//=============================================================================
 // General format instructions
 //=============================================================================
 template <Size Sz, uint8_t OpReg, typename Mode>
@@ -834,7 +845,7 @@ inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
             DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<7>, disp);
             break;
         default:
-            D_HardError(mcu, "SCB/F invalid regcode");
+            FatalError(mcu, "SCB/F invalid regcode");
         }
     }
     else if (byte == 0b00000110)
@@ -866,7 +877,7 @@ inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
             DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<7>, disp);
             break;
         default:
-            D_HardError(mcu, "SCB/NE invalid regcode");
+            FatalError(mcu, "SCB/NE invalid regcode");
         }
     }
     else if (byte == 0b00000111)
@@ -898,12 +909,12 @@ inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
             DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<7>, disp);
             break;
         default:
-            D_HardError(mcu, "SCB/EQ invalid regcode");
+            FatalError(mcu, "SCB/EQ invalid regcode");
         }
     }
     else
     {
-        D_HardError(mcu, "not implemented");
+        FatalError(mcu, "not implemented");
     }
 }
 
@@ -1038,7 +1049,7 @@ inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
         }
         else
         {
-            D_HardError(mcu);
+            FatalError(mcu);
         }
     }
 }
