@@ -11,23 +11,24 @@ namespace decoder2
 {
 
 using D_Handler       = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte);
-using D_OpcodeHandler = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr);
+using D_OpcodeHandler = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr);
 
 void D_FetchDecodeExecuteNext(mcu_t& mcu);
 
-void DoCache(mcu_t&                     mcu,
-             I_InstructionCache&        cache,
-             uint32_t                   instr_start,
-             I_Handler_Erased_Func      func,
-             const I_CachedInstruction& st);
+void DoCache(mcu_t&                          mcu,
+             InstructionCache&               cache,
+             uint32_t                        instr_start,
+             CachedInstructionHandler        func,
+             const DecodedInstructionParams& st);
 
-void DoCacheJump(mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
+void DoCacheJump(
+    mcu_t& mcu, InstructionCache& cache, uint32_t instr_start, CachedInstructionHandler func, int16_t disp);
 
 void DoCacheBranch(
-    mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
+    mcu_t& mcu, InstructionCache& cache, uint32_t instr_start, CachedInstructionHandler func, int16_t disp);
 
 // void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte);
-void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr);
+void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr);
 
 // Backtrack and re-try using original decoder
 void D_Fallback(mcu_t& mcu);

@@ -325,7 +325,7 @@ struct mcu_t {
 
 #if NUKED_ENABLE_DECODER2
     // Decoder state
-    decoder2::I_InstructionCache icache;
+    decoder2::InstructionCache icache;
     CodeReader                   coder;
 #endif
 };

@@ -3,18 +3,18 @@
 namespace decoder2
 {
 
-I_InstructionCache::I_InstructionCache()
+InstructionCache::InstructionCache()
 {
     m_cache = std::make_unique<ArrayType>();
     m_cache->fill({});
 }
 
-size_t I_InstructionCache::CountCached() const
+size_t InstructionCache::CountCached() const
 {
     size_t count = 0;
     for (const auto& i : *m_cache)
     {
-        if (i.F)
+        if (i.handler)
         {
             ++count;
         }

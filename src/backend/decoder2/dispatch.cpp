@@ -119,9 +119,9 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     uint32_t instr_start = MCU_GetAddress(mcu.cp, mcu.pc);
     mcu.coder            = CodeReader{};
 
-    if (const I_Handler& handler = mcu.icache.Lookup(instr_start); handler.F)
+    if (const CachedInstruction& instr = mcu.icache.Lookup(instr_start); instr.handler)
     {
-        handler.F(mcu, handler.instr);
+        instr.handler(mcu, instr.params);
         return;
     }
 
@@ -161,40 +161,40 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
 #endif
 }
 
-void DoCache(mcu_t&                     mcu,
-             I_InstructionCache&        cache,
-             uint32_t                   instr_start,
-             I_Handler_Erased_Func      func,
-             const I_CachedInstruction& st)
+void DoCache(mcu_t&                          mcu,
+             InstructionCache&               cache,
+             uint32_t                        instr_start,
+             CachedInstructionHandler        func,
+             const DecodedInstructionParams& st)
 {
-    cache.Write(instr_start, {.F = func, .instr = st});
+    cache.Write(instr_start, {.handler = func, .params = st});
     func(mcu, st);
 }
 
-void DoCacheJump(mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
+void DoCacheJump(mcu_t& mcu, InstructionCache& cache, uint32_t instr_start, CachedInstructionHandler func, int16_t disp)
 {
     const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
 
-    I_CachedInstruction st;
+    DecodedInstructionParams st;
     st.br_true  = (uint16_t)(next_ip + disp);
     st.br_false = (uint16_t)(next_ip + disp);
-    cache.Write(instr_start, {.F = func, .instr = st});
+    cache.Write(instr_start, {.handler = func, .params = st});
     func(mcu, st);
 }
 
 void DoCacheBranch(
-    mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
+    mcu_t& mcu, InstructionCache& cache, uint32_t instr_start, CachedInstructionHandler func, int16_t disp)
 {
     const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
 
-    I_CachedInstruction st;
+    DecodedInstructionParams st;
     st.br_true  = (uint16_t)(next_ip + disp);
     st.br_false = next_ip;
-    cache.Write(instr_start, {.F = func, .instr = st});
+    cache.Write(instr_start, {.handler = func, .params = st});
     func(mcu, st);
 }
 
-void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)instr_start;
     (void)byte;

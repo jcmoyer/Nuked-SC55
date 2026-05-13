@@ -13,7 +13,7 @@ void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -33,7 +33,7 @@ void D_General_APreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -53,7 +53,7 @@ void D_General_APostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -73,7 +73,7 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -95,7 +95,7 @@ void D_General_Ad8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const int16_t disp = (int8_t)mcu.coder.ReadU8(mcu);
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_disp = disp;
     instr.ea_reg  = Rn;
 
@@ -118,7 +118,7 @@ void D_General_Ad16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const int16_t disp = (int16_t)mcu.coder.ReadU16(mcu);
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_disp = disp;
     instr.ea_reg  = Rn;
 
@@ -140,7 +140,7 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint16_t imm = mcu.coder.ReadU8(mcu);
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -161,7 +161,7 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint16_t imm = mcu.coder.ReadU16(mcu);
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -183,7 +183,7 @@ void D_General_Aaa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint8_t imm = mcu.coder.ReadU8(mcu);
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
@@ -205,7 +205,7 @@ void D_General_Aaa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint16_t imm = (uint16_t)mcu.coder.ReadU16(mcu);
 
-    I_CachedInstruction instr{};
+    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
     const uint8_t   opcode  = mcu.coder.ReadU8(mcu);

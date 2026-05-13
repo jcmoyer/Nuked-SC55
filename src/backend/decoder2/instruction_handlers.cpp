@@ -5,22 +5,22 @@
 namespace decoder2
 {
 
-void I_NOP(mcu_t& mcu, const I_CachedInstruction&)
+void I_NOP(mcu_t& mcu, const DecodedInstructionParams&)
 {
     ++mcu.pc;
 }
 
-void I_BRA(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BRA(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     mcu.pc = st.br_true;
 }
 
-void I_BRN(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BRN(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     mcu.pc = st.br_false;
 }
 
-void I_BHI(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BHI(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool C = mcu.sr & STATUS_C;
     const bool Z = mcu.sr & STATUS_Z;
@@ -34,7 +34,7 @@ void I_BHI(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BLS(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BLS(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool C = mcu.sr & STATUS_C;
     const bool Z = mcu.sr & STATUS_Z;
@@ -48,7 +48,7 @@ void I_BLS(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BCC(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BCC(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool C = mcu.sr & STATUS_C;
     if (C == false)
@@ -61,7 +61,7 @@ void I_BCC(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BCS(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BCS(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool C = mcu.sr & STATUS_C;
     if (C == true)
@@ -74,7 +74,7 @@ void I_BCS(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BNE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BNE(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool Z = mcu.sr & STATUS_Z;
     if (Z == false)
@@ -87,7 +87,7 @@ void I_BNE(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BEQ(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BEQ(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool Z = mcu.sr & STATUS_Z;
     if (Z == true)
@@ -100,7 +100,7 @@ void I_BEQ(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BVC(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BVC(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool V = mcu.sr & STATUS_V;
     if (V == false)
@@ -113,7 +113,7 @@ void I_BVC(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BVS(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BVS(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool V = mcu.sr & STATUS_V;
     if (V == true)
@@ -126,7 +126,7 @@ void I_BVS(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BPL(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BPL(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool N = mcu.sr & STATUS_N;
     if (N == false)
@@ -139,7 +139,7 @@ void I_BPL(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BMI(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BMI(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool N = mcu.sr & STATUS_N;
     if (N == true)
@@ -152,7 +152,7 @@ void I_BMI(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BGE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BGE(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -166,7 +166,7 @@ void I_BGE(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BLT(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BLT(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -180,7 +180,7 @@ void I_BLT(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BGT(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BGT(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -195,7 +195,7 @@ void I_BGT(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_BLE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_BLE(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     const bool N = mcu.sr & STATUS_N;
     const bool V = mcu.sr & STATUS_V;
@@ -210,7 +210,7 @@ void I_BLE(mcu_t& mcu, const I_CachedInstruction& st)
     }
 }
 
-void I_RTE(mcu_t& mcu, const I_CachedInstruction& st)
+void I_RTE(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     (void)st;
     mcu.sr        = MCU_PopStack(mcu);
@@ -219,7 +219,7 @@ void I_RTE(mcu_t& mcu, const I_CachedInstruction& st)
     mcu.ex_ignore = 1;
 }
 
-void I_BSR(mcu_t& mcu, const I_CachedInstruction& instr)
+void I_BSR(mcu_t& mcu, const DecodedInstructionParams& instr)
 {
     MCU_PushStack(mcu, instr.br_false);
     mcu.pc = instr.br_true;

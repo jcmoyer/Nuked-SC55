@@ -10,7 +10,7 @@ namespace decoder2
 {
 
 // Contains all of the parameters for a fully decoded instruction.
-struct I_CachedInstruction
+struct DecodedInstructionParams
 {
     union {
         uint16_t ea_data; // used by addressing modes that include generic data in the EA field
@@ -32,34 +32,34 @@ struct I_CachedInstruction
     };
 };
 
-using I_Handler_Erased_Func = void (*)(mcu_t&, const I_CachedInstruction&);
+using CachedInstructionHandler = void (*)(mcu_t&, const DecodedInstructionParams&);
 
-struct I_Handler
+struct CachedInstruction
 {
-    I_Handler_Erased_Func F;
-    I_CachedInstruction   instr;
+    CachedInstructionHandler handler;
+    DecodedInstructionParams params;
 };
 
-class I_InstructionCache
+class InstructionCache
 {
 private:
     // 16 pages of 64K, TODO determine upper bound (not all pages contain code)
-    using ArrayType = std::array<I_Handler, static_cast<size_t>(16 * 0x10000)>;
+    using ArrayType = std::array<CachedInstruction, static_cast<size_t>(16 * 0x10000)>;
 
 public:
-    I_InstructionCache();
+    InstructionCache();
 
-    const I_Handler& Lookup(uint32_t addr) const
+    const CachedInstruction& Lookup(uint32_t addr) const
     {
         return (*m_cache)[addr];
     }
 
     bool Contains(uint32_t addr) const
     {
-        return Lookup(addr).F;
+        return Lookup(addr).handler;
     }
 
-    void Write(uint32_t addr, I_Handler handler)
+    void Write(uint32_t addr, CachedInstruction handler)
     {
         (*m_cache)[addr] = handler;
     }

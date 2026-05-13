@@ -21,7 +21,7 @@ namespace decoder2
 // General format instructions
 //=============================================================================
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -37,7 +37,7 @@ void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -53,7 +53,7 @@ void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, typename Mode>
-void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -69,7 +69,7 @@ void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIn
 }
 
 template <Size Sz, typename Mode>
-void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -85,7 +85,7 @@ void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 }
 
 template <Size Sz, typename Mode>
-void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -101,7 +101,7 @@ void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIn
 }
 
 template <Size Sz, typename Mode>
-void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -119,7 +119,7 @@ void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 // Manual lists this as a special format instruction but it allows arbitrary
 // addressing modes so we treat it as a general instruction.
 template <Size Sz, typename Mode, int8_t N>
-void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -134,7 +134,7 @@ void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <typename Mode>
-void D_SWAP_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SWAP_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -142,7 +142,7 @@ void D_SWAP_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <uint8_t OpReg, typename Mode>
-void D_XCH_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_XCH_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -151,7 +151,7 @@ void D_XCH_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -167,7 +167,7 @@ void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -183,7 +183,7 @@ void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -199,7 +199,7 @@ void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -215,7 +215,7 @@ void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, typename Mode>
-void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -230,7 +230,7 @@ void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 }
 
 template <Size Sz, typename Mode>
-void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -245,7 +245,7 @@ void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 }
 
 template <Size Sz, typename Mode>
-void D_SHAL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SHAL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -260,7 +260,7 @@ void D_SHAL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 }
 
 template <Size Sz, typename Mode>
-void D_SHAR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SHAR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -275,7 +275,7 @@ void D_SHAR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 }
 
 template <Size Sz, typename Mode>
-void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -290,7 +290,7 @@ void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <Size Sz, typename Mode>
-void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -305,7 +305,7 @@ void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <Size Sz, typename Mode>
-void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -320,7 +320,7 @@ void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -336,7 +336,7 @@ void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -352,7 +352,7 @@ void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -368,7 +368,7 @@ void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <typename Mode>
-void D_EXTS_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_EXTS_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -377,7 +377,7 @@ void D_EXTS_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <typename Mode>
-void D_EXTU_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_EXTU_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -386,7 +386,7 @@ void D_EXTU_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <Size Sz, typename Mode>
-void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -401,7 +401,7 @@ void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -417,7 +417,7 @@ void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -433,7 +433,7 @@ void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -449,7 +449,7 @@ void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -465,7 +465,7 @@ void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -481,7 +481,7 @@ void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 }
 
 template <Size Sz, typename Mode>
-void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -496,7 +496,7 @@ void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 }
 
 template <Size Sz, typename Mode>
-void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -511,7 +511,7 @@ void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruct
 }
 
 template <Size Sz, typename Mode>
-void D_ROTXL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ROTXL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -526,7 +526,7 @@ void D_ROTXL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 }
 
 template <Size Sz, typename Mode>
-void D_ROTXR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ROTXR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -541,7 +541,7 @@ void D_ROTXR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -557,7 +557,7 @@ void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-void D_BSET_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BSET_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -573,7 +573,7 @@ void D_BSET_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -589,7 +589,7 @@ void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -605,7 +605,7 @@ void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstr
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -621,7 +621,7 @@ void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -637,7 +637,7 @@ void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -653,7 +653,7 @@ void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -669,7 +669,7 @@ void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -685,7 +685,7 @@ void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstru
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -701,7 +701,7 @@ void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInst
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
+void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
@@ -921,7 +921,7 @@ inline void D_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
 inline void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_reg = byte & 0b111;
     DoCache(mcu, mcu.icache, instr_start, I_JMP_ARn, instr);
 }
@@ -929,7 +929,7 @@ inline void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_page = mcu.coder.ReadU8(mcu);
     instr.op_data = mcu.coder.ReadU16(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_PJMP_aa24, instr);
@@ -938,7 +938,7 @@ inline void D_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_page  = mcu.coder.ReadU8(mcu);
     instr.br_true  = mcu.coder.ReadU16(mcu);
     instr.br_false = mcu.coder.GetAddressInPage(mcu);
@@ -947,7 +947,7 @@ inline void D_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
 inline void D_PJSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_reg   = byte & 0b111;
     instr.br_false = mcu.coder.GetAddressInPage(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_PJSR_ARn, instr);
@@ -955,7 +955,7 @@ inline void D_PJSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
 inline void D_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_reg = byte & 0b111;
     DoCache(mcu, mcu.icache, instr_start, I_PJMP_ARn, instr);
 }
@@ -963,7 +963,7 @@ inline void D_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.br_true = mcu.coder.ReadU16(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_JMP_aa16, instr);
 }
@@ -971,7 +971,7 @@ inline void D_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.br_true  = mcu.coder.ReadU16(mcu);
     instr.br_false = mcu.coder.GetAddressInPage(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_JSR_aa16, instr);
@@ -979,7 +979,7 @@ inline void D_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
 inline void D_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_reg   = byte & 0b111;
     instr.br_false = mcu.coder.GetAddressInPage(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_JSR_ARn, instr);
@@ -988,7 +988,7 @@ inline void D_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_RTD_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = mcu.coder.ReadU8(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_RTD_immXX, instr);
 }
@@ -996,7 +996,7 @@ inline void D_RTD_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_RTD_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = mcu.coder.ReadU16(mcu);
     DoCache(mcu, mcu.icache, instr_start, I_RTD_immXX, instr);
 }
@@ -1049,7 +1049,7 @@ inline void D_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 
     const uint8_t vec_byte = mcu.coder.ReadU8(mcu);
 
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = vec_byte & 0b1111;
     DoCache(mcu, mcu.icache, instr_start, I_TRAPA_imm4, instr);
 }
@@ -1071,7 +1071,7 @@ inline void D_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        I_CachedInstruction instr;
+        DecodedInstructionParams instr;
         instr.op_data = reglist;
         DoCache(mcu, mcu.icache, instr_start, I_STM, instr);
     }
@@ -1088,7 +1088,7 @@ inline void D_LDM(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
     else
     {
-        I_CachedInstruction instr;
+        DecodedInstructionParams instr;
         instr.op_data = reglist;
         DoCache(mcu, mcu.icache, instr_start, I_LDM, instr);
     }
@@ -1115,7 +1115,7 @@ template <uint8_t Rn>
 inline void D_Short_CMP_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = mcu.coder.ReadU8(mcu);
     instr.ea_reg  = Rn;
     DoCache(mcu, mcu.icache, instr_start, I_CMP_E_imm8_Rd<Rn>, instr);
@@ -1125,7 +1125,7 @@ template <uint8_t Rn>
 inline void D_Short_CMP_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = mcu.coder.ReadU16(mcu);
     instr.ea_reg  = Rn;
     DoCache(mcu, mcu.icache, instr_start, I_CMP_I_W_imm16_Rd<Rn>, instr);
@@ -1135,7 +1135,7 @@ template <uint8_t Rn>
 inline void D_Short_MOV_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = mcu.coder.ReadU8(mcu);
     instr.ea_reg  = Rn;
     DoCache(mcu, mcu.icache, instr_start, I_MOV_E_imm8_Rd<Rn>, instr);
@@ -1145,7 +1145,7 @@ template <uint8_t Rn>
 inline void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_data = mcu.coder.ReadU16(mcu);
     instr.ea_reg  = Rn;
     DoCache(mcu, mcu.icache, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
@@ -1155,7 +1155,7 @@ template <Size Sz, uint8_t Rn>
 inline void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.ea_data = mcu.coder.ReadU8(mcu);
     instr.op_reg  = Rn;
 
@@ -1173,7 +1173,7 @@ template <Size Sz, uint8_t Rn>
 inline void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
-    I_CachedInstruction instr;
+    DecodedInstructionParams instr;
     instr.op_reg  = Rn;
     instr.ea_data = mcu.coder.ReadU8(mcu);
     if constexpr (Sz == Size::Byte)
