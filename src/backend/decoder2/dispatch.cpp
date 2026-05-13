@@ -117,7 +117,6 @@ void D_HardError(mcu_t& mcu, const char* message, const std::source_location& lo
 void D_FetchDecodeExecuteNext(mcu_t& mcu)
 {
     uint32_t instr_start = MCU_GetAddress(mcu.cp, mcu.pc);
-    mcu.coder            = CodeReader{};
 
     if (const CachedInstruction& instr = mcu.icache.Lookup(instr_start); instr.handler)
     {
@@ -129,6 +128,7 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
     ++hitcount[instr_start];
 #endif
 
+    mcu.coder          = CodeReader{};
     const uint8_t byte = mcu.coder.ReadU8(mcu);
 
     D_Handler handler = GetDispatcherTop(byte);
