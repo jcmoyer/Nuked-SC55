@@ -15,6 +15,17 @@ using D_OpcodeHandler = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte,
 
 void D_FetchDecodeExecuteNext(mcu_t& mcu);
 
+void DoCache(mcu_t&                     mcu,
+             I_InstructionCache&        cache,
+             uint32_t                   instr_start,
+             I_Handler_Erased_Func      func,
+             const I_CachedInstruction& st);
+
+void DoCacheJump(mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
+
+void DoCacheBranch(
+    mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
+
 // void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte);
 void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr);
 

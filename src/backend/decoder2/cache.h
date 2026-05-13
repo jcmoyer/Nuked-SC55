@@ -59,11 +59,10 @@ public:
         return Lookup(addr).F;
     }
 
-    void DoCache(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, const I_CachedInstruction& st);
-
-    void DoCacheJump(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
-
-    void DoCacheBranch(mcu_t& mcu, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp);
+    void Write(uint32_t addr, I_Handler handler)
+    {
+        (*m_cache)[addr] = handler;
+    }
 
     size_t CountCached() const;
 

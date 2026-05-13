@@ -161,6 +161,39 @@ void D_FetchDecodeExecuteNext(mcu_t& mcu)
 #endif
 }
 
+void DoCache(mcu_t&                     mcu,
+             I_InstructionCache&        cache,
+             uint32_t                   instr_start,
+             I_Handler_Erased_Func      func,
+             const I_CachedInstruction& st)
+{
+    cache.Write(instr_start, {.F = func, .instr = st});
+    func(mcu, st);
+}
+
+void DoCacheJump(mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
+{
+    const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
+
+    I_CachedInstruction st;
+    st.br_true  = (uint16_t)(next_ip + disp);
+    st.br_false = (uint16_t)(next_ip + disp);
+    cache.Write(instr_start, {.F = func, .instr = st});
+    func(mcu, st);
+}
+
+void DoCacheBranch(
+    mcu_t& mcu, I_InstructionCache& cache, uint32_t instr_start, I_Handler_Erased_Func func, int16_t disp)
+{
+    const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
+
+    I_CachedInstruction st;
+    st.br_true  = (uint16_t)(next_ip + disp);
+    st.br_false = next_ip;
+    cache.Write(instr_start, {.F = func, .instr = st});
+    func(mcu, st);
+}
+
 void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)instr_start;
