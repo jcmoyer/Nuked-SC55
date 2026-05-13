@@ -7,7 +7,7 @@ namespace decoder2
 {
 
 // 1010[Sz][rrr] | xxxxxxxx [...]
-template <MCU_Operand_Size Sz>
+template <Size Sz>
 constexpr std::array<D_OpcodeHandler, 256> DefineTable()
 {
     std::array<D_OpcodeHandler, 256> t{};
@@ -27,9 +27,9 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     t[0b00001101] = D_ADD_Q_n_EAd<Sz, Mode_Rn, -2>;
     t[0b00001110] = D_InvalidInstruction;
     t[0b00001111] = D_InvalidInstruction;
-    t[0b00010000] = Sz == MCU_Operand_Size::BYTE ? D_SWAP_Rd<Mode_Rn> : D_InvalidInstruction;
-    t[0b00010001] = Sz == MCU_Operand_Size::BYTE ? D_EXTS_Rd<Mode_Rn> : D_InvalidInstruction;
-    t[0b00010010] = Sz == MCU_Operand_Size::BYTE ? D_EXTU_Rd<Mode_Rn> : D_InvalidInstruction;
+    t[0b00010000] = Sz == Size::Byte ? D_SWAP_Rd<Mode_Rn> : D_InvalidInstruction;
+    t[0b00010001] = Sz == Size::Byte ? D_EXTS_Rd<Mode_Rn> : D_InvalidInstruction;
+    t[0b00010010] = Sz == Size::Byte ? D_EXTU_Rd<Mode_Rn> : D_InvalidInstruction;
     t[0b00010011] = D_CLR_EAd<Sz, Mode_Rn>;
     t[0b00010100] = D_NEG_EAd<Sz, Mode_Rn>;
     t[0b00010101] = D_NOT_EAd<Sz, Mode_Rn>;
@@ -155,14 +155,14 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     t[0b10001101] = D_LDC_EAs_CR<Sz, 5, Mode_Rn>;
     t[0b10001110] = D_LDC_EAs_CR<Sz, 6, Mode_Rn>;
     t[0b10001111] = D_LDC_EAs_CR<Sz, 7, Mode_Rn>;
-    t[0b10010000] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<0, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010001] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<1, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010010] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<2, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010011] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<3, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010100] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<4, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010101] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<5, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010110] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<6, Mode_Rn> : D_InvalidInstruction;
-    t[0b10010111] = Sz == MCU_Operand_Size::WORD ? D_XCH_Rs_Rd<7, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010000] = Sz == Size::Word ? D_XCH_Rs_Rd<0, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010001] = Sz == Size::Word ? D_XCH_Rs_Rd<1, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010010] = Sz == Size::Word ? D_XCH_Rs_Rd<2, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010011] = Sz == Size::Word ? D_XCH_Rs_Rd<3, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010100] = Sz == Size::Word ? D_XCH_Rs_Rd<4, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010101] = Sz == Size::Word ? D_XCH_Rs_Rd<5, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010110] = Sz == Size::Word ? D_XCH_Rs_Rd<6, Mode_Rn> : D_InvalidInstruction;
+    t[0b10010111] = Sz == Size::Word ? D_XCH_Rs_Rd<7, Mode_Rn> : D_InvalidInstruction;
     t[0b10011000] = D_STC_CR_EAd<Sz, 0, Mode_Rn>;
     t[0b10011001] = D_STC_CR_EAd<Sz, 1, Mode_Rn>;
     t[0b10011010] = D_STC_CR_EAd<Sz, 2, Mode_Rn>;
@@ -271,11 +271,11 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
 }
 
 constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES{{
-    DefineTable<MCU_Operand_Size::BYTE>(),
-    DefineTable<MCU_Operand_Size::WORD>(),
+    DefineTable<Size::Byte>(),
+    DefineTable<Size::Word>(),
 }};
 
-D_OpcodeHandler GetDispatcherRn(uint8_t opcode, MCU_Operand_Size size)
+D_OpcodeHandler GetDispatcherRn(uint8_t opcode, Size size)
 {
     return DECODE_TABLES[(size_t)size][opcode];
 }

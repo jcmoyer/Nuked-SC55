@@ -7,21 +7,21 @@ namespace decoder2
 {
 
 constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES_AA8{{
-    DefineGenericTable<MCU_Operand_Size::BYTE, Mode_Aaa8>(),
-    DefineGenericTable<MCU_Operand_Size::WORD, Mode_Aaa8>(),
+    DefineGenericTable<Size::Byte, Mode_Aaa8>(),
+    DefineGenericTable<Size::Word, Mode_Aaa8>(),
 }};
 
-D_OpcodeHandler GetDispatcherAaa8(uint8_t opcode, MCU_Operand_Size size)
+D_OpcodeHandler GetDispatcherAaa8(uint8_t opcode, Size size)
 {
     return DECODE_TABLES_AA8[(size_t)size][opcode];
 }
 
 constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES_AA16{{
-    DefineGenericTable<MCU_Operand_Size::BYTE, Mode_Aaa16>(),
-    DefineGenericTable<MCU_Operand_Size::WORD, Mode_Aaa16>(),
+    DefineGenericTable<Size::Byte, Mode_Aaa16>(),
+    DefineGenericTable<Size::Word, Mode_Aaa16>(),
 }};
 
-D_OpcodeHandler GetDispatcherAaa16(uint8_t opcode, MCU_Operand_Size size)
+D_OpcodeHandler GetDispatcherAaa16(uint8_t opcode, Size size)
 {
     return DECODE_TABLES_AA16[(size_t)size][opcode];
 }

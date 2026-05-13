@@ -12,6 +12,7 @@
 #include "dispatch.h"
 #include "instruction_handlers.h"
 #include "mcu.h"
+#include "types.h"
 
 namespace decoder2
 {
@@ -19,97 +20,97 @@ namespace decoder2
 //=============================================================================
 // General format instructions
 //=============================================================================
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_B_Rs_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_W_Rs_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = mcu.coder.ReadU8(mcu);
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_B_imm8_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_W_imm8_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = mcu.coder.ReadU16(mcu);
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_B_imm16_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_G_W_imm16_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = mcu.coder.ReadU8(mcu);
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_B_imm8_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_W_imm8_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = mcu.coder.ReadU16(mcu);
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_B_imm16_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_W_imm16_EAd<Mode>, instr);
     }
@@ -117,16 +118,16 @@ void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedI
 
 // Manual lists this as a special format instruction but it allows arbitrary
 // addressing modes so we treat it as a general instruction.
-template <MCU_Operand_Size Sz, typename Mode, int8_t N>
+template <Size Sz, typename Mode, int8_t N>
 void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADD_Q_B_n<Mode, N>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADD_Q_W_n<Mode, N>, instr);
     }
@@ -149,218 +150,218 @@ void D_XCH_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruc
     mcu.icache.DoCache(mcu, instr_start, I_XCH_W_Rs_Rd<Mode>, instr);
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADD_G_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADD_G_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADDX_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADDX_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADDS_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ADDS_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CMP_G_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHLL_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHLL_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHLR_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHLR_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_SHAL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHAL_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHAL_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_SHAR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHAR_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SHAR_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_NEG_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_NEG_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CLR_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_CLR_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_TST_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_TST_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SUB_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SUB_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SUBS_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SUBS_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SUBX_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_SUBX_W_EAs_Rd<Mode>, instr);
     }
@@ -384,332 +385,332 @@ void D_EXTU_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstructi
     mcu.icache.DoCache(mcu, instr_start, I_EXTU_B_Rd<Mode>, instr);
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_NOT_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_NOT_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MULXU_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MULXU_X_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_DIVXU_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_DIVXU_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
+template <Size Sz, uint8_t Imm4, typename Mode>
 void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = Imm4 & 0b1111;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BCLR_B_imm4_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BCLR_W_imm4_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Rs, typename Mode>
+template <Size Sz, uint8_t Rs, typename Mode>
 void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = Rs;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BCLR_B_Rs_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BCLR_W_Rs_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
+template <Size Sz, uint8_t Imm4, typename Mode>
 void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = Imm4 & 0b1111;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BNOT_B_imm4_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BNOT_W_imm4_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTL_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTL_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTR_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTR_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_ROTXL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTXL_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTXL_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 void D_ROTXR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTXR_B_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ROTXR_W_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
+template <Size Sz, uint8_t Imm4, typename Mode>
 void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = Imm4 & 0b1111;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BSET_B_imm4_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BSET_W_imm4_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Rs, typename Mode>
+template <Size Sz, uint8_t Rs, typename Mode>
 void D_BSET_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = Rs;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BSET_B_Rs_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BSET_W_Rs_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Imm4, typename Mode>
+template <Size Sz, uint8_t Imm4, typename Mode>
 void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_data = Imm4 & 0b1111;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BTST_B_imm4_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BTST_W_imm4_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BTST_B_Rs_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_BTST_W_Rs_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
+template <Size Sz, uint8_t CR, typename Mode>
 void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_STC_B_CR_EAd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_STC_W_CR_EAd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
+template <Size Sz, uint8_t CR, typename Mode>
 void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_LDC_B_EAs_CR<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_LDC_W_EAs_CR<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_XOR_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_XOR_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_OR_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_OR_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t OpReg, typename Mode>
+template <Size Sz, uint8_t OpReg, typename Mode>
 void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_AND_B_EAs_Rd<Mode>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_AND_W_EAs_Rd<Mode>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
+template <Size Sz, uint8_t CR, typename Mode>
 void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ORC_B_imm8_CR<Mode, CR>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ORC_W_imm16_CR<Mode, CR>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t CR, typename Mode>
+template <Size Sz, uint8_t CR, typename Mode>
 void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedInstruction instr)
 {
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ANDC_B_imm8_CR<Mode, CR>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_ANDC_W_imm16_CR<Mode, CR>, instr);
     }
@@ -718,17 +719,17 @@ void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, I_CachedIns
 //=============================================================================
 // Special format instructions
 //=============================================================================
-template <MCU_Operand_Size Sz>
+template <Size Sz>
 inline void D_Bcc(mcu_t& mcu, uint32_t instr_start, uint8_t opcode)
 {
     const uint8_t cond = opcode & 0b1111;
     int16_t       disp;
     switch (Sz)
     {
-    case MCU_Operand_Size::BYTE:
+    case Size::Byte:
         disp = (int8_t)mcu.coder.ReadU8(mcu);
         break;
-    case MCU_Operand_Size::WORD:
+    case Size::Word:
         disp = (int16_t)mcu.coder.ReadU16(mcu);
         break;
     }
@@ -947,7 +948,7 @@ inline void D_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 inline void D_PJSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     I_CachedInstruction instr;
-    instr.op_reg  = byte & 0b111;
+    instr.op_reg   = byte & 0b111;
     instr.br_false = mcu.coder.GetAddressInPage(mcu);
     mcu.icache.DoCache(mcu, instr_start, I_PJSR_ARn, instr);
 }
@@ -1150,7 +1151,7 @@ inline void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t b
     mcu.icache.DoCache(mcu, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
 }
 
-template <MCU_Operand_Size Sz, uint8_t Rn>
+template <Size Sz, uint8_t Rn>
 inline void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
@@ -1158,28 +1159,28 @@ inline void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     instr.ea_data = mcu.coder.ReadU8(mcu);
     instr.op_reg  = Rn;
 
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_L_B_aa8_Rd<Rn>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_L_W_aa8_Rd<Rn>, instr);
     }
 }
 
-template <MCU_Operand_Size Sz, uint8_t Rn>
+template <Size Sz, uint8_t Rn>
 inline void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 {
     (void)byte;
     I_CachedInstruction instr;
     instr.op_reg  = Rn;
     instr.ea_data = mcu.coder.ReadU8(mcu);
-    if constexpr (Sz == MCU_Operand_Size::BYTE)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_S_B_Rs_aa8<Rn>, instr);
     }
-    else if constexpr (Sz == MCU_Operand_Size::WORD)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.icache.DoCache(mcu, instr_start, I_MOV_S_W_Rs_aa8<Rn>, instr);
     }

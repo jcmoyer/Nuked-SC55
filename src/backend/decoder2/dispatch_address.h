@@ -2,7 +2,7 @@
 
 #include "dispatch.h"
 #include "dispatch_handlers.h"
-#include "mcu_opcodes.h"
+#include "types.h"
 
 namespace decoder2
 {
@@ -20,7 +20,7 @@ namespace decoder2
 // This function creates a table that implements all of these instructions for
 // a specific mode and size.
 
-template <MCU_Operand_Size Sz, typename Mode>
+template <Size Sz, typename Mode>
 constexpr std::array<D_OpcodeHandler, 256> DefineGenericTable()
 {
     std::array<D_OpcodeHandler, 256> t{};

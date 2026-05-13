@@ -6,19 +6,19 @@
 namespace decoder2
 {
 
-template <MCU_Operand_Size Sz>
+template <Size Sz>
 struct Size_To_Mode
 {
 };
 
 template <>
-struct Size_To_Mode<MCU_Operand_Size::BYTE>
+struct Size_To_Mode<Size::Byte>
 {
     using Type = Mode_Imm8;
 };
 
 template <>
-struct Size_To_Mode<MCU_Operand_Size::WORD>
+struct Size_To_Mode<Size::Word>
 {
     using Type = Mode_Imm16;
 };
@@ -26,7 +26,7 @@ struct Size_To_Mode<MCU_Operand_Size::WORD>
 // In comparison to other addressing modes, the instructions valid for
 // immediate modes cannot use EA as a destination. We cannot share
 // instructions.
-template <MCU_Operand_Size Sz>
+template <Size Sz>
 constexpr std::array<D_OpcodeHandler, 256> DefineTable()
 {
     using Mode = typename Size_To_Mode<Sz>::Type;
@@ -291,8 +291,8 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     return t;
 }
 
-constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM8  = DefineTable<MCU_Operand_Size::BYTE>();
-constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM16 = DefineTable<MCU_Operand_Size::WORD>();
+constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM8  = DefineTable<Size::Byte>();
+constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM16 = DefineTable<Size::Word>();
 
 D_OpcodeHandler GetDispatcherImm8(uint8_t opcode)
 {
