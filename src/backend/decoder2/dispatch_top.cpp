@@ -9,15 +9,14 @@ namespace decoder2
 {
 
 template <Size Sz, uint8_t Rn>
-void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
-    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherRn(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherRn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -29,15 +28,14 @@ void D_General_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_APreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_APreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
-    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAPreDecRn(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherAPreDecRn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -49,15 +47,14 @@ void D_General_APreDecRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_APostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_APostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
-    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAPostIncRn(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherAPostIncRn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -69,15 +66,14 @@ void D_General_APostIncRn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
-    DecodedInstructionParams instr{};
     instr.ea_reg = Rn;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherARn(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherARn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -89,18 +85,17 @@ void D_General_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_Ad8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Ad8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
     const int16_t disp = (int8_t)mcu.coder.ReadU8(mcu);
 
-    DecodedInstructionParams instr{};
     instr.ea_disp = disp;
     instr.ea_reg  = Rn;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAd8Rn(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherAd8Rn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -112,18 +107,17 @@ void D_General_Ad8_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_Ad16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Ad16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
     const int16_t disp = (int16_t)mcu.coder.ReadU16(mcu);
 
-    DecodedInstructionParams instr{};
     instr.ea_disp = disp;
     instr.ea_reg  = Rn;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAd16Rn(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherAd16Rn(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -134,17 +128,16 @@ void D_General_Ad16_Rn(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
     const uint16_t imm = mcu.coder.ReadU8(mcu);
 
-    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherImm8(opcode);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherImm8(opcode);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -155,17 +148,16 @@ void D_General_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
     const uint16_t imm = mcu.coder.ReadU16(mcu);
 
-    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherImm16(opcode);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherImm16(opcode);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -177,17 +169,16 @@ void D_General_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz>
-void D_General_Aaa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Aaa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
     const uint8_t imm = mcu.coder.ReadU8(mcu);
 
-    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAaa8(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherAaa8(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -199,17 +190,16 @@ void D_General_Aaa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
 }
 
 template <Size Sz>
-void D_General_Aaa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
+void D_General_Aaa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
 
     const uint16_t imm = (uint16_t)mcu.coder.ReadU16(mcu);
 
-    DecodedInstructionParams instr{};
     instr.ea_data = imm;
 
-    const uint8_t   opcode  = mcu.coder.ReadU8(mcu);
-    D_OpcodeHandler handler = GetDispatcherAaa16(opcode, Sz);
+    const uint8_t opcode  = mcu.coder.ReadU8(mcu);
+    Dispatcher    handler = GetDispatcherAaa16(opcode, Sz);
     if (handler)
     {
         handler(mcu, instr_start, byte, instr);
@@ -220,9 +210,9 @@ void D_General_Aaa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte)
     }
 }
 
-constexpr std::array<D_Handler, 256> MakeDecodeTable()
+constexpr std::array<Dispatcher, 256> MakeDecodeTable()
 {
-    std::array<D_Handler, 256> t{};
+    std::array<Dispatcher, 256> t{};
     t[0b00000000] = D_NOP;
     t[0b00000001] = D_SCB;
     t[0b00000010] = D_LDM;
@@ -482,9 +472,9 @@ constexpr std::array<D_Handler, 256> MakeDecodeTable()
     return t;
 }
 
-constexpr std::array<D_Handler, 256> DECODE_TABLE_0 = MakeDecodeTable();
+constexpr std::array<Dispatcher, 256> DECODE_TABLE_0 = MakeDecodeTable();
 
-D_Handler GetDispatcherTop(uint8_t byte)
+Dispatcher GetDispatcherTop(uint8_t byte)
 {
     return DECODE_TABLE_0[byte];
 }

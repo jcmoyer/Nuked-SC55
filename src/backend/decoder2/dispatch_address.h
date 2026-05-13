@@ -1,7 +1,7 @@
 #include <array>
 
-#include "dispatch.h"
 #include "dispatch_handlers.h"
+#include "dispatchers.h"
 #include "types.h"
 
 namespace decoder2
@@ -21,9 +21,9 @@ namespace decoder2
 // a specific mode and size.
 
 template <Size Sz, typename Mode>
-constexpr std::array<D_OpcodeHandler, 256> DefineGenericTable()
+constexpr std::array<Dispatcher, 256> DefineGenericTable()
 {
-    std::array<D_OpcodeHandler, 256> t{};
+    std::array<Dispatcher, 256> t{};
     t[0b00000000] = nullptr;
     t[0b00000001] = nullptr;
     t[0b00000010] = nullptr;

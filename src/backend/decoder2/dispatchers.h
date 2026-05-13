@@ -1,54 +1,58 @@
 #pragma once
 
-#include "dispatch.h"
+#include "cache.h"
 #include "types.h"
+
+struct mcu_t;
 
 namespace decoder2
 {
 
+using Dispatcher = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr);
+
 // Top level decode table for instructions. Depending on `byte` the handler
 // returned might decode a general form instruction or a special form
 // instruction.
-D_Handler GetDispatcherTop(uint8_t byte);
+Dispatcher GetDispatcherTop(uint8_t byte);
 
 // Rn
 // 1010[Sz]rrr | opcode [...]
-D_OpcodeHandler GetDispatcherRn(uint8_t opcode, Size size);
+Dispatcher GetDispatcherRn(uint8_t opcode, Size size);
 
 // @Rn
 // 1101[Sz]rrr | opcode [...]
-D_OpcodeHandler GetDispatcherARn(uint8_t opcode, Size size);
+Dispatcher GetDispatcherARn(uint8_t opcode, Size size);
 
 // @(d:8,Rn)
 // 1110[Sz]rrr | disp8 | opcode [...]
-D_OpcodeHandler GetDispatcherAd8Rn(uint8_t opcode, Size size);
+Dispatcher GetDispatcherAd8Rn(uint8_t opcode, Size size);
 
 // @(d:16,Rn)
 // 1111[Sz]rrr | disp16 | opcode [...]
-D_OpcodeHandler GetDispatcherAd16Rn(uint8_t opcode, Size size);
+Dispatcher GetDispatcherAd16Rn(uint8_t opcode, Size size);
 
 // @-Rn
 // 1011[Sz]rrr | opcode [...]
-D_OpcodeHandler GetDispatcherAPreDecRn(uint8_t opcode, Size size);
+Dispatcher GetDispatcherAPreDecRn(uint8_t opcode, Size size);
 
 // @Rn+
 // 1100[Sz]rrr | opcode [...]
-D_OpcodeHandler GetDispatcherAPostIncRn(uint8_t opcode, Size size);
+Dispatcher GetDispatcherAPostIncRn(uint8_t opcode, Size size);
 
 // #xx:8
 // 00000100 | imm8 | opcode [...]
-D_OpcodeHandler GetDispatcherImm8(uint8_t opcode);
+Dispatcher GetDispatcherImm8(uint8_t opcode);
 
 // #xx:16
 // 00001100 | imm16 | opcode [...]
-D_OpcodeHandler GetDispatcherImm16(uint8_t opcode);
+Dispatcher GetDispatcherImm16(uint8_t opcode);
 
 // @aa:8
 // 0000[Sz]101 | addr8 | opcode [...]
-D_OpcodeHandler GetDispatcherAaa8(uint8_t opcode, Size size);
+Dispatcher GetDispatcherAaa8(uint8_t opcode, Size size);
 
 // @aa:16
 // 0001[Sz]101 | addr16 | opcode [...]
-D_OpcodeHandler GetDispatcherAaa16(uint8_t opcode, Size size);
+Dispatcher GetDispatcherAaa16(uint8_t opcode, Size size);
 
 } // namespace decoder2

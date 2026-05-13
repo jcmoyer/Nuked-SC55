@@ -10,9 +10,6 @@ struct mcu_t;
 namespace decoder2
 {
 
-using D_Handler       = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte);
-using D_OpcodeHandler = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr);
-
 void FetchDecodeExecuteNext(mcu_t& mcu);
 
 void DoCache(mcu_t&                          mcu,

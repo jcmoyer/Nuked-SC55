@@ -1,16 +1,16 @@
 #include <array>
 
-#include "dispatch.h"
 #include "dispatch_handlers.h"
+#include "dispatchers.h"
 
 namespace decoder2
 {
 
 // 1010[Sz][rrr] | xxxxxxxx [...]
 template <Size Sz>
-constexpr std::array<D_OpcodeHandler, 256> DefineTable()
+constexpr std::array<Dispatcher, 256> DefineTable()
 {
-    std::array<D_OpcodeHandler, 256> t{};
+    std::array<Dispatcher, 256> t{};
     t[0b00000000] = nullptr;
     t[0b00000001] = D_InvalidInstruction;
     t[0b00000010] = D_InvalidInstruction;
@@ -270,12 +270,12 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     return t;
 }
 
-constexpr std::array<std::array<D_OpcodeHandler, 256>, 2> DECODE_TABLES{{
+constexpr std::array<std::array<Dispatcher, 256>, 2> DECODE_TABLES{{
     DefineTable<Size::Byte>(),
     DefineTable<Size::Word>(),
 }};
 
-D_OpcodeHandler GetDispatcherRn(uint8_t opcode, Size size)
+Dispatcher GetDispatcherRn(uint8_t opcode, Size size)
 {
     return DECODE_TABLES[(size_t)size][opcode];
 }

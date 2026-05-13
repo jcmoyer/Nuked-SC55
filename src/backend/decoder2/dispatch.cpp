@@ -131,10 +131,10 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
     mcu.coder          = CodeReader{};
     const uint8_t byte = mcu.coder.ReadU8(mcu);
 
-    D_Handler handler = GetDispatcherTop(byte);
+    Dispatcher handler = GetDispatcherTop(byte);
     if (handler)
     {
-        (*handler)(mcu, instr_start, byte);
+        (*handler)(mcu, instr_start, byte, {});
     }
     else
     {

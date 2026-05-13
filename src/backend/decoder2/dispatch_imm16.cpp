@@ -1,7 +1,7 @@
 #include <array>
 
-#include "dispatch.h"
 #include "dispatch_handlers.h"
+#include "dispatchers.h"
 
 namespace decoder2
 {
@@ -27,11 +27,11 @@ struct Size_To_Mode<Size::Word>
 // immediate modes cannot use EA as a destination. We cannot share
 // instructions.
 template <Size Sz>
-constexpr std::array<D_OpcodeHandler, 256> DefineTable()
+constexpr std::array<Dispatcher, 256> DefineTable()
 {
     using Mode = typename Size_To_Mode<Sz>::Type;
 
-    std::array<D_OpcodeHandler, 256> t{};
+    std::array<Dispatcher, 256> t{};
     t[0b00000000] = nullptr;
     t[0b00000001] = nullptr;
     t[0b00000010] = nullptr;
@@ -291,15 +291,15 @@ constexpr std::array<D_OpcodeHandler, 256> DefineTable()
     return t;
 }
 
-constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM8  = DefineTable<Size::Byte>();
-constexpr std::array<D_OpcodeHandler, 256> DECODE_TABLE_IMM16 = DefineTable<Size::Word>();
+constexpr std::array<Dispatcher, 256> DECODE_TABLE_IMM8  = DefineTable<Size::Byte>();
+constexpr std::array<Dispatcher, 256> DECODE_TABLE_IMM16 = DefineTable<Size::Word>();
 
-D_OpcodeHandler GetDispatcherImm8(uint8_t opcode)
+Dispatcher GetDispatcherImm8(uint8_t opcode)
 {
     return DECODE_TABLE_IMM8[opcode];
 }
 
-D_OpcodeHandler GetDispatcherImm16(uint8_t opcode)
+Dispatcher GetDispatcherImm16(uint8_t opcode)
 {
     return DECODE_TABLE_IMM16[opcode];
 }
