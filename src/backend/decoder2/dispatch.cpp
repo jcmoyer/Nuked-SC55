@@ -40,8 +40,8 @@ void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
         bytes[i] = MCU_Read(mcu, MCU_GetAddress(page, (uint16_t)(paddr + i)));
     }
 
-    I_DecodedInstruction instr;
-    I_Disassemble(bytes, 0, instr);
+    DisassembledInstruction instr;
+    Disassemble(bytes, 0, instr);
 
     std::string result;
     for (int i = 0; i < instr.instr_size; ++i)
@@ -53,7 +53,7 @@ void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
     result.push_back('|');
     result.push_back(' ');
     std::string instr_render;
-    I_RenderInstruction2(instr, instr_render);
+    RenderInstruction(instr, instr_render);
     result += instr_render;
     s      += result;
 }
@@ -99,11 +99,11 @@ void FatalError(mcu_t& mcu, const char* message, const std::source_location& loc
         Diag_Printf(Diag_Category::Debug, "    error: %s\n", message);
     }
 
-    I_DecodedInstruction decoded;
-    if (I_Disassemble(bytes, 0, decoded))
+    DisassembledInstruction decoded;
+    if (Disassemble(bytes, 0, decoded))
     {
         std::string code;
-        I_RenderInstruction2(decoded, code);
+        RenderInstruction(decoded, code);
         Diag_Printf(Diag_Category::Debug, "    %s\n", code.c_str());
     }
     else

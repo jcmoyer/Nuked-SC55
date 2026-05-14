@@ -6,7 +6,7 @@
 namespace decoder2
 {
 
-constexpr Decoder_Handler DIS_GENERAL_IMM8[256] = {
+constexpr Disassembler DIS_GENERAL_IMM8[256] = {
     Dis_InvalidInstruction, // 00000000
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
@@ -265,7 +265,7 @@ constexpr Decoder_Handler DIS_GENERAL_IMM8[256] = {
     Dis_InvalidInstruction, // 11111111
 };
 
-Decoder_Handler GetDecoderimm8(uint8_t byte)
+Disassembler GetDecoderimm8(uint8_t byte)
 {
     return DIS_GENERAL_IMM8[byte];
 }

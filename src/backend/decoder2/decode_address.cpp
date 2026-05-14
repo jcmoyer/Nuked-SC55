@@ -6,7 +6,7 @@
 namespace decoder2
 {
 
-constexpr Decoder_Handler GENERIC_TABLE[256] = {
+constexpr Disassembler GENERIC_TABLE[256] = {
     nullptr,                // 00000000 TODO
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
@@ -265,7 +265,7 @@ constexpr Decoder_Handler GENERIC_TABLE[256] = {
     Dis_BTST_imm4_EAd,      // 11111111
 };
 
-Decoder_Handler GetDecoderGeneric(uint8_t byte)
+Disassembler GetDecoderGeneric(uint8_t byte)
 {
     return GENERIC_TABLE[byte];
 }

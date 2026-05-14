@@ -13,7 +13,7 @@
 namespace decoder2
 {
 
-enum I_InstructionType
+enum class InstructionType
 {
     Unknown,
     //-------- general/special form -------------------------------------------
@@ -99,17 +99,17 @@ enum I_InstructionType
     NOP,
 };
 
-enum I_Size
+enum class OptionalSize
 {
-    UNSIZED, // e.g. NOP
-    BYTE,
-    WORD,
+    Unsized, // e.g. NOP
+    Byte,
+    Word,
 };
 
-using I_RegId        = uint8_t; // range 0..7
-using I_ControlRegId = uint8_t; // range 0..7
+using RegisterId        = uint8_t; // range 0..7
+using ControlRegisterId = uint8_t; // range 0..7
 
-enum I_OpLocation
+enum class OperandLocation
 {
     NotPresent,
     EA,
@@ -118,7 +118,7 @@ enum I_OpLocation
     CR,
 };
 
-enum class I_Format : uint8_t
+enum class InstructionFormat : uint8_t
 {
     NotPresent,
     G,
@@ -130,28 +130,28 @@ enum class I_Format : uint8_t
     Q,
 };
 
-struct I_InstructionOperand
+struct InstructionOperand
 {
-    I_OpLocation location;
+    OperandLocation location;
 
     // when location: EA, none of these fields are used
     union {
-        I_RegId        reg; // location: R
-        I_ControlRegId cr;  // location: CR
-        uint16_t       imm; // location: imm
+        RegisterId        reg; // location: R
+        ControlRegisterId cr;  // location: CR
+        uint16_t          imm; // location: imm
     };
 
     int16_t disp;
 };
 
-struct I_DecodedInstruction
+struct DisassembledInstruction
 {
     AddressMode       mode; // only valid when is_general == true
-    I_Format          format;
-    I_Size            op_size;
-    I_InstructionType instr = Unknown;
+    InstructionFormat format;
+    OptionalSize      op_size;
+    InstructionType   instr = InstructionType::Unknown;
 
-    I_RegId ea_reg; // only present for addressing modes that refer to a register
+    RegisterId ea_reg; // only present for addressing modes that refer to a register
 
     int16_t  ea_disp; // Ad8_Rn, Ad16_Rn
     uint16_t ea_addr; // Aaa8, Aaa16
@@ -161,12 +161,12 @@ struct I_DecodedInstruction
 
     // These are the operands of the instruction, indexed left-to-right. Usage
     // varies by instruction, but most often 0 is source and 1 is destination.
-    I_InstructionOperand op[2];
+    InstructionOperand op[2];
 
     uint8_t instr_size;
 };
 
-enum class I_DecoderErrorCode : uint8_t
+enum class DisassembleErrorCode : uint8_t
 {
     NoMoreBytes = 1,
     InvalidStartingPosition,
@@ -174,34 +174,34 @@ enum class I_DecoderErrorCode : uint8_t
     InvalidInstructionFormat,
 };
 
-struct I_DecoderError
+struct DisassembleError
 {
-    I_DecoderErrorCode code;
-    size_t             position;
-    const char*        message;
+    DisassembleErrorCode code;
+    size_t               position;
+    const char*          message;
 };
 
-class I_Decoder
+class DisassembleDecoder
 {
 public:
-    I_Decoder(std::span<const uint8_t> view, size_t position = 0)
+    DisassembleDecoder(std::span<const uint8_t> view, size_t position = 0)
         : m_view(view),
           m_pos(position)
     {
         if (m_pos >= m_view.size())
         {
             SetError({
-                .code     = I_DecoderErrorCode::InvalidStartingPosition,
+                .code     = DisassembleErrorCode::InvalidStartingPosition,
                 .position = m_pos,
                 .message  = "Initial position is out of bounds",
             });
         }
     }
 
-    I_Decoder(const I_Decoder&)            = delete;
-    I_Decoder& operator=(const I_Decoder&) = delete;
-    I_Decoder(I_Decoder&&)                 = delete;
-    I_Decoder& operator=(I_Decoder&&)      = delete;
+    DisassembleDecoder(const DisassembleDecoder&)            = delete;
+    DisassembleDecoder& operator=(const DisassembleDecoder&) = delete;
+    DisassembleDecoder(DisassembleDecoder&&)                 = delete;
+    DisassembleDecoder& operator=(DisassembleDecoder&&)      = delete;
 
     [[nodiscard]]
     uint8_t ReadAdvance()
@@ -215,7 +215,7 @@ public:
         else
         {
             SetError({
-                .code     = I_DecoderErrorCode::NoMoreBytes,
+                .code     = DisassembleErrorCode::NoMoreBytes,
                 .position = GetPosition(),
                 .message  = "Decoded instruction requires more bytes than were provided",
             });
@@ -231,12 +231,12 @@ public:
         return static_cast<uint16_t>((hi << 8) | lo);
     }
 
-    I_DecoderError GetError() const
+    DisassembleError GetError() const
     {
         return m_err;
     }
 
-    void SetError(I_DecoderError error)
+    void SetError(DisassembleError error)
     {
         m_err = error;
     }
@@ -244,7 +244,7 @@ public:
     [[nodiscard]]
     bool HasError() const
     {
-        return m_err.code != I_DecoderErrorCode{};
+        return m_err.code != DisassembleErrorCode{};
     }
 
     size_t GetPosition() const
@@ -255,13 +255,13 @@ public:
 private:
     std::span<const uint8_t> m_view;
     size_t                   m_pos = 0;
-    I_DecoderError           m_err{};
+    DisassembleError         m_err{};
 };
 
-using Decoder_Handler = void (*)(I_Decoder& decoder, uint8_t byte, I_DecodedInstruction& instr);
+using Disassembler = void (*)(DisassembleDecoder& decoder, uint8_t byte, DisassembledInstruction& instr);
 
-bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedInstruction& result);
+bool Disassemble(std::span<const uint8_t> bytes, size_t position, DisassembledInstruction& result);
 
-void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result);
+void RenderInstruction(const DisassembledInstruction& instr, std::string& result);
 
 } // namespace decoder2

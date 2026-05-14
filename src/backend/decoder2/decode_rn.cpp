@@ -4,7 +4,7 @@
 namespace decoder2
 {
 
-constexpr Decoder_Handler DIS_GENERAL_RN[256] = {
+constexpr Disassembler DIS_GENERAL_RN[256] = {
     nullptr,                // 00000000 TODO
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
@@ -263,7 +263,7 @@ constexpr Decoder_Handler DIS_GENERAL_RN[256] = {
     Dis_BTST_imm4_EAd,      // 11111111
 };
 
-Decoder_Handler GetDecoderRn(uint8_t byte)
+Disassembler GetDecoderRn(uint8_t byte)
 {
     return DIS_GENERAL_RN[byte];
 }

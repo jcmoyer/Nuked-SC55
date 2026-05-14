@@ -9,25 +9,25 @@
 namespace decoder2
 {
 
-std::string I_RenderFormatSuffix(I_Format format)
+std::string RenderFormatSuffix(InstructionFormat format)
 {
     switch (format)
     {
-    case I_Format::NotPresent:
+    case InstructionFormat::NotPresent:
         return "";
-    case I_Format::G:
+    case InstructionFormat::G:
         return ":G";
-    case I_Format::E:
+    case InstructionFormat::E:
         return ":E";
-    case I_Format::I:
+    case InstructionFormat::I:
         return ":I";
-    case I_Format::F:
+    case InstructionFormat::F:
         return ":F";
-    case I_Format::L:
+    case InstructionFormat::L:
         return ":L";
-    case I_Format::S:
+    case InstructionFormat::S:
         return ":S";
-    case I_Format::Q:
+    case InstructionFormat::Q:
         return ":Q";
     }
     std::unreachable();
@@ -49,14 +49,14 @@ void WriteHexU16(std::string& s, uint16_t val)
     WriteHexU8(s, (uint8_t)val);
 }
 
-void OperandString(I_DecodedInstruction instr, I_InstructionOperand op, std::string& result)
+void OperandString(DisassembledInstruction instr, InstructionOperand op, std::string& result)
 {
     result.clear();
     switch (op.location)
     {
-    case NotPresent:
+    case OperandLocation::NotPresent:
         break;
-    case EA:
+    case OperandLocation::EA:
         switch (instr.mode)
         {
         case AddressMode::Rn:
@@ -108,36 +108,36 @@ void OperandString(I_DecodedInstruction instr, I_InstructionOperand op, std::str
             break;
         }
         break;
-    case R:
+    case OperandLocation::R:
         result  = "R";
         result += std::to_string(op.reg);
         break;
-    case imm:
+    case OperandLocation::imm:
         result  = "#";
         result += std::to_string(op.imm);
         break;
-    case CR:
+    case OperandLocation::CR:
         result  = "CR:";
         result += std::to_string(op.cr);
         break;
     }
 }
 
-std::string I_RenderSizeSuffix(I_Size size)
+std::string RenderSizeSuffix(OptionalSize size)
 {
     switch (size)
     {
-    case UNSIZED:
+    case OptionalSize::Unsized:
         return "";
-    case BYTE:
+    case OptionalSize::Byte:
         return ".B";
-    case WORD:
+    case OptionalSize::Word:
         return ".W";
     }
     return ".?";
 }
 
-bool I_DisassembleOpcode(I_Decoder& decoder, uint8_t opcode, I_DecodedInstruction& result)
+bool DisassembleOpcode(DisassembleDecoder& decoder, uint8_t opcode, DisassembledInstruction& result)
 {
     if (result.is_general)
     {
@@ -183,11 +183,11 @@ bool I_DisassembleOpcode(I_Decoder& decoder, uint8_t opcode, I_DecodedInstructio
     return true;
 }
 
-bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedInstruction& result)
+bool Disassemble(std::span<const uint8_t> bytes, size_t position, DisassembledInstruction& result)
 {
     result = {};
 
-    I_Decoder decoder(bytes, position);
+    DisassembleDecoder decoder(bytes, position);
 
     const size_t  instr_first = decoder.GetPosition();
     const uint8_t byte        = decoder.ReadAdvance();
@@ -195,20 +195,20 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     if ((byte & 0b11110000) == 0b10100000)
     {
         result.mode       = AddressMode::Rn;
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110000) == 0b11010000)
     {
         result.mode       = AddressMode::ARn;
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110000) == 0b11100000)
     {
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.mode       = AddressMode::Ad8_Rn;
         result.ea_disp    = (int8_t)decoder.ReadAdvance();
         result.is_general = true;
@@ -216,7 +216,7 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     }
     else if ((byte & 0b11110000) == 0b11110000)
     {
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.mode       = AddressMode::Ad16_Rn;
         result.ea_disp    = (int16_t)decoder.ReadU16();
         result.is_general = true;
@@ -224,42 +224,42 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     }
     else if ((byte & 0b11110000) == 0b10110000)
     {
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.mode       = AddressMode::APreDecRn;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110000) == 0b11000000)
     {
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.mode       = AddressMode::APostIncRn;
         result.is_general = true;
         result.ea_reg     = byte & 0b111;
     }
     else if ((byte & 0b11110111) == 0b00000101)
     {
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.mode       = AddressMode::Aaa8;
         result.ea_addr    = decoder.ReadAdvance();
         result.is_general = true;
     }
     else if ((byte & 0b11110111) == 0b00010101)
     {
-        result.op_size    = (byte & 0b00001000) ? WORD : BYTE;
+        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
         result.mode       = AddressMode::Aaa16;
         result.ea_addr    = decoder.ReadU16();
         result.is_general = true;
     }
     else if (byte == 0b00000100)
     {
-        result.op_size    = BYTE;
+        result.op_size    = OptionalSize::Byte;
         result.mode       = AddressMode::imm8;
         result.ea_imm     = decoder.ReadAdvance();
         result.is_general = true;
     }
     else if (byte == 0b00001100)
     {
-        result.op_size    = WORD;
+        result.op_size    = OptionalSize::Word;
         result.mode       = AddressMode::imm16;
         result.ea_imm     = decoder.ReadU16();
         result.is_general = true;
@@ -272,11 +272,11 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     bool success;
     if (result.is_general)
     {
-        success = I_DisassembleOpcode(decoder, decoder.ReadAdvance(), result);
+        success = DisassembleOpcode(decoder, decoder.ReadAdvance(), result);
     }
     else
     {
-        success = I_DisassembleOpcode(decoder, byte, result);
+        success = DisassembleOpcode(decoder, byte, result);
     }
 
     const size_t instr_last = decoder.GetPosition();
@@ -285,175 +285,175 @@ bool I_Disassemble(std::span<const uint8_t> bytes, size_t position, I_DecodedIns
     return success;
 }
 
-const char* ToCString(I_InstructionType instr)
+const char* ToCString(InstructionType instr)
 {
     switch (instr)
     {
-    case Unknown:
+    case InstructionType::Unknown:
         return "<unknown>";
-    case MOV:
+    case InstructionType::MOV:
         return "MOV";
-    case LDM:
+    case InstructionType::LDM:
         return "LDM";
-    case STM:
+    case InstructionType::STM:
         return "STM";
-    case XCH:
+    case InstructionType::XCH:
         return "XCH";
-    case SWAP:
+    case InstructionType::SWAP:
         return "SWAP";
-    case MOVTPE:
+    case InstructionType::MOVTPE:
         return "MOVTPE";
-    case ADD:
+    case InstructionType::ADD:
         return "ADD";
-    case ADDS:
+    case InstructionType::ADDS:
         return "ADDS";
-    case ADDX:
+    case InstructionType::ADDX:
         return "ADDX";
-    case DADD:
+    case InstructionType::DADD:
         return "DADD";
-    case SUB:
+    case InstructionType::SUB:
         return "SUB";
-    case SUBS:
+    case InstructionType::SUBS:
         return "SUBS";
-    case SUBX:
+    case InstructionType::SUBX:
         return "SUBX";
-    case DSUB:
+    case InstructionType::DSUB:
         return "DSUB";
-    case MULXU:
+    case InstructionType::MULXU:
         return "MULXU";
-    case DIVXU:
+    case InstructionType::DIVXU:
         return "DIVXU";
-    case CMP:
+    case InstructionType::CMP:
         return "CMP";
-    case EXTS:
+    case InstructionType::EXTS:
         return "EXTS";
-    case EXTU:
+    case InstructionType::EXTU:
         return "EXTU";
-    case TST:
+    case InstructionType::TST:
         return "TST";
-    case NEG:
+    case InstructionType::NEG:
         return "NEG";
-    case CLR:
+    case InstructionType::CLR:
         return "CLR";
-    case TAS:
+    case InstructionType::TAS:
         return "TAS";
-    case SHAL:
+    case InstructionType::SHAL:
         return "SHAL";
-    case SHAR:
+    case InstructionType::SHAR:
         return "SHAR";
-    case SHLL:
+    case InstructionType::SHLL:
         return "SHLL";
-    case SHLR:
+    case InstructionType::SHLR:
         return "SHLR";
-    case ROTL:
+    case InstructionType::ROTL:
         return "ROTL";
-    case ROTR:
+    case InstructionType::ROTR:
         return "ROTR";
-    case ROTXL:
+    case InstructionType::ROTXL:
         return "ROTXL";
-    case ROTXR:
+    case InstructionType::ROTXR:
         return "ROTXR";
-    case AND:
+    case InstructionType::AND:
         return "AND";
-    case OR:
+    case InstructionType::OR:
         return "OR";
-    case XOR:
+    case InstructionType::XOR:
         return "XOR";
-    case NOT:
+    case InstructionType::NOT:
         return "NOT";
-    case BSET:
+    case InstructionType::BSET:
         return "BSET";
-    case BCLR:
+    case InstructionType::BCLR:
         return "BCLR";
-    case BTST:
+    case InstructionType::BTST:
         return "BTST";
-    case BNOT:
+    case InstructionType::BNOT:
         return "BNOT";
-    case LDC:
+    case InstructionType::LDC:
         return "LDC";
-    case STC:
+    case InstructionType::STC:
         return "STC";
-    case ANDC:
+    case InstructionType::ANDC:
         return "ANDC";
-    case ORC:
+    case InstructionType::ORC:
         return "ORC";
-    case XORC:
+    case InstructionType::XORC:
         return "XORC";
-    case BRA:
+    case InstructionType::BRA:
         return "BRA";
-    case BRN:
+    case InstructionType::BRN:
         return "BRN";
-    case BHI:
+    case InstructionType::BHI:
         return "BHI";
-    case BLS:
+    case InstructionType::BLS:
         return "BLS";
-    case BCC:
+    case InstructionType::BCC:
         return "BCC";
-    case BCS:
+    case InstructionType::BCS:
         return "BCS";
-    case BNE:
+    case InstructionType::BNE:
         return "BNE";
-    case BEQ:
+    case InstructionType::BEQ:
         return "BEQ";
-    case BVC:
+    case InstructionType::BVC:
         return "BVC";
-    case BVS:
+    case InstructionType::BVS:
         return "BVS";
-    case BPL:
+    case InstructionType::BPL:
         return "BPL";
-    case BMI:
+    case InstructionType::BMI:
         return "BMI";
-    case BGE:
+    case InstructionType::BGE:
         return "BGE";
-    case BLT:
+    case InstructionType::BLT:
         return "BLT";
-    case BGT:
+    case InstructionType::BGT:
         return "BGT";
-    case BLE:
+    case InstructionType::BLE:
         return "BLE";
-    case JMP:
+    case InstructionType::JMP:
         return "JMP";
-    case BSR:
+    case InstructionType::BSR:
         return "BSR";
-    case JSR:
+    case InstructionType::JSR:
         return "JSR";
-    case RTS:
+    case InstructionType::RTS:
         return "RTS";
-    case RTD:
+    case InstructionType::RTD:
         return "RTD";
-    case SCB_F:
+    case InstructionType::SCB_F:
         return "SCB/F";
-    case SCB_NE:
+    case InstructionType::SCB_NE:
         return "SCB/NE";
-    case SCB_EQ:
+    case InstructionType::SCB_EQ:
         return "SCB/EQ";
-    case PJMP:
+    case InstructionType::PJMP:
         return "PJMP";
-    case PJSR:
+    case InstructionType::PJSR:
         return "PJSR";
-    case PRTS:
+    case InstructionType::PRTS:
         return "PRTS";
-    case PRTD:
+    case InstructionType::PRTD:
         return "PRTD";
-    case TRAPA:
+    case InstructionType::TRAPA:
         return "TRAPA";
-    case TRAP_VS:
+    case InstructionType::TRAP_VS:
         return "TRAP_VS";
-    case RTE:
+    case InstructionType::RTE:
         return "RTE";
-    case LINK:
+    case InstructionType::LINK:
         return "LINK";
-    case UNLK:
+    case InstructionType::UNLK:
         return "UNLK";
-    case SLEEP:
+    case InstructionType::SLEEP:
         return "SLEEP";
-    case NOP:
+    case InstructionType::NOP:
         return "NOP";
     }
     std::unreachable();
 }
 
-void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result)
+void RenderInstruction(const DisassembledInstruction& instr, std::string& result)
 {
     result.clear();
     // if (instr.is_general)
@@ -466,21 +466,21 @@ void I_RenderInstruction2(const I_DecodedInstruction& instr, std::string& result
     //     result += "Sh ";
     // }
     result += ToCString(instr.instr);
-    result += I_RenderFormatSuffix(instr.format);
-    result += I_RenderSizeSuffix(instr.op_size);
+    result += RenderFormatSuffix(instr.format);
+    result += RenderSizeSuffix(instr.op_size);
 
     std::string op_str;
 
-    if (instr.op[0].location != NotPresent)
+    if (instr.op[0].location != OperandLocation::NotPresent)
     {
         result += " ";
         OperandString(instr, instr.op[0], op_str);
         result += op_str;
     }
 
-    if (instr.op[1].location != NotPresent)
+    if (instr.op[1].location != OperandLocation::NotPresent)
     {
-        if (instr.op[0].location != NotPresent)
+        if (instr.op[0].location != OperandLocation::NotPresent)
         {
             result += ",";
         }

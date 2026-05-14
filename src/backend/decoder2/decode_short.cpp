@@ -6,7 +6,7 @@
 namespace decoder2
 {
 
-constexpr Decoder_Handler DIS_SHORT[256] = {
+constexpr Disassembler DIS_SHORT[256] = {
     Dis_NOP,              // 00000000
     Dis_SCB_F,            // 00000001
     Dis_LDM_SP_Reglist,   // 00000010
@@ -265,7 +265,7 @@ constexpr Decoder_Handler DIS_SHORT[256] = {
     nullptr,              // 11111111
 };
 
-Decoder_Handler GetDecoderShort(uint8_t byte)
+Disassembler GetDecoderShort(uint8_t byte)
 {
     return DIS_SHORT[byte];
 }
