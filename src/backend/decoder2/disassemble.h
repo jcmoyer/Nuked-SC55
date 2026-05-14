@@ -99,6 +99,8 @@ enum class InstructionType
     NOP,
 };
 
+const char* ToCString(InstructionType instr);
+
 enum class OptionalSize
 {
     Unsized, // e.g. NOP

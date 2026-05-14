@@ -9,7 +9,7 @@
 namespace decoder2
 {
 
-std::string RenderFormatSuffix(InstructionFormat format)
+static std::string RenderFormatSuffix(InstructionFormat format)
 {
     switch (format)
     {
@@ -33,9 +33,9 @@ std::string RenderFormatSuffix(InstructionFormat format)
     std::unreachable();
 }
 
-const char* HEX_DIGITS = "0123456789abcdef";
+constexpr const char* HEX_DIGITS = "0123456789abcdef";
 
-void WriteHexU8(std::string& s, uint8_t val)
+static void WriteHexU8(std::string& s, uint8_t val)
 {
     uint8_t hi = val >> 4;
     uint8_t lo = val & 0x0f;
@@ -43,13 +43,13 @@ void WriteHexU8(std::string& s, uint8_t val)
     s.push_back(HEX_DIGITS[lo]);
 }
 
-void WriteHexU16(std::string& s, uint16_t val)
+static void WriteHexU16(std::string& s, uint16_t val)
 {
     WriteHexU8(s, (uint8_t)(val >> 8));
     WriteHexU8(s, (uint8_t)val);
 }
 
-void OperandString(DisassembledInstruction instr, InstructionOperand op, std::string& result)
+static void OperandString(DisassembledInstruction instr, InstructionOperand op, std::string& result)
 {
     result.clear();
     switch (op.location)
@@ -123,7 +123,7 @@ void OperandString(DisassembledInstruction instr, InstructionOperand op, std::st
     }
 }
 
-std::string RenderSizeSuffix(OptionalSize size)
+static std::string RenderSizeSuffix(OptionalSize size)
 {
     switch (size)
     {
@@ -137,7 +137,7 @@ std::string RenderSizeSuffix(OptionalSize size)
     return ".?";
 }
 
-bool DisassembleOpcode(DisassembleDecoder& decoder, uint8_t opcode, DisassembledInstruction& result)
+static bool DisassembleOpcode(DisassembleDecoder& decoder, uint8_t opcode, DisassembledInstruction& result)
 {
     if (result.is_general)
     {
