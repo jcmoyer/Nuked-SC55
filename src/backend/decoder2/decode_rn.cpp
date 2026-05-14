@@ -1,5 +1,7 @@
+#include "decoders.h"
+//=============================================================================
+
 #include "decoder_handlers.h"
-#include "disassemble.h"
 
 namespace decoder2
 {

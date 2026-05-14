@@ -137,52 +137,6 @@ static std::string RenderSizeSuffix(OptionalSize size)
     return ".?";
 }
 
-static bool DisassembleOpcode(DisassembleDecoder& decoder, uint8_t opcode, DisassembledInstruction& result)
-{
-    if (result.is_general)
-    {
-        switch (result.mode)
-        {
-        case AddressMode::Rn:
-            if (auto handler = GetDecoderRn(opcode); handler)
-            {
-                handler(decoder, opcode, result);
-            }
-            break;
-        // These addressing modes all share the same instructions
-        case AddressMode::Ad8_Rn:
-        case AddressMode::Ad16_Rn:
-        case AddressMode::Aaa16:
-        case AddressMode::Aaa8:
-        case AddressMode::ARn:
-        case AddressMode::APreDecRn:
-        case AddressMode::APostIncRn:
-            if (auto handler = GetDecoderGeneric(opcode); handler)
-            {
-                handler(decoder, opcode, result);
-            }
-            break;
-        // Immediate modes share instructions
-        case AddressMode::imm8:
-        case AddressMode::imm16:
-            if (auto handler = GetDecoderimm8(opcode); handler)
-            {
-                handler(decoder, opcode, result);
-            }
-            break;
-        }
-    }
-    else
-    {
-        if (auto handler = GetDecoderShort(opcode); handler)
-        {
-            handler(decoder, opcode, result);
-        }
-    }
-
-    return true;
-}
-
 bool Disassemble(std::span<const uint8_t> bytes, size_t position, DisassembledInstruction& result)
 {
     result = {};
@@ -192,97 +146,24 @@ bool Disassemble(std::span<const uint8_t> bytes, size_t position, DisassembledIn
     const size_t  instr_first = decoder.GetPosition();
     const uint8_t byte        = decoder.ReadAdvance();
 
-    if ((byte & 0b11110000) == 0b10100000)
+    if (auto handler = GetDecoderTop(byte); handler)
     {
-        result.mode       = AddressMode::Rn;
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.is_general = true;
-        result.ea_reg     = byte & 0b111;
-    }
-    else if ((byte & 0b11110000) == 0b11010000)
-    {
-        result.mode       = AddressMode::ARn;
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.is_general = true;
-        result.ea_reg     = byte & 0b111;
-    }
-    else if ((byte & 0b11110000) == 0b11100000)
-    {
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.mode       = AddressMode::Ad8_Rn;
-        result.ea_disp    = (int8_t)decoder.ReadAdvance();
-        result.is_general = true;
-        result.ea_reg     = byte & 0b111;
-    }
-    else if ((byte & 0b11110000) == 0b11110000)
-    {
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.mode       = AddressMode::Ad16_Rn;
-        result.ea_disp    = (int16_t)decoder.ReadU16();
-        result.is_general = true;
-        result.ea_reg     = byte & 0b111;
-    }
-    else if ((byte & 0b11110000) == 0b10110000)
-    {
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.mode       = AddressMode::APreDecRn;
-        result.is_general = true;
-        result.ea_reg     = byte & 0b111;
-    }
-    else if ((byte & 0b11110000) == 0b11000000)
-    {
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.mode       = AddressMode::APostIncRn;
-        result.is_general = true;
-        result.ea_reg     = byte & 0b111;
-    }
-    else if ((byte & 0b11110111) == 0b00000101)
-    {
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.mode       = AddressMode::Aaa8;
-        result.ea_addr    = decoder.ReadAdvance();
-        result.is_general = true;
-    }
-    else if ((byte & 0b11110111) == 0b00010101)
-    {
-        result.op_size    = (byte & 0b00001000) ? OptionalSize::Word : OptionalSize::Byte;
-        result.mode       = AddressMode::Aaa16;
-        result.ea_addr    = decoder.ReadU16();
-        result.is_general = true;
-    }
-    else if (byte == 0b00000100)
-    {
-        result.op_size    = OptionalSize::Byte;
-        result.mode       = AddressMode::imm8;
-        result.ea_imm     = decoder.ReadAdvance();
-        result.is_general = true;
-    }
-    else if (byte == 0b00001100)
-    {
-        result.op_size    = OptionalSize::Word;
-        result.mode       = AddressMode::imm16;
-        result.ea_imm     = decoder.ReadU16();
-        result.is_general = true;
+        handler(decoder, byte, result);
+
+        const size_t instr_last = decoder.GetPosition();
+        result.instr_size       = (uint8_t)(instr_last - instr_first);
     }
     else
     {
-        result.is_general = false;
+        decoder.SetError({
+            .code     = DisassembleErrorCode::InvalidInstructionFormat,
+            .position = instr_first,
+            .message  = "No top handler",
+        });
     }
 
-    bool success;
-    if (result.is_general)
-    {
-        success = DisassembleOpcode(decoder, decoder.ReadAdvance(), result);
-    }
-    else
-    {
-        success = DisassembleOpcode(decoder, byte, result);
-    }
-
-    const size_t instr_last = decoder.GetPosition();
-    result.instr_size       = (uint8_t)(instr_last - instr_first);
-
-    return success;
+    // TODO: propagate error
+    return decoder.GetError().code == DisassembleErrorCode{};
 }
 
 const char* ToCString(InstructionType instr)

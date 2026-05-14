@@ -117,7 +117,7 @@ if(NUKED_ENABLE_DECODER2)
         src/backend/decoder2/decode_imm16.cpp
         src/backend/decoder2/decode_imm8.cpp
         src/backend/decoder2/decode_rn.cpp
-        src/backend/decoder2/decode_short.cpp
+        src/backend/decoder2/decode_top.cpp
         src/backend/decoder2/decoder_handlers.cpp
         src/backend/decoder2/disassemble.cpp
         src/backend/decoder2/dispatch_aa.cpp

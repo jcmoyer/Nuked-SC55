@@ -260,8 +260,6 @@ private:
     DisassembleError         m_err{};
 };
 
-using Disassembler = void (*)(DisassembleDecoder& decoder, uint8_t byte, DisassembledInstruction& instr);
-
 bool Disassemble(std::span<const uint8_t> bytes, size_t position, DisassembledInstruction& result);
 
 void RenderInstruction(const DisassembledInstruction& instr, std::string& result);

@@ -5,6 +5,8 @@
 namespace decoder2
 {
 
+using Disassembler = void (*)(DisassembleDecoder& decoder, uint8_t byte, DisassembledInstruction& instr);
+
 // Rn
 Disassembler GetDecoderRn(uint8_t byte);
 
@@ -18,6 +20,6 @@ Disassembler GetDecoderimm8(uint8_t byte);
 Disassembler GetDecoderimm16(uint8_t byte);
 
 // Short-form instructions
-Disassembler GetDecoderShort(uint8_t byte);
+Disassembler GetDecoderTop(uint8_t byte);
 
 } // namespace decoder2
