@@ -105,9 +105,9 @@ private:
     }
 
 private:
-    mcu_t&                     m_mcu;
+    mcu_t&                          m_mcu;
     const DecodedInstructionParams& m_instr;
-    const uint8_t              m_instr_size;
+    const uint8_t                   m_instr_size;
 };
 
 constexpr uint8_t GetPageForRegister(const mcu_t& mcu, uint8_t Rn)
@@ -1983,25 +1983,9 @@ inline void I_SCB_EQ(mcu_t& mcu, const DecodedInstructionParams& st)
     }
 }
 
-inline void I_RTS(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    (void)st;
-    mcu.pc = MCU_PopStack(mcu);
-}
-
-inline void I_PRTS(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    (void)st;
-    mcu.cp = (uint8_t)MCU_PopStack(mcu);
-    mcu.pc = MCU_PopStack(mcu);
-}
-
-inline void I_SLEEP(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    (void)st;
-    mcu.sleep = 1;
-    ++mcu.pc;
-}
+void I_RTS(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_PRTS(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_SLEEP(mcu_t& mcu, const DecodedInstructionParams& st);
 
 // STM <register list>,@-SP
 inline void I_STM(mcu_t& mcu, const DecodedInstructionParams& st)
@@ -2075,68 +2059,16 @@ inline void I_LDM_Fast(mcu_t& mcu, const DecodedInstructionParams& st)
     mcu.pc += 2;
 }
 
-inline void I_JMP_ARn(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    mcu.pc = mcu.r[st.op_reg];
-}
-
-inline void I_JMP_aa16(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    mcu.pc = st.br_true;
-}
-
-inline void I_JSR_aa16(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    MCU_PushStack(mcu, st.br_false);
-    mcu.pc = st.br_true;
-}
-
-inline void I_JSR_ARn(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    MCU_PushStack(mcu, st.br_false);
-    mcu.pc = mcu.r[st.op_reg];
-}
-
-inline void I_PJMP_aa24(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    mcu.cp = st.op_page;
-    mcu.pc = st.op_data;
-}
-
-inline void I_PJSR_aa24(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    MCU_PushStack(mcu, st.br_false);
-    MCU_PushStack(mcu, mcu.cp);
-    mcu.cp = st.op_page;
-    mcu.pc = st.br_true;
-}
-
-inline void I_PJSR_ARn(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    MCU_PushStack(mcu, st.br_false);
-    MCU_PushStack(mcu, mcu.cp);
-    mcu.cp = static_cast<uint8_t>(mcu.r[st.op_reg]);
-    mcu.pc = mcu.r[st.op_reg + 1];
-}
-
-inline void I_PJMP_ARn(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    mcu.cp = (uint8_t)mcu.r[st.op_reg];
-    mcu.pc = mcu.r[st.op_reg + 1];
-}
-
-inline void I_RTD_immXX(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    mcu.pc   = MCU_PopStack(mcu);
-    mcu.r[7] = (uint16_t)(mcu.r[7] + (int16_t)st.op_data);
-}
-
-inline void I_TRAPA_imm4(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    MCU_Interrupt_TRAPA(mcu, (uint8_t)st.op_data);
-    mcu.pc += 2;
-}
-
+void I_JMP_ARn(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_JMP_aa16(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_JSR_aa16(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_JSR_ARn(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_PJMP_aa24(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_PJSR_aa24(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_PJSR_ARn(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_PJMP_ARn(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_RTD_immXX(mcu_t& mcu, const DecodedInstructionParams& st);
+void I_TRAPA_imm4(mcu_t& mcu, const DecodedInstructionParams& st);
 void I_BSR(mcu_t& mcu, const DecodedInstructionParams& instr);
 
 } // namespace decoder2
