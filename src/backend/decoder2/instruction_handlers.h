@@ -67,19 +67,20 @@ constexpr uint8_t ModeEASize(Mode_Imm16)
     return 3;
 }
 
-// Implements pre/post decrement/increment for @-Rn and @Rn+ addressing modes.
+// Implements pre/post decrement/increment for @-Rn and @Rn+ addressing modes
+// and automatically adjusts the program counter on scope exit.
 template <Size Sz, typename Mode>
 class InstructionScope
 {
 public:
-    InstructionScope(mcu_t& mcu, const DecodedInstructionParams& instr, uint8_t instr_size)
+    InstructionScope(mcu_t& mcu, const DecodedInstructionParams& params, uint8_t instr_size)
         : m_mcu(mcu),
-          m_instr(instr),
+          m_params(params),
           m_instr_size(instr_size)
     {
         if constexpr (std::is_same_v<Mode, Mode_APreDecRn>)
         {
-            m_mcu.r[m_instr.ea_reg] -= GetAdjust();
+            m_mcu.r[m_params.ea_reg] -= GetAdjust();
         }
     }
 
@@ -87,7 +88,7 @@ public:
     {
         if constexpr (std::is_same_v<Mode, Mode_APostIncRn>)
         {
-            m_mcu.r[m_instr.ea_reg] += GetAdjust();
+            m_mcu.r[m_params.ea_reg] += GetAdjust();
         }
         m_mcu.pc += static_cast<uint8_t>(ModeEASize(Mode{}) + m_instr_size);
     }
@@ -98,7 +99,7 @@ private:
         switch (Sz)
         {
         case Size::Byte:
-            return (m_instr.ea_reg == 7) ? 2 : 1;
+            return (m_params.ea_reg == 7) ? 2 : 1;
         case Size::Word:
             return 2;
         }
@@ -106,7 +107,7 @@ private:
 
 private:
     mcu_t&                          m_mcu;
-    const DecodedInstructionParams& m_instr;
+    const DecodedInstructionParams& m_params;
     const uint8_t                   m_instr_size;
 };
 
