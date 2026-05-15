@@ -1725,33 +1725,17 @@ inline void I_ROTR_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, lsb, STATUS_C);
 }
 
-template <typename Mode>
-inline void I_ROTXL_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_ROTXL_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const bool    old_C  = mcu.sr & STATUS_C;
-    const uint8_t input  = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const bool    msb    = input & 0x80;
-    const uint8_t result = static_cast<uint8_t>((input << 1) | static_cast<uint8_t>(old_C));
-    StoreToEA<Size::Byte>(Mode{}, mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, result == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-    MCU_SetStatus(mcu, msb, STATUS_C);
-}
-
-template <typename Mode>
-inline void I_ROTXL_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const bool     old_C  = mcu.sr & STATUS_C;
-    const uint16_t input  = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const bool     msb    = input & 0x8000;
-    const uint16_t result = (uint16_t)(input << 1) | (uint16_t)old_C;
-    StoreToEA<Size::Word>(Mode{}, mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
+    const bool              old_C  = mcu.sr & STATUS_C;
+    const SizeToIntType<Sz> input  = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const bool              msb    = input & MSB<Sz>;
+    const SizeToIntType<Sz> result = RotateLeft(input, old_C);
+    StoreToEA<Sz>(Mode{}, mcu, st, result);
+    MCU_SetStatus(mcu, result & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
     MCU_SetStatus(mcu, msb, STATUS_C);
