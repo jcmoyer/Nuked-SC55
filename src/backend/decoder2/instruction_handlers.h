@@ -1789,92 +1789,47 @@ inline void I_ROTXR_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, lsb, STATUS_C);
 }
 
-template <typename Mode>
-inline void I_XOR_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_XOR_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint8_t EAs    = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t Rd     = LoadFromOpReg<Size::Byte>(mcu, st);
-    const uint8_t result = EAs ^ Rd;
+    const SizeToIntType<Sz> EAs    = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> Rd     = LoadFromOpReg<Sz>(mcu, st);
+    const SizeToIntType<Sz> result = EAs ^ Rd;
 
-    StoreToOpReg<Size::Byte>(mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x80, STATUS_N);
+    StoreToOpReg<Sz>(mcu, st, result);
+    MCU_SetStatus(mcu, result & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-template <typename Mode>
-inline void I_XOR_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_OR_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint16_t EAs    = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t Rd     = LoadFromOpReg<Size::Word>(mcu, st);
-    const uint16_t result = EAs ^ Rd;
+    const SizeToIntType<Sz> EAs    = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> Rd     = LoadFromOpReg<Sz>(mcu, st);
+    const SizeToIntType<Sz> result = EAs | Rd;
 
-    StoreToOpReg<Size::Word>(mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
+    StoreToOpReg<Sz>(mcu, st, result);
+    MCU_SetStatus(mcu, result & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-template <typename Mode>
-inline void I_OR_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_AND_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint8_t EAs    = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t Rd     = LoadFromOpReg<Size::Byte>(mcu, st);
-    const uint8_t result = EAs | Rd;
+    const SizeToIntType<Sz> EAs    = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> Rd     = LoadFromOpReg<Sz>(mcu, st);
+    const SizeToIntType<Sz> result = EAs & Rd;
 
-    StoreToOpReg<Size::Byte>(mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, result == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-template <typename Mode>
-inline void I_OR_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t EAs    = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t Rd     = LoadFromOpReg<Size::Word>(mcu, st);
-    const uint16_t result = EAs | Rd;
-
-    StoreToOpReg<Size::Word>(mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, result == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-template <typename Mode>
-inline void I_AND_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
-
-    const uint8_t EAs    = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t Rd     = LoadFromOpReg<Size::Byte>(mcu, st);
-    const uint8_t result = EAs & Rd;
-
-    StoreToOpReg<Size::Byte>(mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, result == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-template <typename Mode>
-inline void I_AND_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t EAs    = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t Rd     = LoadFromOpReg<Size::Word>(mcu, st);
-    const uint16_t result = EAs & Rd;
-
-    StoreToOpReg<Size::Word>(mcu, st, result);
-    MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
+    StoreToOpReg<Sz>(mcu, st, result);
+    MCU_SetStatus(mcu, result & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }

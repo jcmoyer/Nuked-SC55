@@ -654,14 +654,7 @@ void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruc
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_XOR_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_XOR_W_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_XOR_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
@@ -670,14 +663,7 @@ void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruct
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_OR_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_OR_W_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_OR_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
@@ -686,14 +672,7 @@ void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruc
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_AND_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_AND_W_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_AND_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
