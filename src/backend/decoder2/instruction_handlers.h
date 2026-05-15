@@ -154,50 +154,50 @@ SizeToIntType<Sz> LoadFromReg(mcu_t& mcu, uint8_t reg)
 // Computes the EA pointer for a given addressing mode. This operation is only
 // valid for modes that refer to an address in memory - the address of a
 // register or immediate cannot be taken.
-constexpr uint32_t LoadEA(Mode_Ad8_Rn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_Ad8_Rn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
-    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
+    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + p.ea_disp));
 }
 
-constexpr uint32_t LoadEA(Mode_Ad16_Rn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_Ad16_Rn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
-    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + instr.ea_disp));
+    return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | (uint16_t)(mcu.r[Rn] + p.ea_disp));
 }
 
-constexpr uint32_t LoadEA(Mode_APreDecRn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_APreDecRn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
-    (void)instr;
+    (void)p;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(Mode_APostIncRn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_APostIncRn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
-    (void)instr;
+    (void)p;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(Mode_ARn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_ARn, mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
-    (void)instr;
+    (void)p;
     return (uint32_t)((GetPageForRegister(mcu, Rn) << 16) | mcu.r[Rn]);
 }
 
-constexpr uint32_t LoadEA(Mode_Aaa8, const mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_Aaa8, const mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
     (void)Rn;
-    return (uint32_t)(mcu.br << 8) | instr.ea_data;
+    return (uint32_t)(mcu.br << 8) | p.ea_data;
 }
 
-constexpr uint32_t LoadEA(Mode_Aaa16, const mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& instr)
+constexpr uint32_t ComputeEA(Mode_Aaa16, const mcu_t& mcu, uint8_t Rn, const DecodedInstructionParams& p)
 {
     (void)Rn;
-    return (uint32_t)(mcu.dp << 16) | instr.ea_data;
+    return (uint32_t)(mcu.dp << 16) | p.ea_data;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Performs a load from EA treating EA as if it were a pointer. This may load
 // from a register or a memory location, but this function abstracts over the
-// exact method. To obtain the pointer itself, use LoadEA instead.
+// exact method. To obtain the pointer itself, use ComputeEA instead.
 template <Size Sz>
 auto LoadFromEA(Mode_Rn, mcu_t& mcu, const DecodedInstructionParams& instr)
 {
@@ -224,7 +224,7 @@ template <Size Sz, typename Mode>
 SizeToIntType<Sz> LoadFromEA(Mode, mcu_t& mcu, const DecodedInstructionParams& st)
 {
     (void)st;
-    const uint32_t addr = LoadEA(Mode{}, mcu, st.ea_reg, st);
+    const uint32_t addr = ComputeEA(Mode{}, mcu, st.ea_reg, st);
     if constexpr (Sz == Size::Byte)
         return MCU_Read(mcu, addr);
     else if constexpr (Sz == Size::Word)
@@ -234,7 +234,7 @@ SizeToIntType<Sz> LoadFromEA(Mode, mcu_t& mcu, const DecodedInstructionParams& s
 ///////////////////////////////////////////////////////////////////////////////
 // Performs a store to EA treating EA as if it were a pointer. This may store
 // to a register or a memory location, but this function abstracts over the
-// exact method. To obtain the pointer used for the store, use LoadEA.
+// exact method. To obtain the pointer used for the store, use ComputeEA.
 template <Size Sz>
 void StoreToEA(Mode_Rn, mcu_t& mcu, const DecodedInstructionParams& st, SizeToIntType<Sz> value)
 {
@@ -245,7 +245,7 @@ template <Size Sz, typename Mode>
     requires(!std::is_same_v<Mode, Mode_Rn>)
 void StoreToEA(Mode, mcu_t& mcu, const DecodedInstructionParams& st, SizeToIntType<Sz> value)
 {
-    const uint32_t addr = LoadEA(Mode{}, mcu, st.ea_reg, st);
+    const uint32_t addr = ComputeEA(Mode{}, mcu, st.ea_reg, st);
     if constexpr (Sz == Size::Byte)
         MCU_Write(mcu, addr, value);
     else if constexpr (Sz == Size::Word)
