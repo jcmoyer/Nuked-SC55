@@ -497,14 +497,7 @@ void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructi
 {
     (void)byte;
 
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ROTL_B_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ROTL_W_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_ROTL_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
@@ -512,14 +505,7 @@ void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructi
 {
     (void)byte;
 
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ROTR_B_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ROTR_W_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_ROTR_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
