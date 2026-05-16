@@ -394,14 +394,7 @@ void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInst
     (void)byte;
 
     instr.op_data = Imm4 & 0b1111;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_BCLR_B_imm4_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_BCLR_W_imm4_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_BCLR_imm4_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
@@ -410,14 +403,7 @@ void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstru
     (void)byte;
 
     instr.op_reg = Rs;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_BCLR_B_Rs_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_BCLR_W_Rs_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_BCLR_Rs_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
@@ -503,14 +489,7 @@ void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruc
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_STC_B_CR_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_STC_W_CR_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_STC_CR_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
@@ -519,14 +498,7 @@ void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruc
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_LDC_B_EAs_CR<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_LDC_W_EAs_CR<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_LDC_EAs_CR<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
@@ -562,14 +534,7 @@ void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstr
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ORC_B_imm8_CR<Mode, CR>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ORC_W_imm16_CR<Mode, CR>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_ORC_immXX_CR<Sz, Mode, CR>, instr);
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
@@ -578,14 +543,7 @@ void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInst
     (void)byte;
 
     instr.op_c = CR;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ANDC_B_imm8_CR<Mode, CR>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ANDC_W_imm16_CR<Mode, CR>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_ANDC_immXX_CR<Sz, Mode, CR>, instr);
 }
 
 //=============================================================================

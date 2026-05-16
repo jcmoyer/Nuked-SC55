@@ -263,6 +263,15 @@ inline bool IsSR_W(uint8_t cr)
     return cr == 0;
 }
 
+template <Size Sz>
+inline bool IsSR(uint8_t cr)
+{
+    if constexpr (Sz == Size::Byte)
+        return IsSR_B(cr);
+    else if constexpr (Sz == Size::Word)
+        return IsSR_W(cr);
+}
+
 inline uint8_t LoadFromCR_B(mcu_t& mcu, uint8_t cr)
 {
     switch (cr)
@@ -602,54 +611,29 @@ inline void I_BNOT_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
-// BCLR.B #xx, <EAd>
-template <typename State>
-inline void I_BCLR_B_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// BCLR.[B|W] #xx, <EAd>
+template <Size Sz, typename State>
+inline void I_BCLR_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t mask = (uint8_t)(1 << st.op_data);
-    const uint8_t data = LoadFromEA<Size::Byte>(State{}, mcu, st);
+    const SizeToIntType<Sz> mask = 1 << st.op_data;
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
-    StoreToEA<Size::Byte>(State{}, mcu, st, data & (~mask));
+    StoreToEA<Sz>(State{}, mcu, st, data & (~mask));
 }
 
-// BCLR.W #xx, <EAd>
-template <typename State>
-inline void I_BCLR_W_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// BCLR.[B|W] Rs,<EAd>
+template <Size Sz, typename State>
+inline void I_BCLR_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint16_t mask = (uint16_t)(1 << st.op_data);
-    const uint16_t data = LoadFromEA<Size::Word>(State{}, mcu, st);
+    const uint8_t           bit  = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
+    const SizeToIntType<Sz> mask = 1 << bit;
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
-    StoreToEA<Size::Word>(State{}, mcu, st, data & (~mask));
-}
-
-// BCLR.B Rs,<EAd>
-template <typename State>
-inline void I_BCLR_B_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
-
-    const uint16_t bit  = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const uint8_t  mask = (uint8_t)(1 << bit);
-    const uint8_t  data = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
-    StoreToEA<Size::Byte>(State{}, mcu, st, data & (~mask));
-}
-
-// BCLR.W Rs,<EAd>
-template <typename State>
-inline void I_BCLR_W_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint16_t bit  = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const uint16_t mask = (uint16_t)(1 << bit);
-    const uint16_t data = LoadFromEA<Size::Word>(State{}, mcu, st);
-    MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
-    StoreToEA<Size::Word>(State{}, mcu, st, data & (~mask));
+    StoreToEA<Sz>(State{}, mcu, st, data & (~mask));
 }
 
 template <Size Sz, typename Mode>
@@ -1252,63 +1236,41 @@ inline void I_SHAR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, C, STATUS_C);
 }
 
-// LDC.B <EAs>, CR
-template <typename State>
-inline void I_LDC_B_EAs_CR(mcu_t& mcu, const DecodedInstructionParams& st)
+// LDC.[B|W] <EAs>, CR
+template <Size Sz, typename State>
+inline void I_LDC_EAs_CR(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t byte = LoadFromEA<Size::Byte>(State{}, mcu, st);
+    const SizeToIntType<Sz> byte = LoadFromEA<Sz>(State{}, mcu, st);
 
-    StoreToCR_B(mcu, st.op_c, byte);
+    StoreToCR<Sz>(mcu, st.op_c, byte);
     mcu.ex_ignore = 1;
 }
 
-// LDC.W <EAs>, CR
-template <typename State>
-inline void I_LDC_W_EAs_CR(mcu_t& mcu, const DecodedInstructionParams& st)
+// STC.[B|W] CR, <EAd>
+template <Size Sz, typename State>
+void I_STC_CR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint16_t word = LoadFromEA<Size::Word>(State{}, mcu, st);
-
-    StoreToCR_W(mcu, st.op_c, word);
-    mcu.ex_ignore = 1;
+    const SizeToIntType<Sz> value = LoadFromCR<Sz>(mcu, st.op_c);
+    StoreToEA<Sz>(State{}, mcu, st, value);
 }
 
-// STC.B CR, <EAd>
-template <typename State>
-void I_STC_B_CR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// ANDC.[B|W] #xx:[8|16], CR
+template <Size Sz, typename Mode, uint8_t CR>
+inline void I_ANDC_immXX_CR(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint8_t value = LoadFromCR_B(mcu, st.op_c);
-    StoreToEA<Size::Byte>(State{}, mcu, st, value);
-}
-
-// STC.W CR, <EAd>
-template <typename State>
-void I_STC_W_CR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint16_t value = LoadFromCR_W(mcu, st.op_c);
-    StoreToEA<Size::Word>(State{}, mcu, st, value);
-}
-
-// ANDC.B #xx:8, CR
-template <typename Mode, uint8_t CR>
-inline void I_ANDC_B_imm8_CR(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
-
-    const uint8_t result = LoadFromCR_B(mcu, CR) & (uint8_t)st.ea_data;
-    StoreToCR_B(mcu, CR, result);
+    const SizeToIntType<Sz> result = LoadFromCR<Sz>(mcu, CR) & static_cast<SizeToIntType<Sz>>(st.ea_data);
+    StoreToCR<Sz>(mcu, CR, result);
     mcu.ex_ignore = 1;
 
-    if (!IsSR_B(CR))
+    if (!IsSR<Sz>(CR))
     {
-        const bool N = result & 0x80;
+        const bool N = result & MSB<Sz>;
         const bool Z = result == 0;
         const bool V = 0;
         MCU_SetStatus(mcu, N, STATUS_N);
@@ -1317,61 +1279,19 @@ inline void I_ANDC_B_imm8_CR(mcu_t& mcu, const DecodedInstructionParams& st)
     }
 }
 
-// ANDC.W #xx:16, CR
-template <typename Mode, uint8_t CR>
-inline void I_ANDC_W_imm16_CR(mcu_t& mcu, const DecodedInstructionParams& st)
+// ORC.[B|W] #xx:[8|16], CR
+template <Size Sz, typename Mode, uint8_t CR>
+inline void I_ORC_immXX_CR(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint16_t result = LoadFromCR_W(mcu, CR) & st.ea_data;
-    StoreToCR_W(mcu, CR, result);
+    const SizeToIntType<Sz> result = LoadFromCR<Sz>(mcu, CR) | static_cast<SizeToIntType<Sz>>(st.ea_data);
+    StoreToCR<Sz>(mcu, CR, result);
     mcu.ex_ignore = 1;
 
-    if (!IsSR_W(CR))
+    if (!IsSR<Sz>(CR))
     {
-        const bool N = result & 0x8000;
-        const bool Z = result == 0;
-        const bool V = 0;
-        MCU_SetStatus(mcu, N, STATUS_N);
-        MCU_SetStatus(mcu, Z, STATUS_Z);
-        MCU_SetStatus(mcu, V, STATUS_V);
-    }
-}
-
-// ORC.B #xx:8, CR
-template <typename Mode, uint8_t CR>
-inline void I_ORC_B_imm8_CR(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
-
-    const uint8_t result = (uint8_t)(LoadFromCR_B(mcu, CR) | st.ea_data);
-    StoreToCR_B(mcu, CR, result);
-    mcu.ex_ignore = 1;
-
-    if (!IsSR_B(CR))
-    {
-        const bool N = result & 0x80;
-        const bool Z = result == 0;
-        const bool V = 0;
-        MCU_SetStatus(mcu, N, STATUS_N);
-        MCU_SetStatus(mcu, Z, STATUS_Z);
-        MCU_SetStatus(mcu, V, STATUS_V);
-    }
-}
-
-// ORC.W #xx:16, CR
-template <typename Mode, uint8_t CR>
-inline void I_ORC_W_imm16_CR(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t result = LoadFromCR_W(mcu, CR) | st.ea_data;
-    StoreToCR_W(mcu, CR, result);
-    mcu.ex_ignore = 1;
-
-    if (!IsSR_W(CR))
-    {
-        const bool N = result & 0x8000;
+        const bool N = result & MSB<Sz>;
         const bool Z = result == 0;
         const bool V = 0;
         MCU_SetStatus(mcu, N, STATUS_N);
