@@ -509,26 +509,13 @@ inline void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, result_u & 0x10000, STATUS_C);
 }
 
-// CLR.B <EAd>
-template <typename State>
-inline void I_CLR_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// CLR.[B|W] <EAd>
+template <Size Sz, typename State>
+inline void I_CLR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    StoreToEA<Size::Byte>(State{}, mcu, st, 0);
-    MCU_SetStatus(mcu, 0, STATUS_N);
-    MCU_SetStatus(mcu, 1, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-    MCU_SetStatus(mcu, 0, STATUS_C);
-}
-
-// CLR.W <EAd>
-template <typename State>
-inline void I_CLR_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    StoreToEA<Size::Word>(State{}, mcu, st, 0);
+    StoreToEA<Sz>(State{}, mcu, st, 0);
     MCU_SetStatus(mcu, 0, STATUS_N);
     MCU_SetStatus(mcu, 1, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
@@ -573,83 +560,45 @@ void I_ADD_G_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, add_u & 0x10000, STATUS_C);
 }
 
-template <typename Mode>
-inline void I_BSET_B_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_BSET_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint8_t mask   = (uint8_t)(1 << st.op_data);
-    const uint8_t data   = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t result = data | mask;
-    const bool    Z      = (data & mask) == 0;
-    StoreToEA<Size::Byte>(Mode{}, mcu, st, result);
+    const SizeToIntType<Sz> mask   = 1 << st.op_data;
+    const SizeToIntType<Sz> data   = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> result = data | mask;
+    const bool              Z      = (data & mask) == 0;
+    StoreToEA<Sz>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
-template <typename Mode>
-inline void I_BSET_W_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_BSET_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint16_t mask   = (uint16_t)(1 << st.op_data);
-    const uint16_t data   = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t result = data | mask;
-    const bool     Z      = (data & mask) == 0;
-    StoreToEA<Size::Word>(Mode{}, mcu, st, result);
+    // Both Byte and Word loads work here since we truncate to 4 bits either way.
+    const uint8_t           bit    = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
+    const SizeToIntType<Sz> mask   = 1 << bit;
+    const SizeToIntType<Sz> data   = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> result = data | mask;
+    const bool              Z      = (data & mask) == 0;
+    StoreToEA<Sz>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
-template <typename Mode>
-inline void I_BSET_B_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// BNOT.[B|W] #xx, <EAd>
+template <Size Sz, typename Mode>
+inline void I_BNOT_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint16_t bit    = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const uint8_t  mask   = (uint8_t)(1 << bit);
-    const uint8_t  data   = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t  result = data | mask;
-    const bool     Z      = (data & mask) == 0;
-    StoreToEA<Size::Byte>(Mode{}, mcu, st, result);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-}
-
-template <typename Mode>
-inline void I_BSET_W_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t bit    = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const uint16_t mask   = (uint16_t)(1 << bit);
-    const uint16_t data   = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t result = data | mask;
-    const bool     Z      = (data & mask) == 0;
-    StoreToEA<Size::Word>(Mode{}, mcu, st, result);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-}
-
-template <typename Mode>
-inline void I_BNOT_B_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
-
-    const uint8_t mask   = (uint8_t)(1 << st.op_data);
-    const uint8_t data   = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t result = data ^ mask;
-    const bool    Z      = (data & mask) == 0;
-    StoreToEA<Size::Byte>(Mode{}, mcu, st, result);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-}
-
-template <typename Mode>
-inline void I_BNOT_W_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t mask   = (uint16_t)(1 << st.op_data);
-    const uint16_t data   = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t result = data ^ mask;
-    const bool     Z      = (data & mask) == 0;
-    StoreToEA<Size::Word>(Mode{}, mcu, st, result);
+    const SizeToIntType<Sz> mask   = 1 << st.op_data;
+    const SizeToIntType<Sz> data   = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> result = data ^ mask;
+    const bool              Z      = (data & mask) == 0;
+    StoreToEA<Sz>(Mode{}, mcu, st, result);
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
