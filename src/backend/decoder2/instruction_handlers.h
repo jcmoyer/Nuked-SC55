@@ -1254,20 +1254,20 @@ inline void I_NEG_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, neg_u & 0x10000, STATUS_C);
 }
 
-// SHLR.B <EAd>
-template <typename State>
-inline void I_SHLL_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// SHLL.[B|W] <EAd>
+template <Size Sz, typename State>
+inline void I_SHLL_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t val_old = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    const uint8_t val_new = (uint8_t)(val_old << 1);
-    StoreToEA<Size::Byte>(State{}, mcu, st, val_new);
+    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> val_new = val_old << 1;
+    StoreToEA<Sz>(State{}, mcu, st, val_new);
 
-    const bool N = val_new & 0x80;
+    const bool N = val_new & MSB<Sz>;
     const bool Z = val_new == 0;
     const bool V = 0;
-    const bool C = val_old & 0x80;
+    const bool C = val_old & MSB<Sz>;
 
     MCU_SetStatus(mcu, N, STATUS_N);
     MCU_SetStatus(mcu, Z, STATUS_Z);
@@ -1275,57 +1275,15 @@ inline void I_SHLL_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, C, STATUS_C);
 }
 
-// SHLR.W <EAd>
-template <typename State>
-inline void I_SHLL_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// SHLR.[B|W] <EAd>
+template <Size Sz, typename State>
+inline void I_SHLR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint16_t val_old = LoadFromEA<Size::Word>(State{}, mcu, st);
-    const uint16_t val_new = (uint16_t)(val_old << 1);
-    StoreToEA<Size::Word>(State{}, mcu, st, val_new);
-
-    const bool N = val_new & 0x8000;
-    const bool Z = val_new == 0;
-    const bool V = 0;
-    const bool C = val_old & 0x8000;
-
-    MCU_SetStatus(mcu, N, STATUS_N);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-    MCU_SetStatus(mcu, V, STATUS_V);
-    MCU_SetStatus(mcu, C, STATUS_C);
-}
-
-// SHLR.B <EAd>
-template <typename State>
-inline void I_SHLR_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
-
-    const uint8_t val_old = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    const uint8_t val_new = val_old >> 1;
-    StoreToEA<Size::Byte>(State{}, mcu, st, val_new);
-
-    const bool N = 0;
-    const bool Z = val_new == 0;
-    const bool V = 0;
-    const bool C = val_old & 1;
-
-    MCU_SetStatus(mcu, N, STATUS_N);
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-    MCU_SetStatus(mcu, V, STATUS_V);
-    MCU_SetStatus(mcu, C, STATUS_C);
-}
-
-// SHLR.W <EAd>
-template <typename State>
-inline void I_SHLR_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint16_t val_old = LoadFromEA<Size::Word>(State{}, mcu, st);
-    const uint16_t val_new = val_old >> 1;
-    StoreToEA<Size::Word>(State{}, mcu, st, val_new);
+    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> val_new = val_old >> 1;
+    StoreToEA<Sz>(State{}, mcu, st, val_new);
 
     const bool N = 0;
     const bool Z = val_new == 0;

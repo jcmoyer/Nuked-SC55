@@ -224,14 +224,7 @@ void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructi
 {
     (void)byte;
 
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_SHLL_B_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_SHLL_W_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_SHLL_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
@@ -239,14 +232,7 @@ void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructi
 {
     (void)byte;
 
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_SHLR_B_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_SHLR_W_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_SHLR_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
