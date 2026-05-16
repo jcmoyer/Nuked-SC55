@@ -703,49 +703,26 @@ inline void I_BCLR_W_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     StoreToEA<Size::Word>(State{}, mcu, st, data & (~mask));
 }
 
-template <typename Mode>
-inline void I_BTST_B_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_BTST_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint8_t mask = (uint8_t)(1 << st.op_data);
-    const uint8_t data = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const bool    Z    = (data & mask) == 0;
+    const SizeToIntType<Sz> mask = 1 << st.op_data;
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const bool              Z    = (data & mask) == 0;
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
-template <typename Mode>
-inline void I_BTST_W_imm4_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_BTST_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint16_t mask = (uint16_t)(1 << st.op_data);
-    const uint16_t data = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const bool     Z    = (data & mask) == 0;
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-}
-
-template <typename Mode>
-inline void I_BTST_B_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
-
-    const uint8_t data  = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t shift = LoadFromOpReg<Size::Byte>(mcu, st) & 0b1111;
-    const uint8_t mask  = (uint8_t)(1 << shift);
-    const bool    Z     = (data & mask) == 0;
-    MCU_SetStatus(mcu, Z, STATUS_Z);
-}
-
-template <typename Mode>
-inline void I_BTST_W_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t data  = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint8_t  shift = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const uint16_t mask  = (uint16_t)(1 << shift);
-    const bool     Z     = (data & mask) == 0;
+    const SizeToIntType<Sz> data  = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const uint8_t           shift = LoadFromOpReg<Sz>(mcu, st) & 0b1111;
+    const SizeToIntType<Sz> mask  = 1 << shift;
+    const bool              Z     = (data & mask) == 0;
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
@@ -1196,25 +1173,13 @@ inline void I_SUBS_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     StoreToOpReg<Size::Word>(mcu, st, (uint16_t)sub_u);
 }
 
-template <typename State>
-inline void I_TST_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename State>
+inline void I_TST_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t value = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    MCU_SetStatus(mcu, value & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, value == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-    MCU_SetStatus(mcu, 0, STATUS_C);
-}
-
-template <typename State>
-inline void I_TST_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint16_t value = LoadFromEA<Size::Word>(State{}, mcu, st);
-    MCU_SetStatus(mcu, value & 0x8000, STATUS_N);
+    const SizeToIntType<Sz> value = LoadFromEA<Sz>(State{}, mcu, st);
+    MCU_SetStatus(mcu, value & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, value == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
     MCU_SetStatus(mcu, 0, STATUS_C);
