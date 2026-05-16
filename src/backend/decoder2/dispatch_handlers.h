@@ -200,14 +200,7 @@ void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstru
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ADDS_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_ADDS_W_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_ADDS_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>

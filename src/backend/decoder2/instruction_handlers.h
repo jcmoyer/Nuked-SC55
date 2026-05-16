@@ -1645,23 +1645,25 @@ inline void I_NOT_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-template <typename Mode>
-inline void I_ADDS_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename Mode>
+inline void I_ADDS_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
+    // This instruction is unusual in that it always operates on words even if the form is ADDS.B.
     const uint16_t old_reg = LoadFromOpReg<Size::Word>(mcu, st);
-    const uint16_t value   = SX(LoadFromEA<Size::Byte>(Mode{}, mcu, st));
-    StoreToOpReg<Size::Word>(mcu, st, old_reg + value);
-}
 
-template <typename Mode>
-inline void I_ADDS_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
+    uint16_t value;
+    if constexpr (Sz == Size::Byte)
+    {
+        // To get a word addend we sign extend the low byte of the register.
+        value = SX(LoadFromEA<Size::Byte>(Mode{}, mcu, st));
+    }
+    else
+    {
+        value = LoadFromEA<Size::Word>(Mode{}, mcu, st);
+    }
 
-    const uint16_t old_reg = LoadFromOpReg<Size::Word>(mcu, st);
-    const uint16_t value   = LoadFromEA<Size::Word>(Mode{}, mcu, st);
     StoreToOpReg<Size::Word>(mcu, st, old_reg + value);
 }
 
