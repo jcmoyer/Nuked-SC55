@@ -659,48 +659,57 @@ inline void I_BTST_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
 
-// MULXU.B <EAs>, Rd
-template <typename State>
-inline void I_MULXU_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// MULXU.[B|W] <EAs>, Rd
+template <Size Sz, typename State>
+inline void I_MULXU_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    using ResultType = WidenType<SizeToIntType<Sz>>;
 
-    const uint8_t  data   = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    const uint16_t result = data * LoadFromOpReg<Size::Byte>(mcu, st);
-    mcu.r[st.op_reg]      = result;
-    MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
+
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
+    const ResultType result      = static_cast<ResultType>(data) * static_cast<ResultType>(LoadFromOpReg<Sz>(mcu, st));
+
+    // Store size is one size wider than the operation size.
+    if constexpr (Sz == Size::Byte)
+    {
+        mcu.r[st.op_reg] = result;
+        MCU_SetStatus(mcu, result & 0x8000, STATUS_N);
+    }
+    else if constexpr (Sz == Size::Word)
+    {
+        // TODO: consider a DoubleWord Size to model larger operations?
+        mcu.r[st.op_reg + 0] = (uint16_t)(result >> 16);
+        mcu.r[st.op_reg + 1] = (uint16_t)result;
+        MCU_SetStatus(mcu, result & 0x80000000, STATUS_N);
+    }
+
     MCU_SetStatus(mcu, result == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
     MCU_SetStatus(mcu, 0, STATUS_C);
 }
 
-// MULXU.X <EAs>, Rd
-template <typename State>
-inline void I_MULXU_X_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// DIVXU.[B|W] <EAs>, Rd
+template <Size Sz, typename State>
+inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
+    using WideType = WidenType<SizeToIntType<Sz>>;
 
-    const uint16_t data   = LoadFromEA<Size::Word>(State{}, mcu, st);
-    const uint32_t result = data * LoadFromOpReg<Size::Word>(mcu, st);
-    mcu.r[st.op_reg + 0]  = (uint16_t)(result >> 16);
-    mcu.r[st.op_reg + 1]  = (uint16_t)result;
-    MCU_SetStatus(mcu, result & 0x80000000, STATUS_N);
-    MCU_SetStatus(mcu, result == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-    MCU_SetStatus(mcu, 0, STATUS_C);
-}
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-// DIVXU.B <EAs>, Rd
-template <typename State>
-inline void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    WideType dividend;
+    if (Sz == Size::Byte)
+    {
+        dividend = LoadFromOpReg<Size::Word>(mcu, st);
+    }
+    else if (Sz == Size::Word)
+    {
+        dividend = static_cast<uint32_t>((mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1]);
+    }
 
-    const uint16_t op_value = LoadFromOpReg<Size::Word>(mcu, st);
+    const SizeToIntType<Sz> divisor = LoadFromEA<Sz>(State{}, mcu, st);
 
-    const uint8_t d = LoadFromEA<Size::Byte>(State{}, mcu, st);
-
-    if (d == 0)
+    if (divisor == 0)
     {
         // TODO exception
         MCU_SetStatus(mcu, 0, STATUS_N);
@@ -710,10 +719,10 @@ inline void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
         return;
     }
 
-    const uint16_t q = op_value / d;
-    const uint16_t r = op_value % d;
+    const WideType q = dividend / divisor;
+    const WideType r = dividend % divisor;
 
-    if (q > UINT8_MAX)
+    if (q > SizeToInt<Sz>::Max)
     {
         MCU_SetStatus(mcu, 0, STATUS_N);
         MCU_SetStatus(mcu, 0, STATUS_Z);
@@ -722,52 +731,17 @@ inline void I_DIVXU_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
         return;
     }
 
-    const uint16_t result = (uint16_t)((r << 8) | q);
-
-    mcu.r[st.op_reg] = result;
-
-    MCU_SetStatus(mcu, q & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, q == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-    MCU_SetStatus(mcu, 0, STATUS_C);
-}
-
-// DIVXU.W <EAs>, Rd
-template <typename State>
-inline void I_DIVXU_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint32_t op_value = static_cast<uint32_t>((mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1]);
-
-    const uint16_t d = LoadFromEA<Size::Word>(State{}, mcu, st);
-
-    if (d == 0)
+    if (Sz == Size::Byte)
     {
-        // TODO exception
-        MCU_SetStatus(mcu, 0, STATUS_N);
-        MCU_SetStatus(mcu, 1, STATUS_Z);
-        MCU_SetStatus(mcu, 0, STATUS_V);
-        MCU_SetStatus(mcu, 0, STATUS_C);
-        return;
+        mcu.r[st.op_reg] = (uint16_t)((r << 8) | q);
+    }
+    else if (Sz == Size::Word)
+    {
+        mcu.r[st.op_reg + 0] = (uint16_t)r;
+        mcu.r[st.op_reg + 1] = (uint16_t)q;
     }
 
-    const uint32_t q = op_value / d;
-    const uint32_t r = op_value % d;
-
-    if (q > UINT16_MAX)
-    {
-        MCU_SetStatus(mcu, 0, STATUS_N);
-        MCU_SetStatus(mcu, 0, STATUS_Z);
-        MCU_SetStatus(mcu, 1, STATUS_V);
-        MCU_SetStatus(mcu, 0, STATUS_C);
-        return;
-    }
-
-    mcu.r[st.op_reg + 0] = (uint16_t)r;
-    mcu.r[st.op_reg + 1] = (uint16_t)q;
-
-    MCU_SetStatus(mcu, q & 0x8000, STATUS_N);
+    MCU_SetStatus(mcu, q & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, q == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
     MCU_SetStatus(mcu, 0, STATUS_C);

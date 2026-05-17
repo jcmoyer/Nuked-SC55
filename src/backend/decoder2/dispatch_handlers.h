@@ -362,14 +362,7 @@ void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstr
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MULXU_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MULXU_X_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MULXU_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
@@ -378,14 +371,7 @@ void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstr
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_DIVXU_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_DIVXU_W_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_DIVXU_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
