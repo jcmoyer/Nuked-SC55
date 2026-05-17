@@ -38,14 +38,7 @@ void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstr
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_B_EAs_Rd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_W_EAs_Rd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_EAs_Rd<Sz, Mode>, instr);
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
@@ -54,14 +47,7 @@ void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstr
     (void)byte;
 
     instr.op_reg = OpReg;
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_B_Rs_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_W_Rs_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_Rs_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
@@ -70,14 +56,7 @@ void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedIns
     (void)byte;
 
     instr.op_data = mcu.coder.ReadU8(mcu);
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_B_imm8_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_W_imm8_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_imm8_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
@@ -86,14 +65,7 @@ void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedIn
     (void)byte;
 
     instr.op_data = mcu.coder.ReadU16(mcu);
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_B_imm16_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_G_W_imm16_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_imm16_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>

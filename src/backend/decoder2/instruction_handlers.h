@@ -751,106 +751,63 @@ inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 // General instruction handlers
 //=============================================================================
 
-// MOV:G.B <EAs>, Rd
-template <typename State>
-inline void I_MOV_G_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// MOV:G.[B|W] <EAs>, Rd
+template <Size Sz, typename State>
+inline void I_MOV_G_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t data = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    StoreToOpReg<Size::Byte>(mcu, st, data);
-    MCU_SetStatus(mcu, data & 0x80, STATUS_N);
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
+    StoreToOpReg<Sz>(mcu, st, data);
+    MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-// MOV:G.W <EAs>, Rd
-template <typename State>
-inline void I_MOV_G_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// MOV:G.[B|W] Rs, <EAd>
+template <Size Sz, typename Mode>
+inline void I_MOV_G_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint16_t data = LoadFromEA<Size::Word>(State{}, mcu, st);
-    StoreToOpReg<Size::Word>(mcu, st, data);
-    MCU_SetStatus(mcu, data & 0x8000, STATUS_N);
+    const SizeToIntType<Sz> data = LoadFromOpReg<Sz>(mcu, st);
+    StoreToEA<Sz>(Mode{}, mcu, st, data);
+    MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-// MOV:G.B Rs, <EAd>
-template <typename Mode>
-inline void I_MOV_G_B_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// MOV:G.[B|W] #xx:8, <EAd>
+template <Size Sz, typename State>
+inline void I_MOV_G_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 2);
 
-    const uint8_t data = LoadFromOpReg<Size::Byte>(mcu, st);
-    StoreToEA<Size::Byte>(Mode{}, mcu, st, data);
-    MCU_SetStatus(mcu, data & 0x80, STATUS_N);
+    SizeToIntType<Sz> data;
+    if (Sz == Size::Byte)
+    {
+        data = LoadFromOpData<Size::Byte>(mcu, st);
+    }
+    else if (Sz == Size::Word)
+    {
+        data = SX(LoadFromOpData<Size::Byte>(mcu, st));
+    }
+
+    StoreToEA<Sz>(State{}, mcu, st, data);
+    MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
-// MOV:G.W Rs, <EAd>
-template <typename Mode>
-inline void I_MOV_G_W_Rs_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// MOV:G.[B|W] #xx:16, <EAd>
+template <Size Sz, typename State>
+inline void I_MOV_G_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 3);
 
-    const uint16_t data = LoadFromOpReg<Size::Word>(mcu, st);
-    StoreToEA<Size::Word>(Mode{}, mcu, st, data);
-    MCU_SetStatus(mcu, data & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, data == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-// MOV:G.B #xx:8, <EAd>
-template <typename State>
-inline void I_MOV_G_B_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 2);
-
-    const uint8_t data = LoadFromOpData<Size::Byte>(mcu, st);
-    StoreToEA<Size::Byte>(State{}, mcu, st, data);
-    MCU_SetStatus(mcu, data & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, data == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-// MOV:G.W #xx:8, <EAd>
-template <typename State>
-inline void I_MOV_G_W_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 2);
-
-    const uint16_t data_sx = SX(LoadFromOpData<Size::Byte>(mcu, st));
-    StoreToEA<Size::Word>(State{}, mcu, st, data_sx);
-    MCU_SetStatus(mcu, data_sx & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, data_sx == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-// MOV:G.B #xx:16, <EAd>
-template <typename State>
-inline void I_MOV_G_B_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 3);
-
-    const uint8_t data_lo = (uint8_t)LoadFromOpData<Size::Word>(mcu, st);
-    StoreToEA<Size::Byte>(State{}, mcu, st, data_lo);
-    MCU_SetStatus(mcu, data_lo & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, data_lo == 0, STATUS_Z);
-    MCU_SetStatus(mcu, 0, STATUS_V);
-}
-
-// MOV:G.W #xx:16, <EAd>
-template <typename State>
-inline void I_MOV_G_W_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 3);
-
-    const uint16_t data = LoadFromOpData<Size::Word>(mcu, st);
-    StoreToEA<Size::Word>(State{}, mcu, st, data);
-    MCU_SetStatus(mcu, data & 0x8000, STATUS_N);
+    const SizeToIntType<Sz> data = LoadFromOpData<Sz>(mcu, st);
+    StoreToEA<Sz>(State{}, mcu, st, data);
+    MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
@@ -1499,7 +1456,7 @@ template <uint8_t Rn>
 inline void I_MOV_E_imm8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as register-direct MOV:G.B #xx:8,EAd
-    I_MOV_G_B_imm8_EAd<Mode_Rn>(mcu, st);
+    I_MOV_G_imm8_EAd<Size::Byte, Mode_Rn>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1508,7 +1465,7 @@ template <uint8_t Rn>
 inline void I_MOV_L_B_aa8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as @aa:8 MOV:G.B EAs,Rd
-    I_MOV_G_B_EAs_Rd<Mode_Aaa8>(mcu, st);
+    I_MOV_G_EAs_Rd<Size::Byte, Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1517,7 +1474,7 @@ template <uint8_t Rn>
 inline void I_MOV_L_W_aa8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as @aa:8 MOV:G.W EAs,Rd
-    I_MOV_G_W_EAs_Rd<Mode_Aaa8>(mcu, st);
+    I_MOV_G_EAs_Rd<Size::Word, Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1526,7 +1483,7 @@ template <uint8_t Rn>
 inline void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as register-direct MOV:G.W #xx:16,EAd
-    I_MOV_G_W_imm16_EAd<Mode_Rn>(mcu, st);
+    I_MOV_G_imm16_EAd<Size::Word, Mode_Rn>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1535,7 +1492,7 @@ template <uint8_t Rn>
 inline void I_MOV_S_B_Rs_aa8(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as @aa:8 MOV:G.B Rs,EAd
-    I_MOV_G_B_Rs_EAd<Mode_Aaa8>(mcu, st);
+    I_MOV_G_Rs_EAd<Size::Byte, Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1544,7 +1501,7 @@ template <uint8_t Rn>
 inline void I_MOV_S_W_Rs_aa8(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as @aa:8 MOV:G.W Rs,EAd
-    I_MOV_G_W_Rs_EAd<Mode_Aaa8>(mcu, st);
+    I_MOV_G_Rs_EAd<Size::Word, Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
