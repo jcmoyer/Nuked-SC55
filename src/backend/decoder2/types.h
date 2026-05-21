@@ -21,6 +21,11 @@ struct SizeToInt<Size::Byte>
 
     static constexpr Type MSB = 0x80;
     static constexpr Type Max = 0xff;
+
+    using SignedType = int8_t;
+
+    static constexpr SignedType SignedMin = INT8_MIN;
+    static constexpr SignedType SignedMax = INT8_MAX;
 };
 
 template <>
@@ -30,6 +35,11 @@ struct SizeToInt<Size::Word>
 
     static constexpr Type MSB = 0x8000;
     static constexpr Type Max = 0xffff;
+
+    using SignedType = int16_t;
+
+    static constexpr SignedType SignedMin = INT16_MIN;
+    static constexpr SignedType SignedMax = INT16_MAX;
 };
 
 template <Size Sz>
@@ -59,6 +69,30 @@ struct Widen<uint16_t>
 template <typename IntType>
 using WidenType = typename Widen<IntType>::Type;
 
+template <typename IntType>
+struct MakeSigned;
+
+template <>
+struct MakeSigned<uint8_t>
+{
+    using Type = int8_t;
+};
+
+template <>
+struct MakeSigned<uint16_t>
+{
+    using Type = int16_t;
+};
+
+template <>
+struct MakeSigned<uint32_t>
+{
+    using Type = int32_t;
+};
+
+template <typename IntType>
+using MakeSignedType = typename MakeSigned<IntType>::Type;
+
 constexpr uint8_t RotateRight(uint8_t x, uint8_t new_msb)
 {
     return static_cast<uint8_t>((x >> 1) | (new_msb << 7));
@@ -77,6 +111,40 @@ constexpr uint8_t RotateLeft(uint8_t x, uint8_t new_lsb)
 constexpr uint16_t RotateLeft(uint16_t x, uint16_t new_lsb)
 {
     return static_cast<uint16_t>((x << 1) | new_lsb);
+}
+
+template <Size Sz>
+struct SubtractResult
+{
+    // result of operation *unsigned*
+    SizeToIntType<Sz> result_bits;
+
+    // N, Z, V, C flags respectively
+    bool negative;
+    bool zero;
+    bool overflow;
+    bool carry;
+};
+
+// Computes the result of `a - b` and what occurred during the operation.
+template <Size Sz>
+constexpr SubtractResult<Sz> GenericSubtract(SizeToIntType<Sz> a, SizeToIntType<Sz> b)
+{
+    using OpUnsigned   = SizeToIntType<Sz>;
+    using OpSigned     = MakeSignedType<OpUnsigned>;
+    using WideUnsigned = WidenType<OpUnsigned>;
+    using WideSigned   = MakeSignedType<WideUnsigned>;
+
+    const WideUnsigned result_u = a - b;
+    const WideSigned   result_s = (OpSigned)a - (OpSigned)b;
+
+    return {
+        .result_bits = (OpUnsigned)result_u,
+        .negative    = (result_u & MSB<Sz>) != 0,
+        .zero        = (OpUnsigned)result_u == 0,
+        .overflow    = result_s < SizeToInt<Sz>::SignedMin || result_s > SizeToInt<Sz>::SignedMax,
+        .carry       = (result_u & (MSB<Sz> << 1)) != 0,
+    };
 }
 
 } // namespace decoder2

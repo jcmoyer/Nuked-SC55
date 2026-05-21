@@ -410,112 +410,62 @@ SizeToIntType<Sz> LoadFromOpReg(mcu_t& mcu, const DecodedInstructionParams& st)
     return LoadFromReg<Sz>(mcu, st.op_reg);
 }
 
-// CMP:G.B <EAs>, Rd
-template <typename State>
-inline void I_CMP_G_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// CMP:G.[B|W] <EAs>, Rd
+template <Size Sz, typename State>
+inline void I_CMP_G_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t d_lo  = LoadFromOpReg<Size::Byte>(mcu, st);
-    const uint8_t ea_lo = LoadFromEA<Size::Byte>(State{}, mcu, st);
+    const SizeToIntType<Sz> rd  = LoadFromOpReg<Sz>(mcu, st);
+    const SizeToIntType<Sz> eas = LoadFromEA<Sz>(State{}, mcu, st);
 
-    const uint16_t result_u = d_lo - ea_lo;
-    const int16_t  result_s = (int8_t)d_lo - (int8_t)ea_lo;
+    const SubtractResult<Sz> result = GenericSubtract<Sz>(rd, eas);
 
-    MCU_SetStatus(mcu, result_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, (uint8_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT8_MIN || result_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x100, STATUS_C);
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-// CMP:G.W <EAs>, Rd
-template <typename State>
-inline void I_CMP_G_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// CMP:G.[B|W] #xx:8, <EAd>
+template <Size Sz, typename State>
+inline void I_CMP_G_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 2);
 
-    const uint16_t d_word  = LoadFromOpReg<Size::Word>(mcu, st);
-    const uint16_t ea_word = LoadFromEA<Size::Word>(State{}, mcu, st);
+    const SizeToIntType<Sz> ea  = LoadFromEA<Sz>(State{}, mcu, st);
+    SizeToIntType<Sz>       imm = LoadFromOpData<Size::Byte>(mcu, st);
 
-    const uint32_t result_u = d_word - ea_word;
-    const int32_t  result_s = (int16_t)d_word - (int16_t)ea_word;
+    if constexpr (Sz == Size::Word)
+    {
+        // It's fine to truncate imm here because it came from a byte load. We
+        // do this because the immediate is 8-bit, but the operation is Word
+        // sized.
+        imm = SX((uint8_t)imm);
+    }
 
-    MCU_SetStatus(mcu, result_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, (uint16_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT16_MIN || result_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x10000, STATUS_C);
+    const SubtractResult<Sz> result = GenericSubtract<Sz>(ea, imm);
+
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-// CMP:G.B #xx:8, <EAd>
-template <typename State>
-inline void I_CMP_G_B_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+// CMP:G.[B|W] #xx:16, <EAd>
+template <Size Sz, typename State>
+inline void I_CMP_G_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 2);
+    InstructionScope<Sz, State> scope(mcu, st, 3);
 
-    const uint8_t ea_byte  = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    const uint8_t imm_byte = LoadFromOpData<Size::Byte>(mcu, st);
+    const SizeToIntType<Sz>  ea     = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz>  imm    = LoadFromOpData<Sz>(mcu, st);
+    const SubtractResult<Sz> result = GenericSubtract<Sz>(ea, imm);
 
-    const uint16_t result_u = ea_byte - imm_byte;
-    const int16_t  result_s = (int8_t)ea_byte - (int8_t)imm_byte;
-
-    MCU_SetStatus(mcu, result_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, (uint8_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT8_MIN || result_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x100, STATUS_C);
-}
-
-// CMP:G.W #xx:8, <EAd>
-template <typename State>
-inline void I_CMP_G_W_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 2);
-
-    const uint16_t ea_word  = LoadFromEA<Size::Word>(State{}, mcu, st);
-    const uint16_t imm_word = SX(LoadFromOpData<Size::Byte>(mcu, st));
-
-    const uint32_t result_u = ea_word - imm_word;
-    const int32_t  result_s = (int16_t)ea_word - (int16_t)imm_word;
-
-    MCU_SetStatus(mcu, result_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, (uint16_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT16_MIN || result_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x10000, STATUS_C);
-}
-
-// CMP:G.B #xx:16, <EAd>
-template <typename State>
-inline void I_CMP_G_B_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 3);
-
-    const uint8_t ea_byte  = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    const uint8_t imm_byte = (uint8_t)LoadFromOpData<Size::Word>(mcu, st);
-
-    const uint16_t result_u = ea_byte - imm_byte;
-    const int16_t  result_s = (int8_t)ea_byte - (int8_t)imm_byte;
-
-    MCU_SetStatus(mcu, result_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, (uint8_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT8_MIN || result_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x100, STATUS_C);
-}
-
-// CMP:G.W #xx:16, <EAd>
-template <typename State>
-inline void I_CMP_G_W_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 3);
-
-    const uint16_t ea_word  = LoadFromEA<Size::Word>(State{}, mcu, st);
-    const uint16_t imm_word = LoadFromOpData<Size::Word>(mcu, st);
-
-    const uint32_t result_u = ea_word - imm_word;
-    const int32_t  result_s = (int16_t)ea_word - (int16_t)imm_word;
-
-    MCU_SetStatus(mcu, result_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, (uint16_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT16_MIN || result_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x10000, STATUS_C);
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
 // CLR.[B|W] <EAd>
@@ -1235,24 +1185,6 @@ inline void I_ORC_immXX_CR(mcu_t& mcu, const DecodedInstructionParams& st)
 // End general instruction handlers
 //=============================================================================
 
-// CMP:E #xx:8,Rd
-template <uint8_t R>
-inline void I_CMP_E_imm8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    const uint8_t R_lo = (uint8_t)mcu.r[R];
-    const uint8_t data = (uint8_t)st.op_data;
-
-    const uint16_t result_u = R_lo - data;
-    const int16_t  result_s = (int8_t)R_lo - (int8_t)data;
-
-    MCU_SetStatus(mcu, result_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, (uint8_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT8_MIN || result_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x100, STATUS_C);
-
-    mcu.pc += 2;
-}
-
 void I_BRA(mcu_t& mcu, const DecodedInstructionParams& st);
 void I_BRN(mcu_t& mcu, const DecodedInstructionParams& st);
 void I_BHI(mcu_t& mcu, const DecodedInstructionParams& st);
@@ -1443,11 +1375,21 @@ inline void I_AND_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
+// CMP:E #xx:8,Rd
+template <uint8_t Rn>
+inline void I_CMP_E_imm8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+{
+    // behave as register-direct CMP:G.B #xx:8,Rd
+    I_CMP_G_imm8_EAd<Size::Byte, Mode_Rn>(mcu, st);
+    // TODO/FIXME
+    --mcu.pc;
+}
+
 template <uint8_t Rn>
 inline void I_CMP_I_W_imm16_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as register-direct CMP:G.W #xx:16,EAd
-    I_CMP_G_W_imm16_EAd<Mode_Rn>(mcu, st);
+    I_CMP_G_imm16_EAd<Size::Word, Mode_Rn>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
