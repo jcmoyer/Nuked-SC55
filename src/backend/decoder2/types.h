@@ -128,15 +128,15 @@ struct SubtractResult
 
 // Computes the result of `a - b` and what occurred during the operation.
 template <Size Sz>
-constexpr SubtractResult<Sz> GenericSubtract(SizeToIntType<Sz> a, SizeToIntType<Sz> b)
+constexpr SubtractResult<Sz> GenericSubtract(SizeToIntType<Sz> a, SizeToIntType<Sz> b, bool carry = false)
 {
     using OpUnsigned   = SizeToIntType<Sz>;
     using OpSigned     = MakeSignedType<OpUnsigned>;
     using WideUnsigned = WidenType<OpUnsigned>;
     using WideSigned   = MakeSignedType<WideUnsigned>;
 
-    const WideUnsigned result_u = a - b;
-    const WideSigned   result_s = (OpSigned)a - (OpSigned)b;
+    const WideUnsigned result_u = (WideUnsigned)(a - b) - (WideUnsigned)carry;
+    const WideSigned   result_s = (WideSigned)((OpSigned)a - (OpSigned)b) - (WideSigned)carry;
 
     return {
         .result_bits = (OpUnsigned)result_u,
