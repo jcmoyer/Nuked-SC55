@@ -114,7 +114,7 @@ constexpr uint16_t RotateLeft(uint16_t x, uint16_t new_lsb)
 }
 
 template <Size Sz>
-struct SubtractResult
+struct BinopResult
 {
     // result of operation *unsigned*
     SizeToIntType<Sz> result_bits;
@@ -126,17 +126,34 @@ struct SubtractResult
     bool carry;
 };
 
-// Computes the result of `a - b` and what occurred during the operation.
-template <Size Sz>
-constexpr SubtractResult<Sz> GenericSubtract(SizeToIntType<Sz> a, SizeToIntType<Sz> b, bool carry = false)
+enum class Binop
+{
+    Add,
+    Subtract,
+};
+
+// Computes the result of `a Op b` and information about the operation.
+template <Size Sz, Binop Op>
+constexpr BinopResult<Sz> GenericBinop(SizeToIntType<Sz> a, SizeToIntType<Sz> b, bool carry = false)
 {
     using OpUnsigned   = SizeToIntType<Sz>;
     using OpSigned     = MakeSignedType<OpUnsigned>;
     using WideUnsigned = WidenType<OpUnsigned>;
     using WideSigned   = MakeSignedType<WideUnsigned>;
 
-    const WideUnsigned result_u = (WideUnsigned)(a - b) - (WideUnsigned)carry;
-    const WideSigned   result_s = (WideSigned)((OpSigned)a - (OpSigned)b) - (WideSigned)carry;
+    WideUnsigned result_u;
+    WideSigned   result_s;
+
+    if constexpr (Op == Binop::Add)
+    {
+        result_u = (WideUnsigned)(a + b) + (WideUnsigned)carry;
+        result_s = (WideSigned)((OpSigned)a + (OpSigned)b) + (WideSigned)carry;
+    }
+    else if constexpr (Op == Binop::Subtract)
+    {
+        result_u = (WideUnsigned)(a - b) - (WideUnsigned)carry;
+        result_s = (WideSigned)((OpSigned)a - (OpSigned)b) - (WideSigned)carry;
+    }
 
     return {
         .result_bits = (OpUnsigned)result_u,
@@ -145,6 +162,20 @@ constexpr SubtractResult<Sz> GenericSubtract(SizeToIntType<Sz> a, SizeToIntType<
         .overflow    = result_s < SizeToInt<Sz>::SignedMin || result_s > SizeToInt<Sz>::SignedMax,
         .carry       = (result_u & (MSB<Sz> << 1)) != 0,
     };
+}
+
+// Returns the result of `a + b`.
+template <Size Sz>
+constexpr BinopResult<Sz> GenericAdd(SizeToIntType<Sz> a, SizeToIntType<Sz> b, bool carry = false)
+{
+    return GenericBinop<Sz, Binop::Add>(a, b, carry);
+}
+
+// Returns the result of `a - b`.
+template <Size Sz>
+constexpr BinopResult<Sz> GenericSubtract(SizeToIntType<Sz> a, SizeToIntType<Sz> b, bool carry = false)
+{
+    return GenericBinop<Sz, Binop::Subtract>(a, b, carry);
 }
 
 } // namespace decoder2

@@ -419,7 +419,7 @@ inline void I_CMP_G_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     const SizeToIntType<Sz> rd  = LoadFromOpReg<Sz>(mcu, st);
     const SizeToIntType<Sz> eas = LoadFromEA<Sz>(State{}, mcu, st);
 
-    const SubtractResult<Sz> result = GenericSubtract<Sz>(rd, eas);
+    const BinopResult<Sz> result = GenericSubtract<Sz>(rd, eas);
 
     MCU_SetStatus(mcu, result.negative, STATUS_N);
     MCU_SetStatus(mcu, result.zero, STATUS_Z);
@@ -444,7 +444,7 @@ inline void I_CMP_G_imm8_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
         imm = SX((uint8_t)imm);
     }
 
-    const SubtractResult<Sz> result = GenericSubtract<Sz>(ea, imm);
+    const BinopResult<Sz> result = GenericSubtract<Sz>(ea, imm);
 
     MCU_SetStatus(mcu, result.negative, STATUS_N);
     MCU_SetStatus(mcu, result.zero, STATUS_Z);
@@ -458,9 +458,9 @@ inline void I_CMP_G_imm16_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     InstructionScope<Sz, State> scope(mcu, st, 3);
 
-    const SizeToIntType<Sz>  ea     = LoadFromEA<Sz>(State{}, mcu, st);
-    const SizeToIntType<Sz>  imm    = LoadFromOpData<Sz>(mcu, st);
-    const SubtractResult<Sz> result = GenericSubtract<Sz>(ea, imm);
+    const SizeToIntType<Sz> ea     = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> imm    = LoadFromOpData<Sz>(mcu, st);
+    const BinopResult<Sz>   result = GenericSubtract<Sz>(ea, imm);
 
     MCU_SetStatus(mcu, result.negative, STATUS_N);
     MCU_SetStatus(mcu, result.zero, STATUS_Z);
@@ -481,42 +481,22 @@ inline void I_CLR_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, 0, STATUS_C);
 }
 
-// ADD:G.B <EAs>, Rd
-template <typename Mode>
-void I_ADD_G_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+// ADD:G.[B|W] <EAs>, Rd
+template <Size Sz, typename Mode>
+void I_ADD_G_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, Mode> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const uint8_t data    = LoadFromEA<Size::Byte>(Mode{}, mcu, st);
-    const uint8_t operand = LoadFromOpReg<Size::Byte>(mcu, st);
+    const SizeToIntType<Sz> data    = LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> operand = LoadFromOpReg<Sz>(mcu, st);
 
-    const uint16_t add_u = operand + data;
-    const int32_t  add_s = (int8_t)operand + (int8_t)data;
+    BinopResult<Sz> result = GenericAdd<Sz>(data, operand);
 
-    StoreToOpReg<Size::Byte>(mcu, st, (uint8_t)add_u);
-    MCU_SetStatus(mcu, add_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, (add_u & 0xff) == 0, STATUS_Z);
-    MCU_SetStatus(mcu, add_s < INT8_MIN || add_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, add_u & 0x100, STATUS_C);
-}
-
-// ADD:G.W <EAs>, Rd
-template <typename Mode>
-void I_ADD_G_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, Mode> scope(mcu, st, 1);
-
-    const uint16_t data    = LoadFromEA<Size::Word>(Mode{}, mcu, st);
-    const uint16_t operand = LoadFromOpReg<Size::Word>(mcu, st);
-
-    const uint32_t add_u = operand + data;
-    const int32_t  add_s = (int16_t)operand + (int16_t)data;
-
-    StoreToOpReg<Size::Word>(mcu, st, (uint16_t)add_u);
-    MCU_SetStatus(mcu, add_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, add_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, add_s < INT16_MIN || add_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, add_u & 0x10000, STATUS_C);
+    StoreToOpReg<Sz>(mcu, st, result.result_bits);
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
 template <Size Sz, typename Mode>
@@ -788,88 +768,44 @@ inline void I_XCH_W_Rs_Rd(mcu_t& mcu, const DecodedInstructionParams& instr)
     mcu.r[instr.op_reg] = tmp;
 }
 
-// ADD:Q.B #1, <EAd>
-// ADD:Q.B #2, <EAd>
-// ADD:Q.B #-1, <EAd>
-// ADD:Q.B #-2, <EAd>
-template <typename State, int8_t N>
-inline void I_ADD_Q_B_n(mcu_t& mcu, const DecodedInstructionParams& st)
+// ADD:Q.[B|W] #1, <EAd>
+// ADD:Q.[B|W] #2, <EAd>
+// ADD:Q.[B|W] #-1, <EAd>
+// ADD:Q.[B|W] #-2, <EAd>
+template <Size Sz, typename State, int8_t N>
+inline void I_ADD_Q_n(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t ea_byte = LoadFromEA<Size::Byte>(State{}, mcu, st);
+    const SizeToIntType<Sz> ea_byte = LoadFromEA<Sz>(State{}, mcu, st);
 
-    const uint16_t result_u = ea_byte + (uint8_t)N;
-    const int16_t  result_s = (int8_t)ea_byte + N;
+    const BinopResult<Sz> result = GenericAdd<Sz>(ea_byte, N);
 
-    StoreToEA<Size::Byte>(State{}, mcu, st, (uint8_t)result_u);
-    MCU_SetStatus(mcu, result_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, (uint8_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT8_MIN || result_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x100, STATUS_C);
+    StoreToEA<Sz>(State{}, mcu, st, result.result_bits);
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-// ADD:Q.W #1, <EAd>
-// ADD:Q.W #2, <EAd>
-// ADD:Q.W #-1, <EAd>
-// ADD:Q.W #-2, <EAd>
-template <typename State, int8_t N>
-inline void I_ADD_Q_W_n(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename State>
+inline void I_ADDX_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint16_t ea_word = LoadFromEA<Size::Word>(State{}, mcu, st);
-
-    const uint32_t result_u = ea_word + (uint16_t)N;
-    const int32_t  result_s = (int16_t)ea_word + N;
-
-    StoreToEA<Size::Word>(State{}, mcu, st, (uint16_t)result_u);
-    MCU_SetStatus(mcu, result_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, (uint16_t)result_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, result_s < INT16_MIN || result_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, result_u & 0x10000, STATUS_C);
-}
-
-template <typename State>
-inline void I_ADDX_B_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
     const bool old_C = mcu.sr & STATUS_C;
     const bool old_Z = mcu.sr & STATUS_Z;
 
-    const uint8_t data    = LoadFromEA<Size::Byte>(State{}, mcu, st);
-    const uint8_t operand = LoadFromOpReg<Size::Byte>(mcu, st);
+    const SizeToIntType<Sz> data    = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> operand = LoadFromOpReg<Sz>(mcu, st);
 
-    const uint16_t add_u = (uint16_t)(operand + data + old_C);
-    const int16_t  add_s = (int16_t)((int8_t)operand + (int8_t)data + old_C);
+    const BinopResult<Sz> result = GenericAdd<Sz>(data, operand, old_C);
 
-    StoreToOpReg<Size::Byte>(mcu, st, (uint8_t)add_u);
-    MCU_SetStatus(mcu, add_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, old_Z && ((uint8_t)add_u == 0), STATUS_Z);
-    MCU_SetStatus(mcu, add_s < INT8_MIN || add_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, add_u & 0x100, STATUS_C);
-}
-
-template <typename State>
-inline void I_ADDX_W_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const bool old_C = mcu.sr & STATUS_C;
-    const bool old_Z = mcu.sr & STATUS_Z;
-
-    const uint16_t data    = LoadFromEA<Size::Word>(State{}, mcu, st);
-    const uint16_t operand = LoadFromOpReg<Size::Word>(mcu, st);
-
-    const uint32_t add_u = operand + data + old_C;
-    const int32_t  add_s = (int8_t)operand + (int8_t)data + old_C;
-
-    StoreToOpReg<Size::Word>(mcu, st, (uint16_t)add_u);
-    MCU_SetStatus(mcu, add_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, old_Z && ((uint16_t)add_u == 0), STATUS_Z);
-    MCU_SetStatus(mcu, add_s < INT16_MIN || add_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, add_u & 0x10000, STATUS_C);
+    StoreToOpReg<Sz>(mcu, st, result.result_bits);
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, old_Z && result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
 template <Size Sz, typename State>
@@ -880,7 +816,7 @@ inline void I_SUB_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     const SizeToIntType<Sz> EAs = LoadFromEA<Sz>(State{}, mcu, st);
     const SizeToIntType<Sz> Rd  = LoadFromOpReg<Sz>(mcu, st);
 
-    const SubtractResult<Sz> result = GenericSubtract<Sz>(Rd, EAs);
+    const BinopResult<Sz> result = GenericSubtract<Sz>(Rd, EAs);
 
     StoreToOpReg<Sz>(mcu, st, result.result_bits);
 
@@ -899,7 +835,7 @@ inline void I_SUBX_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     const SizeToIntType<Sz> EAs   = LoadFromEA<Sz>(State{}, mcu, st);
     const SizeToIntType<Sz> Rd    = LoadFromOpReg<Sz>(mcu, st);
 
-    const SubtractResult<Sz> result = GenericSubtract<Sz>(Rd, EAs, sub_C);
+    const BinopResult<Sz> result = GenericSubtract<Sz>(Rd, EAs, sub_C);
 
     StoreToOpReg<Sz>(mcu, st, result.result_bits);
 
