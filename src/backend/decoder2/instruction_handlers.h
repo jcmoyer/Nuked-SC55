@@ -877,38 +877,20 @@ inline void I_TST_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
     MCU_SetStatus(mcu, 0, STATUS_C);
 }
 
-template <typename State>
-inline void I_NEG_B_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, typename State>
+inline void I_NEG_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    InstructionScope<Size::Byte, State> scope(mcu, st, 1);
+    InstructionScope<Sz, State> scope(mcu, st, 1);
 
-    const uint8_t value = LoadFromEA<Size::Byte>(State{}, mcu, st);
+    const SizeToIntType<Sz> value = LoadFromEA<Sz>(State{}, mcu, st);
 
-    const uint16_t neg_u = -value;
-    const int16_t  neg_s = -(int8_t)value;
+    const BinopResult<Sz> result = GenericSubtract<Sz>(0, value);
 
-    StoreToEA<Size::Byte>(State{}, mcu, st, (uint8_t)neg_u);
-    MCU_SetStatus(mcu, neg_u & 0x80, STATUS_N);
-    MCU_SetStatus(mcu, neg_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, neg_s < INT8_MIN || neg_s > INT8_MAX, STATUS_V);
-    MCU_SetStatus(mcu, neg_u & 0x100, STATUS_C);
-}
-
-template <typename State>
-inline void I_NEG_W_EAd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    InstructionScope<Size::Word, State> scope(mcu, st, 1);
-
-    const uint16_t value = LoadFromEA<Size::Word>(State{}, mcu, st);
-
-    const uint32_t neg_u = -value;
-    const int32_t  neg_s = -(int16_t)value;
-
-    StoreToEA<Size::Word>(State{}, mcu, st, (uint16_t)neg_u);
-    MCU_SetStatus(mcu, neg_u & 0x8000, STATUS_N);
-    MCU_SetStatus(mcu, neg_u == 0, STATUS_Z);
-    MCU_SetStatus(mcu, neg_s < INT16_MIN || neg_s > INT16_MAX, STATUS_V);
-    MCU_SetStatus(mcu, neg_u & 0x10000, STATUS_C);
+    StoreToEA<Sz>(State{}, mcu, st, result.result_bits);
+    MCU_SetStatus(mcu, result.negative, STATUS_N);
+    MCU_SetStatus(mcu, result.zero, STATUS_Z);
+    MCU_SetStatus(mcu, result.overflow, STATUS_V);
+    MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
 // SHLL.[B|W] <EAd>

@@ -186,14 +186,7 @@ void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructio
 {
     (void)byte;
 
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_NEG_B_EAd<Mode>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_NEG_W_EAd<Mode>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_NEG_EAd<Sz, Mode>, instr);
 }
 
 template <Size Sz, typename Mode>
