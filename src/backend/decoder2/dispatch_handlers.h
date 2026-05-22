@@ -897,7 +897,7 @@ inline void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte,
 }
 
 template <Size Sz, uint8_t Rn>
-inline void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
 {
     (void)byte;
     instr.op_reg  = Rn;
