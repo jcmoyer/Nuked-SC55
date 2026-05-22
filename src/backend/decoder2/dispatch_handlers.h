@@ -893,15 +893,7 @@ inline void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte,
     (void)byte;
     instr.ea_data = mcu.coder.ReadU8(mcu);
     instr.op_reg  = Rn;
-
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_L_B_aa8_Rd<Rn>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_L_W_aa8_Rd<Rn>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MOV_L_aa8_Rd<Sz, Rn>, instr);
 }
 
 template <Size Sz, uint8_t Rn>
@@ -910,14 +902,7 @@ inline void D_Short_I_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byt
     (void)byte;
     instr.op_reg  = Rn;
     instr.ea_data = mcu.coder.ReadU8(mcu);
-    if constexpr (Sz == Size::Byte)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_S_B_Rs_aa8<Rn>, instr);
-    }
-    else if constexpr (Sz == Size::Word)
-    {
-        DoCache(mcu, mcu.icache, instr_start, I_MOV_S_W_Rs_aa8<Rn>, instr);
-    }
+    DoCache(mcu, mcu.icache, instr_start, I_MOV_S_Rs_aa8<Sz, Rn>, instr);
 }
 
 } // namespace decoder2

@@ -1345,20 +1345,11 @@ inline void I_MOV_E_imm8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     --mcu.pc;
 }
 
-template <uint8_t Rn>
-inline void I_MOV_L_B_aa8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, uint8_t Rn>
+inline void I_MOV_L_aa8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
 {
-    // behave as @aa:8 MOV:G.B EAs,Rd
-    I_MOV_G_EAs_Rd<Size::Byte, Mode_Aaa8>(mcu, st);
-    // TODO/FIXME
-    --mcu.pc;
-}
-
-template <uint8_t Rn>
-inline void I_MOV_L_W_aa8_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    // behave as @aa:8 MOV:G.W EAs,Rd
-    I_MOV_G_EAs_Rd<Size::Word, Mode_Aaa8>(mcu, st);
+    // behave as @aa:8 MOV:G.[B|W] EAs,Rd
+    I_MOV_G_EAs_Rd<Sz, Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
@@ -1372,20 +1363,11 @@ inline void I_MOV_I_W_imm16_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     --mcu.pc;
 }
 
-template <uint8_t Rn>
-inline void I_MOV_S_B_Rs_aa8(mcu_t& mcu, const DecodedInstructionParams& st)
+template <Size Sz, uint8_t Rn>
+inline void I_MOV_S_Rs_aa8(mcu_t& mcu, const DecodedInstructionParams& st)
 {
     // behave as @aa:8 MOV:G.B Rs,EAd
-    I_MOV_G_Rs_EAd<Size::Byte, Mode_Aaa8>(mcu, st);
-    // TODO/FIXME
-    --mcu.pc;
-}
-
-template <uint8_t Rn>
-inline void I_MOV_S_W_Rs_aa8(mcu_t& mcu, const DecodedInstructionParams& st)
-{
-    // behave as @aa:8 MOV:G.W Rs,EAd
-    I_MOV_G_Rs_EAd<Size::Word, Mode_Aaa8>(mcu, st);
+    I_MOV_G_Rs_EAd<Sz, Mode_Aaa8>(mcu, st);
     // TODO/FIXME
     --mcu.pc;
 }
