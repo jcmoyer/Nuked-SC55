@@ -1,6 +1,7 @@
 #include "dispatch.h"
 
 #include "decoder2/cache.h"
+#include "decoder2/code_reader.h"
 #include "diagnostics.h"
 #include "dispatchers.h"
 #include "mcu.h"

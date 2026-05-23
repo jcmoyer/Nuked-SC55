@@ -1,9 +1,9 @@
 #include <cstdint>
 
+#include "decoder2/code_reader.h"
 #include "dispatch.h"
 #include "dispatch_handlers.h"
 #include "dispatchers.h"
-#include "mcu.h"
 
 namespace decoder2
 {

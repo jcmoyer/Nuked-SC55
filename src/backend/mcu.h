@@ -232,30 +232,6 @@ typedef void(*mcu_sample_callback)(void* userdata, const AudioFrame<int32_t>& fr
 
 void MCU_DefaultSampleCallback(void* userdata, const AudioFrame<int32_t>& frame);
 
-class CodeReader
-{
-public:
-    CodeReader() = default;
-
-    CodeReader(mcu_t& mcu)
-        : m_mcu(&mcu)
-    {
-    }
-
-    inline uint8_t  ReadU8();
-    inline uint16_t ReadU16();
-    inline uint16_t GetAddressInPage() const;
-
-    mcu_t& GetMCU()
-    {
-        return *m_mcu;
-    }
-
-private:
-    mcu_t* m_mcu = nullptr;
-    uint8_t m_offset = 0;
-};
-
 struct mcu_t {
     uint16_t r[8]{};
     uint16_t pc = 0;
@@ -608,22 +584,3 @@ void MCU_PostSample(mcu_t& mcu, const AudioFrame<int32_t>& frame);
 void MCU_PostUART(mcu_t& mcu, uint8_t data);
 
 void MCU_SetRomset(mcu_t& mcu, Romset romset);
-
-inline uint8_t CodeReader::ReadU8()
-{
-    uint8_t result = MCU_ReadCodeOffset(*m_mcu, m_offset);
-    ++m_offset;
-    return result;
-}
-
-inline uint16_t CodeReader::ReadU16()
-{
-    uint16_t result = ReadU8();
-    result          = static_cast<uint16_t>((result << 8) | ReadU8());
-    return result;
-}
-
-inline uint16_t CodeReader::GetAddressInPage() const
-{
-    return static_cast<uint16_t>(m_mcu->pc + m_offset);
-}

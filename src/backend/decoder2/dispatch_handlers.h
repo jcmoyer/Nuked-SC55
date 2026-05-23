@@ -10,9 +10,9 @@
 #pragma once
 
 #include "decoder2/cache.h"
+#include "decoder2/code_reader.h"
 #include "dispatch.h"
 #include "instruction_handlers.h"
-#include "mcu.h"
 #include "types.h"
 
 namespace decoder2
