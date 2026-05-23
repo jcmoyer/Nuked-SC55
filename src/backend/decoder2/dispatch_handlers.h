@@ -19,545 +19,599 @@ namespace decoder2
 {
 
 //=============================================================================
+// Helpers
+//=============================================================================
+inline void MakeBranch(CodeReader& reader, CachedInstruction& instr, CachedInstructionHandler handler, int16_t disp)
+{
+    const uint16_t next_ip = reader.GetAddressInPage();
+    instr.params.br_true   = (uint16_t)(next_ip + disp);
+    instr.params.br_false  = next_ip;
+    instr.handler          = handler;
+}
+
+//=============================================================================
 // Pseudo instructions
 //=============================================================================
-inline void D_InvalidInstruction(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_InvalidInstruction(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    (void)instr_start;
+    (void)reader;
     (void)byte;
     (void)instr;
-    FatalError(mcu, "Invalid instruction");
+    // TODO: do we need to know about the mcu? this should signal failure in the decoder subsystem which might know
+    // about the mcu higher up
+    FatalError(reader.GetMCU(), "Invalid instruction");
 }
 
 //=============================================================================
 // General format instructions
 //=============================================================================
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MOV_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_MOV_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_MOV_G_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MOV_G_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_MOV_G_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_Rs_EAd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_MOV_G_Rs_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_MOV_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_MOV_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_imm8_EAd<Sz, Mode>, instr);
+    instr.params.op_data = reader.ReadU8();
+    instr.handler        = I_MOV_G_imm8_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_MOV_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_MOV_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_G_imm16_EAd<Sz, Mode>, instr);
+    instr.params.op_data = reader.ReadU16();
+    instr.handler        = I_MOV_G_imm16_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_CMP_G_imm8_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_CMP_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_CMP_G_imm8_EAd<Sz, Mode>, instr);
+    instr.params.op_data = reader.ReadU8();
+    instr.handler        = I_CMP_G_imm8_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_CMP_G_imm16_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_CMP_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_CMP_G_imm16_EAd<Sz, Mode>, instr);
+    instr.params.op_data = reader.ReadU16();
+    instr.handler        = I_CMP_G_imm16_EAd<Sz, Mode>;
 }
 
 // Manual lists this as a special format instruction but it allows arbitrary
 // addressing modes so we treat it as a general instruction.
 template <Size Sz, typename Mode, int8_t N>
-void D_ADD_Q_n_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ADD_Q_n_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_ADD_Q_n<Sz, Mode, N>, instr);
+    instr.handler = I_ADD_Q_n<Sz, Mode, N>;
 }
 
 template <typename Mode>
-void D_SWAP_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SWAP_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_SWAP_B_Rd<Mode>, instr);
+    instr.handler = I_SWAP_B_Rd<Mode>;
 }
 
 template <uint8_t OpReg, typename Mode>
-void D_XCH_Rs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_XCH_Rs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_XCH_W_Rs_Rd<Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_XCH_W_Rs_Rd<Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADD_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ADD_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_ADD_G_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_ADD_G_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADDX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ADDX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_ADDX_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_ADDX_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADDS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ADDS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_ADDS_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_ADDS_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_CMP_G_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_CMP_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_CMP_G_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_CMP_G_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_SHLL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SHLL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_SHLL_EAd<Sz, Mode>, instr);
+    instr.handler = I_SHLL_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_SHLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SHLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_SHLR_EAd<Sz, Mode>, instr);
+    instr.handler = I_SHLR_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_SHAL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SHAL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_SHAL_EAd<Sz, Mode>, instr);
+    instr.handler = I_SHAL_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_SHAR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SHAR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_SHAR_EAd<Sz, Mode>, instr);
+    instr.handler = I_SHAR_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_NEG_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_NEG_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_NEG_EAd<Sz, Mode>, instr);
+    instr.handler = I_NEG_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_CLR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_CLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_CLR_EAd<Sz, Mode>, instr);
+    instr.handler = I_CLR_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_TST_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_TST_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_TST_EAd<Sz, Mode>, instr);
+    instr.handler = I_TST_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUB_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SUB_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_SUB_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_SUB_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUBS_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SUBS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_SUBS_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_SUBS_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUBX_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_SUBX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_SUBX_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_SUBX_EAs_Rd<Sz, Mode>;
 }
 
 template <typename Mode>
-void D_EXTS_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_EXTS_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
     static_assert(std::is_same_v<Mode, Mode_Rn>);
-    DoCache(mcu, mcu.icache, instr_start, I_EXTS_B_Rd<Mode>, instr);
+    instr.handler = I_EXTS_B_Rd<Mode>;
 }
 
 template <typename Mode>
-void D_EXTU_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_EXTU_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
     static_assert(std::is_same_v<Mode, Mode_Rn>);
-    DoCache(mcu, mcu.icache, instr_start, I_EXTU_B_Rd<Mode>, instr);
+    instr.handler = I_EXTU_B_Rd<Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_NOT_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_NOT_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_NOT_EAd<Sz, Mode>, instr);
+    instr.handler = I_NOT_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MULXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_MULXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_MULXU_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_MULXU_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_DIVXU_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_DIVXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_DIVXU_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_DIVXU_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BCLR_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BCLR_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_data = Imm4 & 0b1111;
-    DoCache(mcu, mcu.icache, instr_start, I_BCLR_imm4_EAd<Sz, Mode>, instr);
+    instr.params.op_data = Imm4 & 0b1111;
+    instr.handler        = I_BCLR_imm4_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-void D_BCLR_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BCLR_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = Rs;
-    DoCache(mcu, mcu.icache, instr_start, I_BCLR_Rs_EAd<Sz, Mode>, instr);
+    instr.params.op_reg = Rs;
+    instr.handler       = I_BCLR_Rs_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BNOT_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BNOT_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_data = Imm4 & 0b1111;
-    DoCache(mcu, mcu.icache, instr_start, I_BNOT_imm4_EAd<Sz, Mode>, instr);
+    instr.params.op_data = Imm4 & 0b1111;
+    instr.handler        = I_BNOT_imm4_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_ROTL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ROTL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_ROTL_EAd<Sz, Mode>, instr);
+    instr.handler = I_ROTL_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_ROTR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ROTR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_ROTR_EAd<Sz, Mode>, instr);
+    instr.handler = I_ROTR_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_ROTXL_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ROTXL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_ROTXL_EAd<Sz, Mode>, instr);
+    instr.handler = I_ROTXL_EAd<Sz, Mode>;
 }
 
 template <Size Sz, typename Mode>
-void D_ROTXR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ROTXR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    DoCache(mcu, mcu.icache, instr_start, I_ROTXR_EAd<Sz, Mode>, instr);
+    instr.handler = I_ROTXR_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BSET_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BSET_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_data = Imm4 & 0b1111;
-    DoCache(mcu, mcu.icache, instr_start, I_BSET_imm4_EAd<Sz, Mode>, instr);
+    instr.params.op_data = Imm4 & 0b1111;
+    instr.handler        = I_BSET_imm4_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-void D_BSET_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BSET_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = Rs;
-    DoCache(mcu, mcu.icache, instr_start, I_BSET_Rs_EAd<Sz, Mode>, instr);
+    instr.params.op_reg = Rs;
+    instr.handler       = I_BSET_Rs_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BTST_imm4_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BTST_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_data = Imm4 & 0b1111;
-    DoCache(mcu, mcu.icache, instr_start, I_BTST_imm4_EAd<Sz, Mode>, instr);
+    instr.params.op_data = Imm4 & 0b1111;
+    instr.handler        = I_BTST_imm4_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_BTST_Rs_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_BTST_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_BTST_Rs_EAd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_BTST_Rs_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_STC_CR_EAd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_STC_CR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_c = CR;
-    DoCache(mcu, mcu.icache, instr_start, I_STC_CR_EAd<Sz, Mode>, instr);
+    instr.params.op_c = CR;
+    instr.handler     = I_STC_CR_EAd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_LDC_EAs_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_LDC_EAs_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_c = CR;
-    DoCache(mcu, mcu.icache, instr_start, I_LDC_EAs_CR<Sz, Mode>, instr);
+    instr.params.op_c = CR;
+    instr.handler     = I_LDC_EAs_CR<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_XOR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_XOR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_XOR_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_XOR_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_OR_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_OR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_OR_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_OR_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_AND_EAs_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_AND_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_reg = OpReg;
-    DoCache(mcu, mcu.icache, instr_start, I_AND_EAs_Rd<Sz, Mode>, instr);
+    instr.params.op_reg = OpReg;
+    instr.handler       = I_AND_EAs_Rd<Sz, Mode>;
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_ORC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ORC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_c = CR;
-    DoCache(mcu, mcu.icache, instr_start, I_ORC_immXX_CR<Sz, Mode, CR>, instr);
+    instr.params.op_c = CR;
+    instr.handler     = I_ORC_immXX_CR<Sz, Mode, CR>;
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_ANDC_immXX_CR(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+void D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
 
-    instr.op_c = CR;
-    DoCache(mcu, mcu.icache, instr_start, I_ANDC_immXX_CR<Sz, Mode, CR>, instr);
+    instr.params.op_c = CR;
+    instr.handler     = I_ANDC_immXX_CR<Sz, Mode, CR>;
 }
 
 //=============================================================================
 // Special format instructions
 //=============================================================================
 template <Size Sz>
-inline void D_Bcc(mcu_t& mcu, uint32_t instr_start, uint8_t opcode, DecodedInstructionParams instr)
+inline void D_Bcc(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    (void)instr; // TODO: not passing labeling to cache
-
-    const uint8_t cond = opcode & 0b1111;
+    const uint8_t cond = byte & 0b1111;
     int16_t       disp;
     switch (Sz)
     {
     case Size::Byte:
-        disp = (int8_t)mcu.coder.ReadU8(mcu);
+        disp = (int8_t)reader.ReadU8();
         break;
     case Size::Word:
-        disp = (int16_t)mcu.coder.ReadU16(mcu);
+        disp = (int16_t)reader.ReadU16();
         break;
     }
     switch (cond)
     {
     case 0:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BRA, disp);
+        MakeBranch(reader, instr, I_BRA, disp);
         break;
     case 1:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BRN, disp);
+        MakeBranch(reader, instr, I_BRN, disp);
         break;
     case 2:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BHI, disp);
+        MakeBranch(reader, instr, I_BHI, disp);
         break;
     case 3:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BLS, disp);
+        MakeBranch(reader, instr, I_BLS, disp);
         break;
     case 4:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BCC, disp);
+        MakeBranch(reader, instr, I_BCC, disp);
         break;
     case 5:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BCS, disp);
+        MakeBranch(reader, instr, I_BCS, disp);
         break;
     case 6:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BNE, disp);
+        MakeBranch(reader, instr, I_BNE, disp);
         break;
     case 7:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BEQ, disp);
+        MakeBranch(reader, instr, I_BEQ, disp);
         break;
     case 8:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BVC, disp);
+        MakeBranch(reader, instr, I_BVC, disp);
         break;
     case 9:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BVS, disp);
+        MakeBranch(reader, instr, I_BVS, disp);
         break;
     case 10:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BPL, disp);
+        MakeBranch(reader, instr, I_BPL, disp);
         break;
     case 11:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BMI, disp);
+        MakeBranch(reader, instr, I_BMI, disp);
         break;
     case 12:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BGE, disp);
+        MakeBranch(reader, instr, I_BGE, disp);
         break;
     case 13:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BLT, disp);
+        MakeBranch(reader, instr, I_BLT, disp);
         break;
     case 14:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BGT, disp);
+        MakeBranch(reader, instr, I_BGT, disp);
         break;
     case 15:
-        DoCacheBranch(mcu, mcu.icache, instr_start, I_BLE, disp);
+        MakeBranch(reader, instr, I_BLE, disp);
         break;
     default:
         std::unreachable();
     }
 }
 
-inline void D_NOP(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_NOP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
-    DoCache(mcu, mcu.icache, instr_start, I_NOP, instr);
+
+    instr.handler = I_NOP;
 }
 
-inline void D_RTE(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_RTE(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
-    (void)instr; // TODO: not passing labeling through to cache
-    DoCacheBranch(mcu, mcu.icache, instr_start, I_RTE, 0);
+
+    instr.handler = I_RTE;
 }
 
-inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    (void)instr; // TODO: not passing labeling through to cache
-
-    const uint8_t regcode = mcu.coder.ReadU8(mcu);
-    const int8_t  disp    = (int8_t)mcu.coder.ReadU8(mcu);
+    const uint8_t regcode = reader.ReadU8();
+    const int8_t  disp    = (int8_t)reader.ReadU8();
 
     if (byte == 0b00000001)
     {
         switch (regcode)
         {
         case 0b10111000:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<0>, disp);
+            MakeBranch(reader, instr, I_SCB_F<0>, disp);
             break;
         case 0b10111001:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<1>, disp);
+            MakeBranch(reader, instr, I_SCB_F<1>, disp);
             break;
         case 0b10111010:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<2>, disp);
+            MakeBranch(reader, instr, I_SCB_F<2>, disp);
             break;
         case 0b10111011:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<3>, disp);
+            MakeBranch(reader, instr, I_SCB_F<3>, disp);
             break;
         case 0b10111100:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<4>, disp);
+            MakeBranch(reader, instr, I_SCB_F<4>, disp);
             break;
         case 0b10111101:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<5>, disp);
+            MakeBranch(reader, instr, I_SCB_F<5>, disp);
             break;
         case 0b10111110:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<6>, disp);
+            MakeBranch(reader, instr, I_SCB_F<6>, disp);
             break;
         case 0b10111111:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_F<7>, disp);
+            MakeBranch(reader, instr, I_SCB_F<7>, disp);
             break;
         default:
-            FatalError(mcu, "SCB/F invalid regcode");
+            FatalError(reader.GetMCU(), "SCB/F invalid regcode");
         }
     }
     else if (byte == 0b00000110)
@@ -565,31 +619,31 @@ inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruc
         switch (regcode)
         {
         case 0b10111000:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<0>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<0>, disp);
             break;
         case 0b10111001:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<1>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<1>, disp);
             break;
         case 0b10111010:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<2>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<2>, disp);
             break;
         case 0b10111011:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<3>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<3>, disp);
             break;
         case 0b10111100:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<4>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<4>, disp);
             break;
         case 0b10111101:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<5>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<5>, disp);
             break;
         case 0b10111110:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<6>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<6>, disp);
             break;
         case 0b10111111:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_NE<7>, disp);
+            MakeBranch(reader, instr, I_SCB_NE<7>, disp);
             break;
         default:
-            FatalError(mcu, "SCB/NE invalid regcode");
+            FatalError(reader.GetMCU(), "SCB/NE invalid regcode");
         }
     }
     else if (byte == 0b00000111)
@@ -597,284 +651,297 @@ inline void D_SCB(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstruc
         switch (regcode)
         {
         case 0b10111000:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<0>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<0>, disp);
             break;
         case 0b10111001:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<1>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<1>, disp);
             break;
         case 0b10111010:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<2>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<2>, disp);
             break;
         case 0b10111011:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<3>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<3>, disp);
             break;
         case 0b10111100:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<4>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<4>, disp);
             break;
         case 0b10111101:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<5>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<5>, disp);
             break;
         case 0b10111110:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<6>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<6>, disp);
             break;
         case 0b10111111:
-            DoCacheBranch(mcu, mcu.icache, instr_start, I_SCB_EQ<7>, disp);
+            MakeBranch(reader, instr, I_SCB_EQ<7>, disp);
             break;
         default:
-            FatalError(mcu, "SCB/EQ invalid regcode");
+            FatalError(reader.GetMCU(), "SCB/EQ invalid regcode");
         }
     }
     else
     {
-        FatalError(mcu, "not implemented");
+        FatalError(reader.GetMCU(), "not implemented");
     }
 }
 
-inline void D_RTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_RTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    (void)byte;
-    DoCache(mcu, mcu.icache, instr_start, I_RTS, instr);
-}
-
-inline void D_PRTS(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    DoCache(mcu, mcu.icache, instr_start, I_PRTS, instr);
-}
-
-inline void D_JMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    instr.op_reg = byte & 0b111;
-    DoCache(mcu, mcu.icache, instr_start, I_JMP_ARn, instr);
-}
-
-inline void D_PJMP_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    instr.op_page = mcu.coder.ReadU8(mcu);
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_PJMP_aa24, instr);
-}
-
-inline void D_PJSR_aa24(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    instr.op_page  = mcu.coder.ReadU8(mcu);
-    instr.br_true  = mcu.coder.ReadU16(mcu);
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_PJSR_aa24, instr);
-}
-
-inline void D_PJSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    instr.op_reg   = byte & 0b111;
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_PJSR_ARn, instr);
-}
-
-inline void D_PJMP_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    instr.op_reg = byte & 0b111;
-    DoCache(mcu, mcu.icache, instr_start, I_PJMP_ARn, instr);
-}
-
-inline void D_JMP_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    instr.br_true = mcu.coder.ReadU16(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_JMP_aa16, instr);
-}
-
-inline void D_JSR_aa16(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    instr.br_true  = mcu.coder.ReadU16(mcu);
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_JSR_aa16, instr);
-}
-
-inline void D_JSR_ARn(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    instr.op_reg   = byte & 0b111;
-    instr.br_false = mcu.coder.GetAddressInPage(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_JSR_ARn, instr);
-}
-
-inline void D_RTD_imm8(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_RTD_immXX, instr);
-}
-
-inline void D_RTD_imm16(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)byte;
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_RTD_immXX, instr);
-}
-
-inline void D_JMP(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
-{
-    (void)instr_start;
+    (void)reader;
     (void)byte;
 
-    const uint8_t kind = mcu.coder.ReadU8(mcu);
+    instr.handler = I_RTS;
+}
+
+inline void D_PRTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)reader;
+    (void)byte;
+
+    instr.handler = I_PRTS;
+}
+
+inline void D_JMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)reader;
+
+    instr.params.op_reg = byte & 0b111;
+    instr.handler       = I_JMP_ARn;
+}
+
+inline void D_PJMP_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+
+    instr.params.op_page = reader.ReadU8();
+    instr.params.op_data = reader.ReadU16();
+    instr.handler        = I_PJMP_aa24;
+}
+
+inline void D_PJSR_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+
+    instr.params.op_page  = reader.ReadU8();
+    instr.params.br_true  = reader.ReadU16();
+    instr.params.br_false = reader.GetAddressInPage();
+    instr.handler         = I_PJSR_aa24;
+}
+
+inline void D_PJSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    instr.params.op_reg   = byte & 0b111;
+    instr.params.br_false = reader.GetAddressInPage();
+    instr.handler         = I_PJSR_ARn;
+}
+
+inline void D_PJMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)reader;
+    instr.params.op_reg = byte & 0b111;
+    instr.handler       = I_PJMP_ARn;
+}
+
+inline void D_JMP_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+
+    instr.params.br_true = reader.ReadU16();
+    instr.handler        = I_JMP_aa16;
+}
+
+inline void D_JSR_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+    instr.params.br_true  = reader.ReadU16();
+    instr.params.br_false = reader.GetAddressInPage();
+    instr.handler         = I_JSR_aa16;
+}
+
+inline void D_JSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    instr.params.op_reg   = byte & 0b111;
+    instr.params.br_false = reader.GetAddressInPage();
+    instr.handler         = I_JSR_ARn;
+}
+
+inline void D_RTD_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+    instr.params.op_data = reader.ReadU8();
+    instr.handler        = I_RTD_immXX;
+}
+
+inline void D_RTD_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+    instr.params.op_data = reader.ReadU16();
+    instr.handler        = I_RTD_immXX;
+}
+
+inline void D_JMP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+{
+    (void)byte;
+
+    const uint8_t kind = reader.ReadU8();
 
     // TODO - not all kinds implemented
     switch (kind & 0b11111000)
     {
     // JMP @Rn
     case 0b11010000:
-        D_JMP_ARn(mcu, instr_start, kind, instr);
+        D_JMP_ARn(reader, kind, instr);
         break;
 
     // PJMP @Rn
     case 0b11000000:
-        D_PJMP_ARn(mcu, instr_start, kind, instr);
+        D_PJMP_ARn(reader, kind, instr);
         break;
 
     // PJSR @Rn
     case 0b11001000:
-        D_PJSR_ARn(mcu, instr_start, kind, instr);
+        D_PJSR_ARn(reader, kind, instr);
         break;
 
     // JSR @Rn
     case 0b11011000:
-        D_JSR_ARn(mcu, instr_start, kind, instr);
+        D_JSR_ARn(reader, kind, instr);
         break;
 
     default:
         if (kind == 0b00011001)
         {
-            D_PRTS(mcu, instr_start, kind, instr);
+            D_PRTS(reader, kind, instr);
         }
         else
         {
-            FatalError(mcu);
+            FatalError(reader.GetMCU());
         }
     }
 }
 
-inline void D_TRAPA(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_TRAPA(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint8_t vec_byte = mcu.coder.ReadU8(mcu);
+    const uint8_t vec_byte = reader.ReadU8();
 
-    instr.op_data = vec_byte & 0b1111;
-    DoCache(mcu, mcu.icache, instr_start, I_TRAPA_imm4, instr);
+    instr.params.op_data = vec_byte & 0b1111;
+    instr.handler        = I_TRAPA_imm4;
 }
 
-inline void D_SLEEP(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_SLEEP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
+    (void)reader;
     (void)byte;
-    DoCache(mcu, mcu.icache, instr_start, I_SLEEP, instr);
+
+    instr.handler = I_SLEEP;
 }
 
-inline void D_STM(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_STM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    const uint8_t reglist = mcu.coder.ReadU8(mcu);
+    const uint8_t reglist = reader.ReadU8();
     if (reglist == 127)
     {
         // specialize the most commonly used form of this instruction
-        DoCache(mcu, mcu.icache, instr_start, I_STM_Fast<127>, instr);
+        instr.handler = I_STM_Fast<127>;
     }
     else
     {
-        instr.op_data = reglist;
-        DoCache(mcu, mcu.icache, instr_start, I_STM, instr);
+        instr.params.op_data = reglist;
+        instr.handler        = I_STM;
     }
 }
 
-inline void D_LDM(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_LDM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    const uint8_t reglist = mcu.coder.ReadU8(mcu);
+
+    const uint8_t reglist = reader.ReadU8();
     if (reglist == 127)
     {
         // specialize the most commonly used form of this instruction
-        DoCache(mcu, mcu.icache, instr_start, I_LDM_Fast<127>, instr);
+        instr.handler = I_LDM_Fast<127>;
     }
     else
     {
-        instr.op_data = reglist;
-        DoCache(mcu, mcu.icache, instr_start, I_LDM, instr);
+        instr.params.op_data = reglist;
+        instr.handler        = I_LDM;
     }
 }
 
-inline void D_BSR_d8(mcu_t& mcu, uint32_t instr_start, uint8_t opcode, DecodedInstructionParams instr)
+inline void D_BSR_d8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    (void)opcode;
-    (void)instr; // TODO not passing labeling to cache
-    const int8_t disp = (int8_t)mcu.coder.ReadU8(mcu);
-    DoCacheBranch(mcu, mcu.icache, instr_start, I_BSR, disp);
+    (void)byte;
+
+    const int8_t disp = (int8_t)reader.ReadU8();
+    MakeBranch(reader, instr, I_BSR, disp);
 }
 
-inline void D_BSR_d16(mcu_t& mcu, uint32_t instr_start, uint8_t opcode, DecodedInstructionParams instr)
+inline void D_BSR_d16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    (void)opcode;
-    (void)instr; // TODO not passing labeling to cache
-    const uint16_t disp = mcu.coder.ReadU16(mcu);
-    DoCacheBranch(mcu, mcu.icache, instr_start, I_BSR, (int16_t)disp);
+    (void)byte;
+
+    const uint16_t disp = reader.ReadU16();
+    MakeBranch(reader, instr, I_BSR, (int16_t)disp);
 }
 
 //=============================================================================
 // Short format instructions
 //=============================================================================
 template <uint8_t Rn>
-inline void D_Short_CMP_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_CMP_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    instr.ea_reg  = Rn;
-    DoCache(mcu, mcu.icache, instr_start, I_CMP_E_imm8_Rd<Rn>, instr);
+    instr.params.op_data = reader.ReadU8();
+    instr.params.ea_reg  = Rn;
+    instr.handler        = I_CMP_E_imm8_Rd<Rn>;
 }
 
 template <uint8_t Rn>
-inline void D_Short_CMP_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_CMP_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    instr.ea_reg  = Rn;
-    DoCache(mcu, mcu.icache, instr_start, I_CMP_I_W_imm16_Rd<Rn>, instr);
+
+    instr.params.op_data = reader.ReadU16();
+    instr.params.ea_reg  = Rn;
+    instr.handler        = I_CMP_I_W_imm16_Rd<Rn>;
 }
 
 template <uint8_t Rn>
-inline void D_Short_MOV_E_imm8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_MOV_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.op_data = mcu.coder.ReadU8(mcu);
-    instr.ea_reg  = Rn;
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_E_imm8_Rd<Rn>, instr);
+    instr.params.op_data = reader.ReadU8();
+    instr.params.ea_reg  = Rn;
+    instr.handler        = I_MOV_E_imm8_Rd<Rn>;
 }
 
 template <uint8_t Rn>
-inline void D_Short_MOV_I_W_imm16_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_MOV_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.op_data = mcu.coder.ReadU16(mcu);
-    instr.ea_reg  = Rn;
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_I_W_imm16_Rd<Rn>, instr);
+    instr.params.op_data = reader.ReadU16();
+    instr.params.ea_reg  = Rn;
+    instr.handler        = I_MOV_I_W_imm16_Rd<Rn>;
 }
 
 template <Size Sz, uint8_t Rn>
-inline void D_Short_MOV_L_aa8_Rd(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_MOV_L_aa8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.ea_data = mcu.coder.ReadU8(mcu);
-    instr.op_reg  = Rn;
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_L_aa8_Rd<Sz, Rn>, instr);
+    instr.params.ea_data = reader.ReadU8();
+    instr.params.op_reg  = Rn;
+    instr.handler        = I_MOV_L_aa8_Rd<Sz, Rn>;
 }
 
 template <Size Sz, uint8_t Rn>
-inline void D_Short_MOV_S_Rs_aa8(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr)
+inline void D_Short_MOV_S_Rs_aa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.op_reg  = Rn;
-    instr.ea_data = mcu.coder.ReadU8(mcu);
-    DoCache(mcu, mcu.icache, instr_start, I_MOV_S_Rs_aa8<Sz, Rn>, instr);
+    instr.params.op_reg  = Rn;
+    instr.params.ea_data = reader.ReadU8();
+    instr.handler        = I_MOV_S_Rs_aa8<Sz, Rn>;
 }
 
 } // namespace decoder2

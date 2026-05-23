@@ -3,12 +3,12 @@
 #include "cache.h"
 #include "types.h"
 
-struct mcu_t;
+struct CodeReader;
 
 namespace decoder2
 {
 
-using Dispatcher = void (*)(mcu_t& mcu, uint32_t instr_start, uint8_t byte, DecodedInstructionParams instr);
+using Dispatcher = void (*)(CodeReader& reader, uint8_t byte, CachedInstruction& instr);
 
 // Top level decode table for instructions. Depending on `byte` the handler
 // returned might decode a general form instruction or a special form

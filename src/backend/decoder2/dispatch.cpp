@@ -1,5 +1,6 @@
 #include "dispatch.h"
 
+#include "decoder2/cache.h"
 #include "diagnostics.h"
 #include "dispatchers.h"
 #include "mcu.h"
@@ -128,13 +129,16 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
     ++hitcount[instr_start];
 #endif
 
-    mcu.coder          = CodeReader{};
-    const uint8_t byte = mcu.coder.ReadU8(mcu);
+    CodeReader    reader(mcu);
+    const uint8_t byte = reader.ReadU8();
 
     Dispatcher handler = GetDispatcherTop(byte);
     if (handler)
     {
-        (*handler)(mcu, instr_start, byte, {});
+        CachedInstruction instr{};
+        (*handler)(reader, byte, instr);
+        mcu.icache.Write(instr_start, instr);
+        instr.handler(mcu, instr.params);
     }
     else
     {
@@ -159,39 +163,6 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
         exit(0);
     }
 #endif
-}
-
-void DoCache(mcu_t&                          mcu,
-             InstructionCache&               cache,
-             uint32_t                        instr_start,
-             CachedInstructionHandler        func,
-             const DecodedInstructionParams& st)
-{
-    cache.Write(instr_start, {.handler = func, .params = st});
-    func(mcu, st);
-}
-
-void DoCacheJump(mcu_t& mcu, InstructionCache& cache, uint32_t instr_start, CachedInstructionHandler func, int16_t disp)
-{
-    const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
-
-    DecodedInstructionParams st;
-    st.br_true  = (uint16_t)(next_ip + disp);
-    st.br_false = (uint16_t)(next_ip + disp);
-    cache.Write(instr_start, {.handler = func, .params = st});
-    func(mcu, st);
-}
-
-void DoCacheBranch(
-    mcu_t& mcu, InstructionCache& cache, uint32_t instr_start, CachedInstructionHandler func, int16_t disp)
-{
-    const uint16_t next_ip = mcu.coder.GetAddressInPage(mcu);
-
-    DecodedInstructionParams st;
-    st.br_true  = (uint16_t)(next_ip + disp);
-    st.br_false = next_ip;
-    cache.Write(instr_start, {.handler = func, .params = st});
-    func(mcu, st);
 }
 
 } // namespace decoder2
