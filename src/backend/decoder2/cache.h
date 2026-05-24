@@ -40,10 +40,22 @@ struct CachedInstruction
     DecodedInstructionParams params;
 };
 
+// Maps wide addresses (page:addr) to decoded instructions.
 class InstructionCache
 {
 private:
-    // 16 pages of 64K, TODO determine upper bound (not all pages contain code)
+    // Contains space for 16 pages of 64K, i.e. the entire memory space of the
+    // mcu. Only 9 of the 16 pages contain code, but we allocate space for the
+    // full 16 pages so that looking up a cached instruction is a simple array
+    // index.
+    //
+    // Code is mapped to the following address spaces; ranges are inclusive:
+    //
+    // page   : addr
+    // 0      : 0..0x7fff  => mcu.rom1
+    // 1..4   : 0..0x7ffff => mcu.rom2
+    // 8..9   : 0..0x7ffff => mcu.rom2 (only when !is_jv880)
+    // 14..15 : 0..0x7ffff => mcu.rom2 (only when !is_jv880)
     using ArrayType = std::array<CachedInstruction, static_cast<size_t>(16 * 0x10000)>;
 
 public:
