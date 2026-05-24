@@ -12,15 +12,16 @@ enum class Size : uint8_t
 };
 
 template <Size Sz>
-struct SizeToInt;
+struct SizeTraits;
 
 template <>
-struct SizeToInt<Size::Byte>
+struct SizeTraits<Size::Byte>
 {
-    using Type = uint8_t;
+    using UnsignedType = uint8_t;
 
-    static constexpr Type MSB = 0x80;
-    static constexpr Type Max = 0xff;
+    static constexpr UnsignedType UnsignedMax = UINT8_MAX;
+
+    static constexpr UnsignedType MSB = 0x80;
 
     using SignedType = int8_t;
 
@@ -29,12 +30,13 @@ struct SizeToInt<Size::Byte>
 };
 
 template <>
-struct SizeToInt<Size::Word>
+struct SizeTraits<Size::Word>
 {
-    using Type = uint16_t;
+    using UnsignedType = uint16_t;
 
-    static constexpr Type MSB = 0x8000;
-    static constexpr Type Max = 0xffff;
+    static constexpr UnsignedType UnsignedMax = UINT16_MAX;
+
+    static constexpr UnsignedType MSB = 0x8000;
 
     using SignedType = int16_t;
 
@@ -43,10 +45,10 @@ struct SizeToInt<Size::Word>
 };
 
 template <Size Sz>
-using SizeToIntType = typename SizeToInt<Sz>::Type;
+using SizeToIntType = typename SizeTraits<Sz>::UnsignedType;
 
 template <Size Sz>
-constexpr SizeToIntType<Sz> MSB = SizeToInt<Sz>::MSB;
+constexpr SizeToIntType<Sz> MSB = SizeTraits<Sz>::MSB;
 
 // Widens an integer type by returning the next largest integer type. This type
 // only allows widening from uint8_t to uint16_t and from uint16_t to uint32_t
@@ -159,7 +161,7 @@ constexpr BinopResult<Sz> GenericBinop(SizeToIntType<Sz> a, SizeToIntType<Sz> b,
         .result_bits = (OpUnsigned)result_u,
         .negative    = (result_u & MSB<Sz>) != 0,
         .zero        = (OpUnsigned)result_u == 0,
-        .overflow    = result_s < SizeToInt<Sz>::SignedMin || result_s > SizeToInt<Sz>::SignedMax,
+        .overflow    = result_s < SizeTraits<Sz>::SignedMin || result_s > SizeTraits<Sz>::SignedMax,
         .carry       = (result_u & (MSB<Sz> << 1)) != 0,
     };
 }

@@ -652,7 +652,7 @@ inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const DecodedInstructionParams& st)
     const WideType q = dividend / divisor;
     const WideType r = dividend % divisor;
 
-    if (q > SizeToInt<Sz>::Max)
+    if (q > SizeTraits<Sz>::UnsignedMax)
     {
         MCU_SetStatus(mcu, 0, STATUS_N);
         MCU_SetStatus(mcu, 0, STATUS_Z);
