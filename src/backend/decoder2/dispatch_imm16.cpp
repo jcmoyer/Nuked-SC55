@@ -7,18 +7,16 @@ namespace decoder2
 {
 
 template <Size Sz>
-struct Size_To_Mode
-{
-};
+struct SizeToMode;
 
 template <>
-struct Size_To_Mode<Size::Byte>
+struct SizeToMode<Size::Byte>
 {
     using Type = Mode_Imm8;
 };
 
 template <>
-struct Size_To_Mode<Size::Word>
+struct SizeToMode<Size::Word>
 {
     using Type = Mode_Imm16;
 };
@@ -29,7 +27,7 @@ struct Size_To_Mode<Size::Word>
 template <Size Sz>
 constexpr std::array<Dispatcher, 256> DefineTable()
 {
-    using Mode = typename Size_To_Mode<Sz>::Type;
+    using Mode = typename SizeToMode<Sz>::Type;
 
     std::array<Dispatcher, 256> t{};
     t[0b00000000] = nullptr;
