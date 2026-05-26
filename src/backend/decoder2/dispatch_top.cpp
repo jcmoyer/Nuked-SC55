@@ -9,204 +9,314 @@ namespace decoder2
 {
 
 template <Size Sz, uint8_t Rn>
-void D_General_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
     instr.params.ea_reg = Rn;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherRn(opcode, Sz);
+    ReadError err;
+    uint8_t   opcode;
+
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherRn(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_APreDecRn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_APreDecRn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
     instr.params.ea_reg = Rn;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherAPreDecRn(opcode, Sz);
+    ReadError err;
+    uint8_t   opcode;
+
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherAPreDecRn(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, byte, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_APostIncRn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_APostIncRn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
     instr.params.ea_reg = Rn;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherAPostIncRn(opcode, Sz);
+    ReadError err;
+    uint8_t   opcode;
+
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherAPostIncRn(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
     instr.params.ea_reg = Rn;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherARn(opcode, Sz);
+    ReadError err;
+    uint8_t   opcode;
+
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherARn(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_Ad8_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Ad8_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const int16_t disp = (int8_t)reader.ReadU8();
+    ReadError err;
+    int8_t    disp;
+    uint8_t   opcode;
+
+    err = reader.ReadS8(disp);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.ea_disp = disp;
     instr.params.ea_reg  = Rn;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherAd8Rn(opcode, Sz);
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherAd8Rn(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz, uint8_t Rn>
-void D_General_Ad16_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Ad16_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const int16_t disp = (int16_t)reader.ReadU16();
+    ReadError err;
+    int16_t   disp;
+    uint8_t   opcode;
+
+    err = reader.ReadS16(disp);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.ea_disp = disp;
     instr.params.ea_reg  = Rn;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherAd16Rn(opcode, Sz);
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherAd16Rn(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
-void D_General_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint16_t imm = reader.ReadU8();
+    ReadError err;
+    uint8_t   imm;
+    uint8_t   opcode;
+
+    err = reader.ReadU8(imm);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.ea_data = imm;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherImm8(opcode);
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherImm8(opcode);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
-void D_General_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint16_t imm = reader.ReadU16();
+    ReadError err;
+    uint16_t  imm;
+    uint8_t   opcode;
+
+    err = reader.ReadU16(imm);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.ea_data = imm;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherImm16(opcode);
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherImm16(opcode);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz>
-void D_General_Aaa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Aaa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint8_t imm = reader.ReadU8();
+    ReadError err;
+    uint8_t   imm;
+    uint8_t   opcode;
+
+    err = reader.ReadU8(imm);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.ea_data = imm;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherAaa8(opcode, Sz);
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherAaa8(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 
 template <Size Sz>
-void D_General_Aaa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Aaa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint16_t imm = (uint16_t)reader.ReadU16();
+    ReadError err;
+    uint16_t  imm;
+    uint8_t   opcode;
+
+    err = reader.ReadU16(imm);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.ea_data = imm;
 
-    const uint8_t opcode  = reader.ReadU8();
-    Dispatcher    handler = GetDispatcherAaa16(opcode, Sz);
+    err = reader.ReadU8(opcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherAaa16(opcode, Sz);
     if (handler)
     {
-        handler(reader, byte, instr);
+        return handler(reader, opcode, instr);
     }
     else
     {
-        FatalError(reader.GetMCU());
+        return DecodeError::UnrecognizedInstruction;
     }
 }
 

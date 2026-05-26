@@ -2,6 +2,8 @@
 
 #include "decoder2/cache.h"
 #include "decoder2/code_reader.h"
+#include "decoder2/disassemble.h"
+#include "decoder2/string_util.h"
 #include "diagnostics.h"
 #include "dispatchers.h"
 #include "mcu.h"
@@ -22,12 +24,27 @@
 namespace decoder2
 {
 
-void WriteBin(std::string& s, uint8_t x)
+struct DecodeResult
 {
-    for (int mask = 0x80; mask; mask >>= 1)
+    // address where decoding started
+    uint32_t decode_first;
+    // address one past the end of the decoded data
+    uint32_t decode_last;
+
+    // decoded instruction, only valid if decoding succeeded
+    CachedInstruction instruction;
+};
+
+const char* ToCString(DecodeError err)
+{
+    switch (err)
     {
-        s.push_back((x & mask) ? '1' : '0');
+    case DecodeError::UnrecognizedInstruction:
+        return "unrecognized instruction";
+    case DecodeError::NeedMoreBytes:
+        return "need more bytes";
     }
+    return "unknown";
 }
 
 void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
@@ -36,7 +53,6 @@ void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
     uint16_t paddr = (uint16_t)addr;
     uint8_t  bytes[6]{};
 
-    // max instruction length is 6; disassembler will only read as many bytes as necessary
     for (int i = 0; i < 6; ++i)
     {
         bytes[i] = MCU_Read(mcu, MCU_GetAddress(page, (uint16_t)(paddr + i)));
@@ -48,7 +64,7 @@ void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
     std::string result;
     for (int i = 0; i < instr.instr_size; ++i)
     {
-        WriteBin(result, bytes[i]);
+        WriteBinU8(result, bytes[i]);
         result.push_back(' ');
     }
     result.resize(54, ' ');
@@ -71,49 +87,120 @@ void PrintHitCount(mcu_t& mcu, uint32_t addr, uint64_t count)
 
 std::unordered_map<uint32_t, uint64_t> hitcount;
 
-///////////////////////////////////////////////////////////////////////////////
-
-// Backtrack and re-try using original decoder
+// Backtrack and retry using original decoder
 void Fallback(mcu_t& mcu)
 {
-    // original decoder does not use coder
     const uint8_t byte = MCU_ReadCodeAdvance(mcu);
     MCU_Operand_Table[byte](mcu, byte);
 }
 
-void FatalError(mcu_t& mcu, const char* message, const std::source_location& location)
+static void PrintDecodeError(mcu_t& mcu, DecodeError error, DecodeResult& result)
 {
-    const uint32_t base_addr = MCU_GetAddress(mcu.cp, mcu.pc);
+    constexpr size_t MAX_INSTR_SIZE = 6;
 
-    const uint8_t bytes[6]{
-        MCU_Read(mcu, base_addr + 0),
-        MCU_Read(mcu, base_addr + 1),
-        MCU_Read(mcu, base_addr + 2),
-        MCU_Read(mcu, base_addr + 3),
-        MCU_Read(mcu, base_addr + 4),
-        MCU_Read(mcu, base_addr + 5),
-    };
+    std::string msg;
+    msg  = "Dispatcher: at address range %02x:%04x ~ %02x:%04x:\n";
+    msg += "    Reason: %s\n";
+    msg += "    Bytes:  ";
 
-    Diag_Printf(
-        Diag_Category::Debug, "Dispatcher: in %s, at address %d:%x:\n", location.function_name(), mcu.cp, mcu.pc);
-    if (message)
+    uint8_t bytes[MAX_INSTR_SIZE]{};
+    uint8_t bytei = 0;
+
+    const uint8_t first_page = static_cast<uint8_t>(result.decode_first >> 16);
+
+    uint8_t prev_page = first_page;
+
+    for (uint32_t addr = result.decode_first; addr < result.decode_first + MAX_INSTR_SIZE; ++addr)
     {
-        Diag_Printf(Diag_Category::Debug, "    error: %s\n", message);
+        const uint8_t addr_page = static_cast<uint8_t>(addr >> 16);
+        if (addr_page < 16)
+        {
+            const uint8_t byte = MCU_Read(mcu, addr);
+            bytes[bytei]       = byte;
+
+            WriteHexU8(msg, byte);
+            if (prev_page == addr_page)
+            {
+                msg += ' ';
+            }
+            else
+            {
+                msg += '|';
+            }
+
+            ++bytei;
+        }
+        else
+        {
+            msg += "xx ";
+        }
+
+        prev_page = addr_page;
     }
+    msg += "\n";
+    msg.append(12 + 3 * (result.decode_last - result.decode_first) - 1, ' ');
+    msg += "^~ stopped decoding here\n";
 
-    DisassembledInstruction decoded;
-    if (Disassemble(bytes, 0, decoded))
+    DisassembledInstruction dis;
+    if (Disassemble(bytes, 0, dis))
     {
-        std::string code;
-        RenderInstruction(decoded, code);
-        Diag_Printf(Diag_Category::Debug, "    %s\n", code.c_str());
+        std::string rendered_instr;
+        RenderInstruction(dis, rendered_instr);
+        msg += "    Disassembly: " + rendered_instr + " (may be incorrect)";
     }
     else
     {
-        Diag_Printf(Diag_Category::Debug, "    failed to disassemble instruction\n");
+        msg += "    no disassembly";
     }
 
-    exit(1);
+    Diag_Printf(Diag_Category::Error,
+                msg.c_str(),
+                result.decode_first >> 16,
+                (uint16_t)result.decode_first,
+                result.decode_last >> 16,
+                (uint16_t)result.decode_last,
+                ToCString(error));
+}
+
+static DecodeError FetchDecode(mcu_t& mcu, DecodeResult& out_result)
+{
+    CodeReader reader(mcu);
+    ReadError  read_err;
+    uint8_t    byte;
+
+    reader.SetReadAddress(mcu.cp, mcu.pc);
+    out_result.decode_first = reader.GetReadAddress();
+
+    read_err = reader.ReadU8(byte);
+    if (read_err != ReadError{})
+    {
+        out_result.decode_last = reader.GetReadAddress();
+        return DecodeError::NeedMoreBytes;
+    }
+
+    Dispatcher handler = GetDispatcherTop(byte);
+    if (handler)
+    {
+        CachedInstruction instr{};
+        DecodeError       d_error;
+
+        d_error                = (*handler)(reader, byte, instr);
+        out_result.decode_last = reader.GetReadAddress();
+
+        if (d_error != DecodeError{})
+        {
+            return d_error;
+        }
+
+        out_result.instruction = instr;
+    }
+    else
+    {
+        out_result.decode_last = reader.GetReadAddress();
+        return DecodeError::UnrecognizedInstruction;
+    }
+
+    return DecodeError{};
 }
 
 void FetchDecodeExecuteNext(mcu_t& mcu)
@@ -130,21 +217,16 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
     ++hitcount[instr_start];
 #endif
 
-    CodeReader    reader(mcu);
-    const uint8_t byte = reader.ReadU8();
+    DecodeResult decode_result;
+    DecodeError  err = FetchDecode(mcu, decode_result);
+    if (err != DecodeError{})
+    {
+        PrintDecodeError(mcu, err, decode_result);
+        exit(1);
+    }
 
-    Dispatcher handler = GetDispatcherTop(byte);
-    if (handler)
-    {
-        CachedInstruction instr{};
-        (*handler)(reader, byte, instr);
-        mcu.icache.Write(instr_start, instr);
-        instr.handler(mcu, instr.params);
-    }
-    else
-    {
-        FatalError(mcu);
-    }
+    mcu.icache.Write(instr_start, decode_result.instruction);
+    decode_result.instruction.handler(mcu, decode_result.instruction.params);
 
 #if INSTRUCTION_HIT_TRACING
     if (mcu.cycles >= 1000000000)

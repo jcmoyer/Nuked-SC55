@@ -32,480 +32,621 @@ inline void MakeBranch(CodeReader& reader, CachedInstruction& instr, CachedInstr
 //=============================================================================
 // Pseudo instructions
 //=============================================================================
-inline void D_InvalidInstruction(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_InvalidInstruction(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
     (void)instr;
-    // TODO: do we need to know about the mcu? this should signal failure in the decoder subsystem which might know
-    // about the mcu higher up
-    FatalError(reader.GetMCU(), "Invalid instruction");
+    return DecodeError::UnrecognizedInstruction;
 }
 
 //=============================================================================
 // General format instructions
 //=============================================================================
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MOV_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_MOV_G_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MOV_G_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_MOV_G_Rs_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_MOV_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_data = reader.ReadU8();
+    uint8_t   op_data;
+    ReadError err;
+
+    err = reader.ReadU8(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.handler        = I_MOV_G_imm8_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_MOV_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_data = reader.ReadU16();
+    uint16_t  op_data;
+    ReadError err;
+
+    err = reader.ReadU16(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.handler        = I_MOV_G_imm16_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_CMP_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CMP_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_data = reader.ReadU8();
+    uint8_t   op_data;
+    ReadError err;
+
+    err = reader.ReadU8(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.handler        = I_CMP_G_imm8_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_CMP_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CMP_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_data = reader.ReadU16();
+    uint16_t  op_data;
+    ReadError err;
+
+    err = reader.ReadU16(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.handler        = I_CMP_G_imm16_EAd<Sz, Mode>;
+
+    return {};
 }
 
 // Manual lists this as a special format instruction but it allows arbitrary
 // addressing modes so we treat it as a general instruction.
 template <Size Sz, typename Mode, int8_t N>
-void D_ADD_Q_n_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADD_Q_n_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_ADD_Q_n<Sz, Mode, N>;
+
+    return {};
 }
 
 template <typename Mode>
-void D_SWAP_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SWAP_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_SWAP_B_Rd<Mode>;
+
+    return {};
 }
 
 template <uint8_t OpReg, typename Mode>
-void D_XCH_Rs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_XCH_Rs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_XCH_W_Rs_Rd<Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADD_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADD_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_ADD_G_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADDX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADDX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_ADDX_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_ADDS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADDS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_ADDS_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_CMP_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CMP_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_CMP_G_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_SHLL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHLL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_SHLL_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_SHLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_SHLR_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_SHAL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHAL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_SHAL_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_SHAR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHAR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_SHAR_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_NEG_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_NEG_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_NEG_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_CLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_CLR_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_TST_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_TST_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_TST_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUB_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SUB_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_SUB_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUBS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SUBS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_SUBS_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_SUBX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SUBX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_SUBX_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <typename Mode>
-void D_EXTS_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_EXTS_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     static_assert(std::is_same_v<Mode, Mode_Rn>);
     instr.handler = I_EXTS_B_Rd<Mode>;
+
+    return {};
 }
 
 template <typename Mode>
-void D_EXTU_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_EXTU_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     static_assert(std::is_same_v<Mode, Mode_Rn>);
     instr.handler = I_EXTU_B_Rd<Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_NOT_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_NOT_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_NOT_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_MULXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MULXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_MULXU_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_DIVXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_DIVXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_DIVXU_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BCLR_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BCLR_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_data = Imm4 & 0b1111;
     instr.handler        = I_BCLR_imm4_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-void D_BCLR_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BCLR_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = Rs;
     instr.handler       = I_BCLR_Rs_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BNOT_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BNOT_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_data = Imm4 & 0b1111;
     instr.handler        = I_BNOT_imm4_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_ROTL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_ROTL_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_ROTR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_ROTR_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_ROTXL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTXL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_ROTXL_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, typename Mode>
-void D_ROTXR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTXR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_ROTXR_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BSET_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BSET_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_data = Imm4 & 0b1111;
     instr.handler        = I_BSET_imm4_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-void D_BSET_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BSET_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = Rs;
     instr.handler       = I_BSET_Rs_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-void D_BTST_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BTST_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_data = Imm4 & 0b1111;
     instr.handler        = I_BTST_imm4_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_BTST_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BTST_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_BTST_Rs_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_STC_CR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_STC_CR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_c = CR;
     instr.handler     = I_STC_CR_EAd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_LDC_EAs_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_LDC_EAs_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_c = CR;
     instr.handler     = I_LDC_EAs_CR<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_XOR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_XOR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_XOR_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_OR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_OR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_OR_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-void D_AND_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_AND_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_reg = OpReg;
     instr.handler       = I_AND_EAs_Rd<Sz, Mode>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_ORC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ORC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_c = CR;
     instr.handler     = I_ORC_immXX_CR<Sz, Mode, CR>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-void D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.params.op_c = CR;
     instr.handler     = I_ANDC_immXX_CR<Sz, Mode, CR>;
+
+    return {};
 }
 
 //=============================================================================
 // Special format instructions
 //=============================================================================
 template <Size Sz>
-inline void D_Bcc(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Bcc(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     const uint8_t cond = byte & 0b1111;
-    int16_t       disp;
+
+    ReadError err;
+    int16_t   disp;
+
     switch (Sz)
     {
-    case Size::Byte:
-        disp = (int8_t)reader.ReadU8();
-        break;
-    case Size::Word:
-        disp = (int16_t)reader.ReadU16();
+    case Size::Byte: {
+        int8_t byte_disp;
+        err = reader.ReadS8(byte_disp);
+        if (err != ReadError{})
+        {
+            return DecodeError::NeedMoreBytes;
+        }
+        disp = byte_disp;
         break;
     }
+    case Size::Word:
+        err = reader.ReadS16(disp);
+        if (err != ReadError{})
+        {
+            return DecodeError::NeedMoreBytes;
+        }
+        break;
+    }
+
     switch (cond)
     {
     case 0:
@@ -559,28 +700,47 @@ inline void D_Bcc(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
     default:
         std::unreachable();
     }
+
+    return {};
 }
 
-inline void D_NOP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_NOP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_NOP;
+
+    return {};
 }
 
-inline void D_RTE(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTE(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_RTE;
+
+    return {};
 }
 
-inline void D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
-    const uint8_t regcode = reader.ReadU8();
-    const int8_t  disp    = (int8_t)reader.ReadU8();
+    ReadError err;
+    uint8_t   regcode;
+    int8_t    disp;
+
+    err = reader.ReadU8(regcode);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    err = reader.ReadS8(disp);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     if (byte == 0b00000001)
     {
@@ -611,7 +771,8 @@ inline void D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
             MakeBranch(reader, instr, I_SCB_F<7>, disp);
             break;
         default:
-            FatalError(reader.GetMCU(), "SCB/F invalid regcode");
+            // TODO: attach error context "SCB/F invalid regcode"
+            return DecodeError::UnrecognizedInstruction;
         }
     }
     else if (byte == 0b00000110)
@@ -643,7 +804,8 @@ inline void D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
             MakeBranch(reader, instr, I_SCB_NE<7>, disp);
             break;
         default:
-            FatalError(reader.GetMCU(), "SCB/NE invalid regcode");
+            // TODO: attach error context "SCB/NE invalid regcode"
+            return DecodeError::UnrecognizedInstruction;
         }
     }
     else if (byte == 0b00000111)
@@ -675,114 +837,219 @@ inline void D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
             MakeBranch(reader, instr, I_SCB_EQ<7>, disp);
             break;
         default:
-            FatalError(reader.GetMCU(), "SCB/EQ invalid regcode");
+            // TODO: attach error context "SCB/EQ invalid regcode"
+            return DecodeError::UnrecognizedInstruction;
         }
     }
     else
     {
-        FatalError(reader.GetMCU(), "not implemented");
+        return DecodeError::UnrecognizedInstruction;
     }
+
+    return {};
 }
 
-inline void D_RTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_RTS;
+
+    return {};
 }
 
-inline void D_PRTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PRTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_PRTS;
+
+    return {};
 }
 
-inline void D_JMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
 
     instr.params.op_reg = byte & 0b111;
     instr.handler       = I_JMP_ARn;
+
+    return {};
 }
 
-inline void D_PJMP_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJMP_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_page = reader.ReadU8();
-    instr.params.op_data = reader.ReadU16();
+    ReadError err;
+    uint8_t   op_page;
+    uint16_t  op_data;
+
+    err = reader.ReadU8(op_page);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    err = reader.ReadU16(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_page = op_page;
+    instr.params.op_data = op_data;
     instr.handler        = I_PJMP_aa24;
+
+    return {};
 }
 
-inline void D_PJSR_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJSR_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_page  = reader.ReadU8();
-    instr.params.br_true  = reader.ReadU16();
+    ReadError err;
+    uint8_t   op_page;
+    uint16_t  br_true;
+
+    err = reader.ReadU8(op_page);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    err = reader.ReadU16(br_true);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_page  = op_page;
+    instr.params.br_true  = br_true;
     instr.params.br_false = reader.GetAddressInPage();
     instr.handler         = I_PJSR_aa24;
+
+    return {};
 }
 
-inline void D_PJSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     instr.params.op_reg   = byte & 0b111;
     instr.params.br_false = reader.GetAddressInPage();
     instr.handler         = I_PJSR_ARn;
+
+    return {};
 }
 
-inline void D_PJMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     instr.params.op_reg = byte & 0b111;
     instr.handler       = I_PJMP_ARn;
+
+    return {};
 }
 
-inline void D_JMP_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JMP_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.br_true = reader.ReadU16();
+    ReadError err;
+    uint16_t  br_true;
+
+    err = reader.ReadU16(br_true);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.br_true = br_true;
     instr.handler        = I_JMP_aa16;
+
+    return {};
 }
 
-inline void D_JSR_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JSR_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.br_true  = reader.ReadU16();
+
+    ReadError err;
+    uint16_t  br_true;
+
+    err = reader.ReadU16(br_true);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.br_true  = br_true;
     instr.params.br_false = reader.GetAddressInPage();
     instr.handler         = I_JSR_aa16;
+
+    return {};
 }
 
-inline void D_JSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     instr.params.op_reg   = byte & 0b111;
     instr.params.br_false = reader.GetAddressInPage();
     instr.handler         = I_JSR_ARn;
+
+    return {};
 }
 
-inline void D_RTD_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTD_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.op_data = reader.ReadU8();
+
+    ReadError err;
+    uint8_t   op_data;
+
+    err = reader.ReadU8(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.handler        = I_RTD_immXX;
+
+    return {};
 }
 
-inline void D_RTD_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTD_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.op_data = reader.ReadU16();
+
+    ReadError err;
+    uint16_t  op_data;
+
+    err = reader.ReadU16(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.handler        = I_RTD_immXX;
+
+    return {};
 }
 
-inline void D_JMP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JMP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint8_t kind = reader.ReadU8();
+    ReadError err;
+    uint8_t   kind;
+
+    err = reader.ReadU8(kind);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     // TODO - not all kinds implemented
     switch (kind & 0b11111000)
@@ -814,33 +1081,55 @@ inline void D_JMP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
         }
         else
         {
-            FatalError(reader.GetMCU());
+            return DecodeError::UnrecognizedInstruction;
         }
     }
+
+    return {};
 }
 
-inline void D_TRAPA(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_TRAPA(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint8_t vec_byte = reader.ReadU8();
+    ReadError err;
+    uint8_t   vec_byte;
+
+    err = reader.ReadU8(vec_byte);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
 
     instr.params.op_data = vec_byte & 0b1111;
     instr.handler        = I_TRAPA_imm4;
+
+    return {};
 }
 
-inline void D_SLEEP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_SLEEP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)reader;
     (void)byte;
 
     instr.handler = I_SLEEP;
+
+    return {};
 }
 
-inline void D_STM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_STM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    const uint8_t reglist = reader.ReadU8();
+
+    ReadError err;
+    uint8_t   reglist;
+
+    err = reader.ReadU8(reglist);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
     if (reglist == 127)
     {
         // specialize the most commonly used form of this instruction
@@ -851,13 +1140,23 @@ inline void D_STM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
         instr.params.op_data = reglist;
         instr.handler        = I_STM;
     }
+
+    return {};
 }
 
-inline void D_LDM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_LDM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint8_t reglist = reader.ReadU8();
+    ReadError err;
+    uint8_t   reglist;
+
+    err = reader.ReadU8(reglist);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
     if (reglist == 127)
     {
         // specialize the most commonly used form of this instruction
@@ -868,80 +1167,173 @@ inline void D_LDM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
         instr.params.op_data = reglist;
         instr.handler        = I_LDM;
     }
+
+    return {};
 }
 
-inline void D_BSR_d8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_BSR_d8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const int8_t disp = (int8_t)reader.ReadU8();
+    ReadError err;
+    int8_t    disp;
+
+    err = reader.ReadS8(disp);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
     MakeBranch(reader, instr, I_BSR, disp);
+
+    return {};
 }
 
-inline void D_BSR_d16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_BSR_d16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    const uint16_t disp = reader.ReadU16();
-    MakeBranch(reader, instr, I_BSR, (int16_t)disp);
+    ReadError err;
+    int16_t   disp;
+
+    err = reader.ReadS16(disp);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    MakeBranch(reader, instr, I_BSR, disp);
+
+    return {};
 }
 
 //=============================================================================
 // Short format instructions
 //=============================================================================
 template <uint8_t Rn>
-inline void D_Short_CMP_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_CMP_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.op_data = reader.ReadU8();
+
+    ReadError err;
+    uint8_t   op_data;
+
+    err = reader.ReadU8(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.params.ea_reg  = Rn;
     instr.handler        = I_CMP_E_imm8_Rd<Rn>;
+
+    return {};
 }
 
 template <uint8_t Rn>
-inline void D_Short_CMP_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_CMP_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
 
-    instr.params.op_data = reader.ReadU16();
+    ReadError err;
+    uint16_t  op_data;
+
+    err = reader.ReadU16(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.params.ea_reg  = Rn;
     instr.handler        = I_CMP_I_W_imm16_Rd<Rn>;
+
+    return {};
 }
 
 template <uint8_t Rn>
-inline void D_Short_MOV_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.op_data = reader.ReadU8();
+
+    ReadError err;
+    uint8_t   op_data;
+
+    err = reader.ReadU8(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.params.ea_reg  = Rn;
     instr.handler        = I_MOV_E_imm8_Rd<Rn>;
+
+    return {};
 }
 
 template <uint8_t Rn>
-inline void D_Short_MOV_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.op_data = reader.ReadU16();
+
+    ReadError err;
+    uint16_t  op_data;
+
+    err = reader.ReadU16(op_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.op_data = op_data;
     instr.params.ea_reg  = Rn;
     instr.handler        = I_MOV_I_W_imm16_Rd<Rn>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Rn>
-inline void D_Short_MOV_L_aa8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_L_aa8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
-    instr.params.ea_data = reader.ReadU8();
+
+    ReadError err;
+    uint8_t   ea_data;
+
+    err = reader.ReadU8(ea_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
+    instr.params.ea_data = ea_data;
     instr.params.op_reg  = Rn;
     instr.handler        = I_MOV_L_aa8_Rd<Sz, Rn>;
+
+    return {};
 }
 
 template <Size Sz, uint8_t Rn>
-inline void D_Short_MOV_S_Rs_aa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_S_Rs_aa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
 {
     (void)byte;
+
+    ReadError err;
+    uint8_t   ea_data;
+
+    err = reader.ReadU8(ea_data);
+    if (err != ReadError{})
+    {
+        return DecodeError::NeedMoreBytes;
+    }
+
     instr.params.op_reg  = Rn;
-    instr.params.ea_data = reader.ReadU8();
+    instr.params.ea_data = ea_data;
     instr.handler        = I_MOV_S_Rs_aa8<Sz, Rn>;
+
+    return {};
 }
 
 } // namespace decoder2

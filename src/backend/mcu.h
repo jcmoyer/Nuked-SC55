@@ -337,19 +337,9 @@ inline uint8_t MCU_ReadCode(mcu_t& mcu) {
     return MCU_Read(mcu, MCU_GetAddress(mcu.cp, mcu.pc));
 }
 
-inline uint8_t MCU_ReadCodeOffset(mcu_t& mcu, uint8_t offset) {
-    return MCU_Read(mcu, MCU_GetAddress(mcu.cp, mcu.pc + offset));
-}
-
 inline uint8_t MCU_ReadCodeAdvance(mcu_t& mcu) {
     uint8_t ret = MCU_ReadCode(mcu);
     mcu.pc++;
-    return ret;
-}
-
-inline uint16_t MCU_ReadCodeAdvance16(mcu_t& mcu) {
-    uint16_t ret = MCU_ReadCodeAdvance(mcu);
-    ret = (uint16_t)((ret << 8) | MCU_ReadCodeAdvance(mcu));
     return ret;
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cache.h"
+#include "dispatch.h"
 #include "types.h"
 
 struct CodeReader;
@@ -8,7 +9,7 @@ struct CodeReader;
 namespace decoder2
 {
 
-using Dispatcher = void (*)(CodeReader& reader, uint8_t byte, CachedInstruction& instr);
+using Dispatcher = DecodeError (*)(CodeReader& reader, uint8_t byte, CachedInstruction& instr);
 
 // Top level decode table for instructions. Depending on `byte` the handler
 // returned might decode a general form instruction or a special form

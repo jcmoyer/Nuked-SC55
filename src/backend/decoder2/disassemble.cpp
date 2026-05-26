@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "address_modes.h"
+#include "decoder2/string_util.h"
 #include "decoder_handlers.h"
 #include "decoders.h"
 
@@ -31,22 +32,6 @@ static std::string RenderFormatSuffix(InstructionFormat format)
         return ":Q";
     }
     std::unreachable();
-}
-
-constexpr const char* HEX_DIGITS = "0123456789abcdef";
-
-static void WriteHexU8(std::string& s, uint8_t val)
-{
-    uint8_t hi = val >> 4;
-    uint8_t lo = val & 0x0f;
-    s.push_back(HEX_DIGITS[hi]);
-    s.push_back(HEX_DIGITS[lo]);
-}
-
-static void WriteHexU16(std::string& s, uint16_t val)
-{
-    WriteHexU8(s, (uint8_t)(val >> 8));
-    WriteHexU8(s, (uint8_t)val);
 }
 
 static void OperandString(DisassembledInstruction instr, InstructionOperand op, std::string& result)
