@@ -1,25 +1,15 @@
 #include "dispatch.h"
 
+#include <string>
+
 #include "decoder2/cache.h"
 #include "decoder2/code_reader.h"
 #include "decoder2/disassemble.h"
 #include "decoder2/string_util.h"
 #include "diagnostics.h"
+#include "disassemble.h"
 #include "dispatchers.h"
 #include "mcu.h"
-
-///////////////////////////////////////////////////////////////////////////////
-#include <string>
-#include <unordered_map>
-
-#include "disassemble.h"
-
-#define INSTRUCTION_HIT_TRACING 0
-
-#if INSTRUCTION_HIT_TRACING
-#include <algorithm>
-#include <vector>
-#endif
 
 namespace decoder2
 {
@@ -46,46 +36,6 @@ const char* ToCString(DecodeError err)
     }
     return "unknown";
 }
-
-void WriteHit(mcu_t& mcu, std::string& s, uint32_t addr)
-{
-    uint8_t  page  = (uint8_t)(addr >> 16);
-    uint16_t paddr = (uint16_t)addr;
-    uint8_t  bytes[6]{};
-
-    for (int i = 0; i < 6; ++i)
-    {
-        bytes[i] = MCU_Read(mcu, MCU_GetAddress(page, (uint16_t)(paddr + i)));
-    }
-
-    DisassembledInstruction instr;
-    Disassemble(bytes, 0, instr);
-
-    std::string result;
-    for (int i = 0; i < instr.instr_size; ++i)
-    {
-        WriteBinU8(result, bytes[i]);
-        result.push_back(' ');
-    }
-    result.resize(54, ' ');
-    result.push_back('|');
-    result.push_back(' ');
-    std::string instr_render;
-    RenderInstruction(instr, instr_render);
-    result += instr_render;
-    s      += result;
-}
-
-void PrintHitCount(mcu_t& mcu, uint32_t addr, uint64_t count)
-{
-    std::string buf;
-    WriteHit(mcu, buf, addr);
-    buf.resize(86, ' ');
-    buf += std::to_string(count);
-    Diag_Printf(Diag_Category::Debug, "%s\n", buf.c_str());
-}
-
-std::unordered_map<uint32_t, uint64_t> hitcount;
 
 // Backtrack and retry using original decoder
 void Fallback(mcu_t& mcu)
@@ -213,10 +163,6 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
         return;
     }
 
-#if INSTRUCTION_HIT_TRACING
-    ++hitcount[instr_start];
-#endif
-
     DecodeResult decode_result;
     DecodeError  err = FetchDecode(mcu, decode_result);
     if (err != DecodeError{})
@@ -227,25 +173,6 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
 
     mcu.icache.Write(instr_start, decode_result.instruction);
     decode_result.instruction.handler(mcu, decode_result.instruction.params);
-
-#if INSTRUCTION_HIT_TRACING
-    if (mcu.cycles >= 1000000000)
-    {
-        std::vector<std::pair<uint32_t, uint64_t>> hits(hitcount.begin(), hitcount.end());
-        std::sort(hits.begin(), hits.end(), [](auto& a, auto& b) { return a.second < b.second; });
-
-        for (auto& kvp : hits)
-        {
-            if (!mcu.icache.Contains(kvp.first))
-            {
-                PrintHitCount(mcu, kvp.first, kvp.second);
-            }
-        }
-
-        Diag_Printf(Diag_Category::Debug, "total cached: %zu\n", mcu.icache.CountCached());
-        exit(0);
-    }
-#endif
 }
 
 } // namespace decoder2
