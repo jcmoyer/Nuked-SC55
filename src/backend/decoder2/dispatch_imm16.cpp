@@ -1,7 +1,7 @@
 #include <array>
 
-#include "dispatch_handlers.h"
-#include "dispatchers.h"
+#include "decoder2/dispatch_handlers.h"
+#include "decoder2/dispatchers.h"
 
 namespace decoder2
 {

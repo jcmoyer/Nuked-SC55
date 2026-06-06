@@ -8,7 +8,7 @@
 #include <span>
 #include <string>
 
-#include "address_modes.h"
+#include "decoder2/address_modes.h"
 
 namespace decoder2
 {

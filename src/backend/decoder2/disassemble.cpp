@@ -1,11 +1,11 @@
-#include "disassemble.h"
+#include "decoder2/disassemble.h"
 
 #include <utility>
 
-#include "address_modes.h"
+#include "decoder2/address_modes.h"
+#include "decoder2/decoder_handlers.h"
+#include "decoder2/decoders.h"
 #include "decoder2/string_util.h"
-#include "decoder_handlers.h"
-#include "decoders.h"
 
 namespace decoder2
 {

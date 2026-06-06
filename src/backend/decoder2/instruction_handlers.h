@@ -4,10 +4,10 @@
 #include <type_traits>
 #include <utility>
 
-#include "address_modes.h"
+#include "decoder2/address_modes.h"
+#include "decoder2/types.h"
 #include "diagnostics.h"
 #include "mcu.h"
-#include "types.h"
 
 namespace decoder2
 {

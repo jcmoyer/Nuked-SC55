@@ -1,6 +1,6 @@
 #pragma once
 
-#include "disassemble.h"
+#include "decoder2/disassemble.h"
 
 namespace decoder2
 {

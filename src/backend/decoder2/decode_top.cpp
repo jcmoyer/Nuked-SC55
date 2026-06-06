@@ -1,10 +1,10 @@
-#include "decoders.h"
+#include "decoder2/decoders.h"
 //=============================================================================
 
 #include <array>
 
+#include "decoder2/decoder_handlers.h"
 #include "decoder2/disassemble.h"
-#include "decoder_handlers.h"
 
 namespace decoder2
 {

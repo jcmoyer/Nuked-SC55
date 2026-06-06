@@ -1,8 +1,8 @@
 #pragma once
 
+#include "decoder2/dispatch.h"
 #include "decoder2/instruction.h"
-#include "dispatch.h"
-#include "types.h"
+#include "decoder2/types.h"
 
 struct CodeReader;
 

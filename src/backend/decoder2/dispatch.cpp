@@ -1,14 +1,13 @@
-#include "dispatch.h"
+#include "decoder2/dispatch.h"
 
 #include <string>
 
 #include "decoder2/cache.h"
 #include "decoder2/code_reader.h"
 #include "decoder2/disassemble.h"
+#include "decoder2/dispatchers.h"
 #include "decoder2/string_util.h"
 #include "diagnostics.h"
-#include "disassemble.h"
-#include "dispatchers.h"
 #include "mcu.h"
 
 namespace decoder2
