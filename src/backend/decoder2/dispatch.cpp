@@ -22,7 +22,7 @@ struct DecodeResult
     uint32_t decode_last;
 
     // decoded instruction, only valid if decoding succeeded
-    CachedInstruction instruction;
+    DecodedInstruction instruction;
 };
 
 const char* ToCString(DecodeError err)
@@ -131,8 +131,8 @@ static DecodeError FetchDecode(mcu_t& mcu, DecodeResult& out_result)
     Dispatcher handler = GetDispatcherTop(byte);
     if (handler)
     {
-        CachedInstruction instr{};
-        DecodeError       d_error;
+        DecodedInstruction instr{};
+        DecodeError        d_error;
 
         d_error                = (*handler)(reader, byte, instr);
         out_result.decode_last = reader.GetReadAddress();
@@ -157,7 +157,7 @@ void FetchDecodeExecuteNext(mcu_t& mcu)
 {
     uint32_t instr_start = MCU_GetAddress(mcu.cp, mcu.pc);
 
-    if (const CachedInstruction& instr = mcu.icache.Lookup(instr_start); instr.handler)
+    if (const DecodedInstruction& instr = mcu.icache.Lookup(instr_start); instr.handler)
     {
         instr.handler(mcu, instr.params);
         return;

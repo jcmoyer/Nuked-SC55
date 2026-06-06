@@ -9,7 +9,7 @@ namespace decoder2
 {
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_General_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Rn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -36,7 +36,7 @@ DecodeError D_General_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& in
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_General_APreDecRn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_APreDecRn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -63,7 +63,7 @@ DecodeError D_General_APreDecRn(CodeReader& reader, uint8_t byte, CachedInstruct
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_General_APostIncRn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_APostIncRn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -90,7 +90,7 @@ DecodeError D_General_APostIncRn(CodeReader& reader, uint8_t byte, CachedInstruc
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_General_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_ARn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -117,7 +117,7 @@ DecodeError D_General_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_General_Ad8_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Ad8_Rn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -152,7 +152,7 @@ DecodeError D_General_Ad8_Rn(CodeReader& reader, uint8_t byte, CachedInstruction
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_General_Ad16_Rn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Ad16_Rn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -186,7 +186,7 @@ DecodeError D_General_Ad16_Rn(CodeReader& reader, uint8_t byte, CachedInstructio
     }
 }
 
-DecodeError D_General_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_imm8(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -219,7 +219,7 @@ DecodeError D_General_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& 
     }
 }
 
-DecodeError D_General_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_imm16(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -253,7 +253,7 @@ DecodeError D_General_imm16(CodeReader& reader, uint8_t byte, CachedInstruction&
 }
 
 template <Size Sz>
-DecodeError D_General_Aaa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Aaa8(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -287,7 +287,7 @@ DecodeError D_General_Aaa8(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz>
-DecodeError D_General_Aaa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_General_Aaa16(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 

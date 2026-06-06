@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cache.h"
+#include <cstdint>
 
 struct mcu_t;
 

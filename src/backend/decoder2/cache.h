@@ -4,41 +4,10 @@
 #include <cstdint>
 #include <memory>
 
-struct mcu_t;
+#include "decoder2/instruction.h"
 
 namespace decoder2
 {
-
-// Contains all of the parameters for a fully decoded instruction.
-struct DecodedInstructionParams
-{
-    union {
-        uint16_t ea_data; // used by addressing modes that include generic data in the EA field
-        int16_t  ea_disp; // used by addressing modes that include a displacement in the EA field
-        uint16_t br_true; // only used for short form branch instructions
-    };
-
-    union {
-        uint8_t op_reg;  // used by instructions that encode a general purpose register as part of the opcode
-        uint8_t op_c;    // used by instructions that encode a control register as part of the opcode
-        uint8_t op_page; // used by instructions that encode an immediate page in addition to immediate address
-    };
-
-    uint8_t ea_reg; // used by addressing modes that refer to a register
-
-    union {
-        uint16_t op_data;  // used by instructions that have immediate data
-        uint16_t br_false; // only used for short form branch instructions
-    };
-};
-
-using CachedInstructionHandler = void (*)(mcu_t&, const DecodedInstructionParams&);
-
-struct CachedInstruction
-{
-    CachedInstructionHandler handler;
-    DecodedInstructionParams params;
-};
 
 // Maps wide addresses (page:addr) to decoded instructions.
 class InstructionCache
@@ -56,12 +25,12 @@ private:
     // 1..4   : 0..0x7ffff => mcu.rom2
     // 8..9   : 0..0x7ffff => mcu.rom2 (only when !is_jv880)
     // 14..15 : 0..0x7ffff => mcu.rom2 (only when !is_jv880)
-    using ArrayType = std::array<CachedInstruction, static_cast<size_t>(16 * 0x10000)>;
+    using ArrayType = std::array<DecodedInstruction, static_cast<size_t>(16 * 0x10000)>;
 
 public:
     InstructionCache();
 
-    const CachedInstruction& Lookup(uint32_t addr) const
+    const DecodedInstruction& Lookup(uint32_t addr) const
     {
         return (*m_cache)[addr];
     }
@@ -71,7 +40,7 @@ public:
         return Lookup(addr).handler;
     }
 
-    void Write(uint32_t addr, CachedInstruction handler)
+    void Write(uint32_t addr, DecodedInstruction handler)
     {
         (*m_cache)[addr] = handler;
     }

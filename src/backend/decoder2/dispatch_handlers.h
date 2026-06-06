@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include "decoder2/cache.h"
 #include "decoder2/code_reader.h"
 #include "dispatch.h"
 #include "instruction_handlers.h"
@@ -21,7 +20,7 @@ namespace decoder2
 //=============================================================================
 // Helpers
 //=============================================================================
-inline void MakeBranch(CodeReader& reader, CachedInstruction& instr, CachedInstructionHandler handler, int16_t disp)
+inline void MakeBranch(CodeReader& reader, DecodedInstruction& instr, InstructionHandler handler, int16_t disp)
 {
     const uint16_t next_ip = reader.GetAddressInPage();
     instr.params.br_true   = (uint16_t)(next_ip + disp);
@@ -32,7 +31,7 @@ inline void MakeBranch(CodeReader& reader, CachedInstruction& instr, CachedInstr
 //=============================================================================
 // Pseudo instructions
 //=============================================================================
-inline DecodeError D_InvalidInstruction(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_InvalidInstruction(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -44,7 +43,7 @@ inline DecodeError D_InvalidInstruction(CodeReader& reader, uint8_t byte, Cached
 // General format instructions
 //=============================================================================
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_MOV_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -56,7 +55,7 @@ DecodeError D_MOV_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_MOV_G_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_Rs_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -68,7 +67,7 @@ DecodeError D_MOV_G_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_MOV_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_imm8_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -88,7 +87,7 @@ DecodeError D_MOV_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_MOV_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MOV_G_imm16_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -108,7 +107,7 @@ DecodeError D_MOV_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstructio
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_CMP_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CMP_G_imm8_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -128,7 +127,7 @@ DecodeError D_CMP_G_imm8_EAd(CodeReader& reader, uint8_t byte, CachedInstruction
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_CMP_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CMP_G_imm16_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -150,7 +149,7 @@ DecodeError D_CMP_G_imm16_EAd(CodeReader& reader, uint8_t byte, CachedInstructio
 // Manual lists this as a special format instruction but it allows arbitrary
 // addressing modes so we treat it as a general instruction.
 template <Size Sz, typename Mode, int8_t N>
-DecodeError D_ADD_Q_n_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADD_Q_n_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -161,7 +160,7 @@ DecodeError D_ADD_Q_n_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <typename Mode>
-DecodeError D_SWAP_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SWAP_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -172,7 +171,7 @@ DecodeError D_SWAP_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <uint8_t OpReg, typename Mode>
-DecodeError D_XCH_Rs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_XCH_Rs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -184,7 +183,7 @@ DecodeError D_XCH_Rs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& ins
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_ADD_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADD_G_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -196,7 +195,7 @@ DecodeError D_ADD_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_ADDX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADDX_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -208,7 +207,7 @@ DecodeError D_ADDX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_ADDS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ADDS_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -220,7 +219,7 @@ DecodeError D_ADDS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_CMP_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CMP_G_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -232,7 +231,7 @@ DecodeError D_CMP_G_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_SHLL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHLL_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -243,7 +242,7 @@ DecodeError D_SHLL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& inst
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_SHLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHLR_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -254,7 +253,7 @@ DecodeError D_SHLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& inst
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_SHAL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHAL_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -265,7 +264,7 @@ DecodeError D_SHAL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& inst
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_SHAR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SHAR_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -276,7 +275,7 @@ DecodeError D_SHAR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& inst
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_NEG_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_NEG_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -287,7 +286,7 @@ DecodeError D_NEG_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_CLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_CLR_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -298,7 +297,7 @@ DecodeError D_CLR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_TST_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_TST_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -309,7 +308,7 @@ DecodeError D_TST_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_SUB_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SUB_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -321,7 +320,7 @@ DecodeError D_SUB_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& in
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_SUBS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SUBS_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -333,7 +332,7 @@ DecodeError D_SUBS_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_SUBX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_SUBX_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -345,7 +344,7 @@ DecodeError D_SUBX_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <typename Mode>
-DecodeError D_EXTS_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_EXTS_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -357,7 +356,7 @@ DecodeError D_EXTS_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <typename Mode>
-DecodeError D_EXTU_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_EXTU_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -369,7 +368,7 @@ DecodeError D_EXTU_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_NOT_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_NOT_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -380,7 +379,7 @@ DecodeError D_NOT_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_MULXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_MULXU_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -392,7 +391,7 @@ DecodeError D_MULXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_DIVXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_DIVXU_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -404,7 +403,7 @@ DecodeError D_DIVXU_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-DecodeError D_BCLR_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BCLR_imm4_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -416,7 +415,7 @@ DecodeError D_BCLR_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction&
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-DecodeError D_BCLR_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BCLR_Rs_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -428,7 +427,7 @@ DecodeError D_BCLR_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-DecodeError D_BNOT_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BNOT_imm4_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -440,7 +439,7 @@ DecodeError D_BNOT_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction&
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_ROTL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTL_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -451,7 +450,7 @@ DecodeError D_ROTL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& inst
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_ROTR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTR_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -462,7 +461,7 @@ DecodeError D_ROTR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& inst
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_ROTXL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTXL_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -473,7 +472,7 @@ DecodeError D_ROTXL_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& ins
 }
 
 template <Size Sz, typename Mode>
-DecodeError D_ROTXR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ROTXR_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -484,7 +483,7 @@ DecodeError D_ROTXR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& ins
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-DecodeError D_BSET_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BSET_imm4_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -496,7 +495,7 @@ DecodeError D_BSET_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction&
 }
 
 template <Size Sz, uint8_t Rs, typename Mode>
-DecodeError D_BSET_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BSET_Rs_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -508,7 +507,7 @@ DecodeError D_BSET_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t Imm4, typename Mode>
-DecodeError D_BTST_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BTST_imm4_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -520,7 +519,7 @@ DecodeError D_BTST_imm4_EAd(CodeReader& reader, uint8_t byte, CachedInstruction&
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_BTST_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_BTST_Rs_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -532,7 +531,7 @@ DecodeError D_BTST_Rs_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& i
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-DecodeError D_STC_CR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_STC_CR_EAd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -544,7 +543,7 @@ DecodeError D_STC_CR_EAd(CodeReader& reader, uint8_t byte, CachedInstruction& in
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-DecodeError D_LDC_EAs_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_LDC_EAs_CR(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -556,7 +555,7 @@ DecodeError D_LDC_EAs_CR(CodeReader& reader, uint8_t byte, CachedInstruction& in
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_XOR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_XOR_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -568,7 +567,7 @@ DecodeError D_XOR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& in
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_OR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_OR_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -580,7 +579,7 @@ DecodeError D_OR_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& ins
 }
 
 template <Size Sz, uint8_t OpReg, typename Mode>
-DecodeError D_AND_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_AND_EAs_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -592,7 +591,7 @@ DecodeError D_AND_EAs_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& in
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-DecodeError D_ORC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ORC_immXX_CR(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -604,7 +603,7 @@ DecodeError D_ORC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& 
 }
 
 template <Size Sz, uint8_t CR, typename Mode>
-DecodeError D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -619,7 +618,7 @@ DecodeError D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, CachedInstruction&
 // Special format instructions
 //=============================================================================
 template <Size Sz>
-DecodeError D_Bcc(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Bcc(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     const uint8_t cond = byte & 0b1111;
 
@@ -704,7 +703,7 @@ DecodeError D_Bcc(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
     return {};
 }
 
-inline DecodeError D_NOP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_NOP(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -714,7 +713,7 @@ inline DecodeError D_NOP(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_RTE(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTE(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -724,7 +723,7 @@ inline DecodeError D_RTE(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_SCB(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     ReadError err;
     uint8_t   regcode;
@@ -849,7 +848,7 @@ inline DecodeError D_SCB(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_RTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTS(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -859,7 +858,7 @@ inline DecodeError D_RTS(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_PRTS(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PRTS(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -869,7 +868,7 @@ inline DecodeError D_PRTS(CodeReader& reader, uint8_t byte, CachedInstruction& i
     return {};
 }
 
-inline DecodeError D_JMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JMP_ARn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
 
@@ -879,7 +878,7 @@ inline DecodeError D_JMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction
     return {};
 }
 
-inline DecodeError D_PJMP_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJMP_aa24(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -906,7 +905,7 @@ inline DecodeError D_PJMP_aa24(CodeReader& reader, uint8_t byte, CachedInstructi
     return {};
 }
 
-inline DecodeError D_PJSR_aa24(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJSR_aa24(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -934,7 +933,7 @@ inline DecodeError D_PJSR_aa24(CodeReader& reader, uint8_t byte, CachedInstructi
     return {};
 }
 
-inline DecodeError D_PJSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJSR_ARn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     instr.params.op_reg   = byte & 0b111;
     instr.params.br_false = reader.GetAddressInPage();
@@ -943,7 +942,7 @@ inline DecodeError D_PJSR_ARn(CodeReader& reader, uint8_t byte, CachedInstructio
     return {};
 }
 
-inline DecodeError D_PJMP_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_PJMP_ARn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     instr.params.op_reg = byte & 0b111;
@@ -952,7 +951,7 @@ inline DecodeError D_PJMP_ARn(CodeReader& reader, uint8_t byte, CachedInstructio
     return {};
 }
 
-inline DecodeError D_JMP_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JMP_aa16(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -971,7 +970,7 @@ inline DecodeError D_JMP_aa16(CodeReader& reader, uint8_t byte, CachedInstructio
     return {};
 }
 
-inline DecodeError D_JSR_aa16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JSR_aa16(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -991,7 +990,7 @@ inline DecodeError D_JSR_aa16(CodeReader& reader, uint8_t byte, CachedInstructio
     return {};
 }
 
-inline DecodeError D_JSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JSR_ARn(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     instr.params.op_reg   = byte & 0b111;
     instr.params.br_false = reader.GetAddressInPage();
@@ -1000,7 +999,7 @@ inline DecodeError D_JSR_ARn(CodeReader& reader, uint8_t byte, CachedInstruction
     return {};
 }
 
-inline DecodeError D_RTD_imm8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTD_imm8(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1019,7 +1018,7 @@ inline DecodeError D_RTD_imm8(CodeReader& reader, uint8_t byte, CachedInstructio
     return {};
 }
 
-inline DecodeError D_RTD_imm16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_RTD_imm16(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1038,7 +1037,7 @@ inline DecodeError D_RTD_imm16(CodeReader& reader, uint8_t byte, CachedInstructi
     return {};
 }
 
-inline DecodeError D_JMP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_JMP(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1088,7 +1087,7 @@ inline DecodeError D_JMP(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_TRAPA(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_TRAPA(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1107,7 +1106,7 @@ inline DecodeError D_TRAPA(CodeReader& reader, uint8_t byte, CachedInstruction& 
     return {};
 }
 
-inline DecodeError D_SLEEP(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_SLEEP(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)reader;
     (void)byte;
@@ -1117,7 +1116,7 @@ inline DecodeError D_SLEEP(CodeReader& reader, uint8_t byte, CachedInstruction& 
     return {};
 }
 
-inline DecodeError D_STM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_STM(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1144,7 +1143,7 @@ inline DecodeError D_STM(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_LDM(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_LDM(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1171,7 +1170,7 @@ inline DecodeError D_LDM(CodeReader& reader, uint8_t byte, CachedInstruction& in
     return {};
 }
 
-inline DecodeError D_BSR_d8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_BSR_d8(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1189,7 +1188,7 @@ inline DecodeError D_BSR_d8(CodeReader& reader, uint8_t byte, CachedInstruction&
     return {};
 }
 
-inline DecodeError D_BSR_d16(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+inline DecodeError D_BSR_d16(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1211,7 +1210,7 @@ inline DecodeError D_BSR_d16(CodeReader& reader, uint8_t byte, CachedInstruction
 // Short format instructions
 //=============================================================================
 template <uint8_t Rn>
-DecodeError D_Short_CMP_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_CMP_E_imm8_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1232,7 +1231,7 @@ DecodeError D_Short_CMP_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstru
 }
 
 template <uint8_t Rn>
-DecodeError D_Short_CMP_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_CMP_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1253,7 +1252,7 @@ DecodeError D_Short_CMP_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedIns
 }
 
 template <uint8_t Rn>
-DecodeError D_Short_MOV_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_E_imm8_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1274,7 +1273,7 @@ DecodeError D_Short_MOV_E_imm8_Rd(CodeReader& reader, uint8_t byte, CachedInstru
 }
 
 template <uint8_t Rn>
-DecodeError D_Short_MOV_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1295,7 +1294,7 @@ DecodeError D_Short_MOV_I_W_imm16_Rd(CodeReader& reader, uint8_t byte, CachedIns
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_Short_MOV_L_aa8_Rd(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_L_aa8_Rd(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
@@ -1316,7 +1315,7 @@ DecodeError D_Short_MOV_L_aa8_Rd(CodeReader& reader, uint8_t byte, CachedInstruc
 }
 
 template <Size Sz, uint8_t Rn>
-DecodeError D_Short_MOV_S_Rs_aa8(CodeReader& reader, uint8_t byte, CachedInstruction& instr)
+DecodeError D_Short_MOV_S_Rs_aa8(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     (void)byte;
 
