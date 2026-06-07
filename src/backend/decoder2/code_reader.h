@@ -2,7 +2,8 @@
 
 #include "mcu.h"
 
-namespace decoder2 {
+namespace decoder2
+{
 
 enum class ReadError
 {
