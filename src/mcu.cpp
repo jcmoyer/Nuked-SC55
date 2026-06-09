@@ -2117,6 +2117,7 @@ int main(int argc, char *argv[])
     MCU_Reset();
     SM_Reset();
     PCM_Reset();
+    TIMER_Reset();
 
     MIDI_Reset(resetType);
     fprintf(stderr, "Running reset, this might take a couple seconds...\n");
