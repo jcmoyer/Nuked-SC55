@@ -71,7 +71,8 @@ indentation) of surrounding code.
 
 As a goal, all tests should pass for every commit on master. This is not a hard
 rule, but having only functional commits makes finding bugs easier in some
-cases.
+cases. For PRs, it is sufficient to only run tests for mk1 (pick any version)
+and mk2 romsets.
 
 ## LLM Contributions
 
