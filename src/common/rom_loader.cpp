@@ -147,16 +147,16 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
         else if (is_romset_given && !is_romset_family)
         {
             // we were given a specific name
-            if (!GetRomsetInfo(
-                    result.registries.romsets, desired_romset, result.registries.hashes, desired, romset_info))
+            if (!result.registries.romsets.ContainsRomset(desired_romset))
             {
                 return LoadRomsetError::InvalidRomsetName;
             }
             // convert specific name to family name
-            if (!result.registries.romsets.GetRomsetFamily(desired_romset, result.romset))
-            {
-                return LoadRomsetError::InvalidRomsetName;
-            }
+            // ignored return: name was determined to be valid above
+            (void)result.registries.romsets.GetRomsetFamily(desired_romset, result.romset);
+            // ignored return: we don't care whether the romset is complete or not, completion will be checked after
+            // exiting the switch statement
+            (void)GetRomsetInfo(result.registries.romsets, desired_romset, result.registries.hashes, desired, romset_info);
 
             result.picked_name = desired_romset;
         }
