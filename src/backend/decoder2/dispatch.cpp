@@ -7,6 +7,7 @@
 #include "decoder2/disassemble.h"
 #include "decoder2/dispatchers.h"
 #include "decoder2/string_util.h"
+
 #include "diagnostics.h"
 #include "mcu.h"
 
