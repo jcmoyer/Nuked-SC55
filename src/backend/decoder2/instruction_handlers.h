@@ -17,56 +17,6 @@ constexpr uint16_t SX(uint8_t byte)
     return (uint16_t)(int8_t)byte;
 }
 
-constexpr uint8_t ModeEASize(Mode_Rn)
-{
-    return 1;
-}
-
-constexpr uint8_t ModeEASize(Mode_ARn)
-{
-    return 1;
-}
-
-constexpr uint8_t ModeEASize(Mode_Ad8_Rn)
-{
-    return 2;
-}
-
-constexpr uint8_t ModeEASize(Mode_Ad16_Rn)
-{
-    return 3;
-}
-
-constexpr uint8_t ModeEASize(Mode_APreDecRn)
-{
-    return 1;
-}
-
-constexpr uint8_t ModeEASize(Mode_APostIncRn)
-{
-    return 1;
-}
-
-constexpr uint8_t ModeEASize(Mode_Aaa8)
-{
-    return 2;
-}
-
-constexpr uint8_t ModeEASize(Mode_Aaa16)
-{
-    return 3;
-}
-
-constexpr uint8_t ModeEASize(Mode_Imm8)
-{
-    return 2;
-}
-
-constexpr uint8_t ModeEASize(Mode_Imm16)
-{
-    return 3;
-}
-
 // Implements pre/post decrement/increment for @-Rn and @Rn+ addressing modes
 // and automatically adjusts the program counter on scope exit.
 template <Size Sz, typename Mode>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace decoder2
 {
 
@@ -56,5 +58,55 @@ struct Mode_Aaa8{};
 struct Mode_Aaa16{};
 
 // clang-format on
+
+constexpr uint8_t ModeEASize(Mode_Rn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_ARn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_Ad8_Rn)
+{
+    return 2;
+}
+
+constexpr uint8_t ModeEASize(Mode_Ad16_Rn)
+{
+    return 3;
+}
+
+constexpr uint8_t ModeEASize(Mode_APreDecRn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_APostIncRn)
+{
+    return 1;
+}
+
+constexpr uint8_t ModeEASize(Mode_Aaa8)
+{
+    return 2;
+}
+
+constexpr uint8_t ModeEASize(Mode_Aaa16)
+{
+    return 3;
+}
+
+constexpr uint8_t ModeEASize(Mode_Imm8)
+{
+    return 2;
+}
+
+constexpr uint8_t ModeEASize(Mode_Imm16)
+{
+    return 3;
+}
 
 } // namespace decoder2
