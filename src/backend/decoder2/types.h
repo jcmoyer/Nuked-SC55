@@ -95,6 +95,11 @@ struct MakeSigned<uint32_t>
 template <typename IntType>
 using MakeSignedType = typename MakeSigned<IntType>::Type;
 
+constexpr uint16_t SX(uint8_t byte)
+{
+    return (uint16_t)(int8_t)byte;
+}
+
 constexpr uint8_t RotateRight(uint8_t x, uint8_t new_msb)
 {
     return static_cast<uint8_t>((x >> 1) | (new_msb << 7));

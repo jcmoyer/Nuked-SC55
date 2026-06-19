@@ -12,11 +12,6 @@
 namespace decoder2
 {
 
-constexpr uint16_t SX(uint8_t byte)
-{
-    return (uint16_t)(int8_t)byte;
-}
-
 // Implements pre/post decrement/increment for @-Rn and @Rn+ addressing modes
 // and automatically adjusts the program counter on scope exit.
 template <Size Sz, typename Mode>
