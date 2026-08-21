@@ -333,8 +333,8 @@ inline SizeToIntType<Sz> LoadFromCR(mcu_t& mcu, uint8_t cr)
         return LoadFromCR_W(mcu, cr);
 }
 
-template <Size Sz, typename State>
-SizeToIntType<Sz> LoadFromOpData(mcu_t& mcu, const State& st)
+template <Size Sz>
+SizeToIntType<Sz> LoadFromOpData(mcu_t& mcu, const InstructionParams& st)
 {
     (void)mcu;
     if constexpr (Sz == Size::Byte)
