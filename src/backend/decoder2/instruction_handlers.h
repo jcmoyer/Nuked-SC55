@@ -8,13 +8,13 @@ namespace decoder2
 {
 
 // CMP:G.[B|W] <EAs>, Rd
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_CMP_G_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const SizeToIntType<Sz> rd  = LoadFromOpReg<Sz>(mcu, st);
-    const SizeToIntType<Sz> eas = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> eas = LoadFromEA<Sz>(Mode{}, mcu, st);
 
     const BinopResult<Sz> result = GenericSubtract<Sz>(rd, eas);
 
@@ -25,12 +25,12 @@ inline void I_CMP_G_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // CMP:G.[B|W] #xx:8, <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_CMP_G_imm8_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 2);
+    InstructionScope<Sz, Mode> scope(mcu, st, 2);
 
-    const SizeToIntType<Sz> ea  = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> ea  = LoadFromEA<Sz>(Mode{}, mcu, st);
     SizeToIntType<Sz>       imm = LoadFromOpData<Size::Byte>(mcu, st);
 
     if constexpr (Sz == Size::Word)
@@ -50,12 +50,12 @@ inline void I_CMP_G_imm8_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // CMP:G.[B|W] #xx:16, <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_CMP_G_imm16_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 3);
+    InstructionScope<Sz, Mode> scope(mcu, st, 3);
 
-    const SizeToIntType<Sz> ea     = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> ea     = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> imm    = LoadFromOpData<Sz>(mcu, st);
     const BinopResult<Sz>   result = GenericSubtract<Sz>(ea, imm);
 
@@ -66,12 +66,12 @@ inline void I_CMP_G_imm16_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // CLR.[B|W] <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_CLR_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    StoreToEA<Sz>(State{}, mcu, st, 0);
+    StoreToEA<Sz>(Mode{}, mcu, st, 0);
     MCU_SetStatus(mcu, 0, STATUS_N);
     MCU_SetStatus(mcu, 1, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
@@ -139,28 +139,28 @@ inline void I_BNOT_imm4_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // BCLR.[B|W] #xx, <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_BCLR_imm4_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const SizeToIntType<Sz> mask = 1 << st.op_data;
-    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
-    StoreToEA<Sz>(State{}, mcu, st, data & (~mask));
+    StoreToEA<Sz>(Mode{}, mcu, st, data & (~mask));
 }
 
 // BCLR.[B|W] Rs,<EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_BCLR_Rs_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const uint8_t           bit  = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
     const SizeToIntType<Sz> mask = 1 << bit;
-    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
-    StoreToEA<Sz>(State{}, mcu, st, data & (~mask));
+    StoreToEA<Sz>(Mode{}, mcu, st, data & (~mask));
 }
 
 template <Size Sz, typename Mode>
@@ -187,14 +187,14 @@ inline void I_BTST_Rs_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // MULXU.[B|W] <EAs>, Rd
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_MULXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
     using ResultType = WidenType<SizeToIntType<Sz>>;
 
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     const ResultType result      = static_cast<ResultType>(data) * static_cast<ResultType>(LoadFromOpReg<Sz>(mcu, st));
 
     // Store size is one size wider than the operation size.
@@ -217,12 +217,12 @@ inline void I_MULXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // DIVXU.[B|W] <EAs>, Rd
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
     using WideType = WidenType<SizeToIntType<Sz>>;
 
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     WideType dividend;
     if (Sz == Size::Byte)
@@ -234,7 +234,7 @@ inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
         dividend = static_cast<uint32_t>((mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1]);
     }
 
-    const SizeToIntType<Sz> divisor = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> divisor = LoadFromEA<Sz>(Mode{}, mcu, st);
 
     if (divisor == 0)
     {
@@ -279,12 +279,12 @@ inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 //=============================================================================
 
 // MOV:G.[B|W] <EAs>, Rd
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_MOV_G_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> data = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     StoreToOpReg<Sz>(mcu, st, data);
     MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
@@ -305,10 +305,10 @@ inline void I_MOV_G_Rs_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // MOV:G.[B|W] #xx:8, <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_MOV_G_imm8_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 2);
+    InstructionScope<Sz, Mode> scope(mcu, st, 2);
 
     SizeToIntType<Sz> data;
     if (Sz == Size::Byte)
@@ -320,20 +320,20 @@ inline void I_MOV_G_imm8_EAd(mcu_t& mcu, const InstructionParams& st)
         data = SX(LoadFromOpData<Size::Byte>(mcu, st));
     }
 
-    StoreToEA<Sz>(State{}, mcu, st, data);
+    StoreToEA<Sz>(Mode{}, mcu, st, data);
     MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
 }
 
 // MOV:G.[B|W] #xx:16, <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_MOV_G_imm16_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 3);
+    InstructionScope<Sz, Mode> scope(mcu, st, 3);
 
     const SizeToIntType<Sz> data = LoadFromOpData<Sz>(mcu, st);
-    StoreToEA<Sz>(State{}, mcu, st, data);
+    StoreToEA<Sz>(Mode{}, mcu, st, data);
     MCU_SetStatus(mcu, data & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, data == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
@@ -369,31 +369,31 @@ inline void I_XCH_W_Rs_Rd(mcu_t& mcu, const InstructionParams& instr)
 // ADD:Q.[B|W] #2, <EAd>
 // ADD:Q.[B|W] #-1, <EAd>
 // ADD:Q.[B|W] #-2, <EAd>
-template <Size Sz, typename State, int8_t N>
+template <Size Sz, typename Mode, int8_t N>
 inline void I_ADD_Q_n(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> ea_byte = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> ea_byte = LoadFromEA<Sz>(Mode{}, mcu, st);
 
     const BinopResult<Sz> result = GenericAdd<Sz>(ea_byte, N);
 
-    StoreToEA<Sz>(State{}, mcu, st, result.result_bits);
+    StoreToEA<Sz>(Mode{}, mcu, st, result.result_bits);
     MCU_SetStatus(mcu, result.negative, STATUS_N);
     MCU_SetStatus(mcu, result.zero, STATUS_Z);
     MCU_SetStatus(mcu, result.overflow, STATUS_V);
     MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_ADDX_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const bool old_C = mcu.sr & STATUS_C;
     const bool old_Z = mcu.sr & STATUS_Z;
 
-    const SizeToIntType<Sz> data    = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> data    = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> operand = LoadFromOpReg<Sz>(mcu, st);
 
     const BinopResult<Sz> result = GenericAdd<Sz>(data, operand, old_C);
@@ -405,12 +405,12 @@ inline void I_ADDX_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
     MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SUB_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> EAs = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> EAs = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> Rd  = LoadFromOpReg<Sz>(mcu, st);
 
     const BinopResult<Sz> result = GenericSubtract<Sz>(Rd, EAs);
@@ -423,13 +423,13 @@ inline void I_SUB_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
     MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SUBX_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const bool              sub_C = (mcu.sr & STATUS_C) != 0;
-    const SizeToIntType<Sz> EAs   = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> EAs   = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> Rd    = LoadFromOpReg<Sz>(mcu, st);
 
     const BinopResult<Sz> result = GenericSubtract<Sz>(Rd, EAs, sub_C);
@@ -442,12 +442,12 @@ inline void I_SUBX_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
     MCU_SetStatus(mcu, result.carry, STATUS_C);
 }
 
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SUBS_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    uint16_t EAs = LoadFromEA<Sz>(State{}, mcu, st);
+    uint16_t EAs = LoadFromEA<Sz>(Mode{}, mcu, st);
 
     if constexpr (Sz == Size::Byte)
     {
@@ -462,28 +462,28 @@ inline void I_SUBS_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
     StoreToOpReg<Size::Word>(mcu, st, sub_u);
 }
 
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_TST_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> value = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> value = LoadFromEA<Sz>(Mode{}, mcu, st);
     MCU_SetStatus(mcu, value & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, value == 0, STATUS_Z);
     MCU_SetStatus(mcu, 0, STATUS_V);
     MCU_SetStatus(mcu, 0, STATUS_C);
 }
 
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_NEG_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> value = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> value = LoadFromEA<Sz>(Mode{}, mcu, st);
 
     const BinopResult<Sz> result = GenericSubtract<Sz>(0, value);
 
-    StoreToEA<Sz>(State{}, mcu, st, result.result_bits);
+    StoreToEA<Sz>(Mode{}, mcu, st, result.result_bits);
     MCU_SetStatus(mcu, result.negative, STATUS_N);
     MCU_SetStatus(mcu, result.zero, STATUS_Z);
     MCU_SetStatus(mcu, result.overflow, STATUS_V);
@@ -491,14 +491,14 @@ inline void I_NEG_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // SHLL.[B|W] <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SHLL_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> val_new = val_old << 1;
-    StoreToEA<Sz>(State{}, mcu, st, val_new);
+    StoreToEA<Sz>(Mode{}, mcu, st, val_new);
 
     const bool N = val_new & MSB<Sz>;
     const bool Z = val_new == 0;
@@ -512,14 +512,14 @@ inline void I_SHLL_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // SHLR.[B|W] <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SHLR_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> val_new = val_old >> 1;
-    StoreToEA<Sz>(State{}, mcu, st, val_new);
+    StoreToEA<Sz>(Mode{}, mcu, st, val_new);
 
     const bool N = 0;
     const bool Z = val_new == 0;
@@ -533,14 +533,14 @@ inline void I_SHLR_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // SHAL.[B|W] <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SHAL_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> val_new = val_old << 1;
-    StoreToEA<Sz>(State{}, mcu, st, val_new);
+    StoreToEA<Sz>(Mode{}, mcu, st, val_new);
 
     const bool N = val_new & MSB<Sz>;
     const bool Z = val_new == 0;
@@ -554,14 +554,14 @@ inline void I_SHAL_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // SHAR.[B|W] <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_SHAR_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> val_new = (val_old >> 1) | (val_old & MSB<Sz>);
-    StoreToEA<Sz>(State{}, mcu, st, val_new);
+    StoreToEA<Sz>(Mode{}, mcu, st, val_new);
 
     const bool N = val_new & MSB<Sz>;
     const bool Z = val_new == 0;
@@ -575,25 +575,25 @@ inline void I_SHAR_EAd(mcu_t& mcu, const InstructionParams& st)
 }
 
 // LDC.[B|W] <EAs>, CR
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 inline void I_LDC_EAs_CR(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> byte = LoadFromEA<Sz>(State{}, mcu, st);
+    const SizeToIntType<Sz> byte = LoadFromEA<Sz>(Mode{}, mcu, st);
 
     StoreToCR<Sz>(mcu, st.op_c, byte);
     mcu.ex_ignore = 1;
 }
 
 // STC.[B|W] CR, <EAd>
-template <Size Sz, typename State>
+template <Size Sz, typename Mode>
 void I_STC_CR_EAd(mcu_t& mcu, const InstructionParams& st)
 {
-    InstructionScope<Sz, State> scope(mcu, st, 1);
+    InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const SizeToIntType<Sz> value = LoadFromCR<Sz>(mcu, st.op_c);
-    StoreToEA<Sz>(State{}, mcu, st, value);
+    StoreToEA<Sz>(Mode{}, mcu, st, value);
 }
 
 // ANDC.[B|W] #xx:[8|16], CR
