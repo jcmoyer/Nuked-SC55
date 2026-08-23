@@ -72,3 +72,13 @@ indentation) of surrounding code.
 As a goal, all tests should pass for every commit on master. This is not a hard
 rule, but having only functional commits makes finding bugs easier in some
 cases.
+
+## LLM Contributions
+
+LLM usage must be disclosed in pull requests. Because LLM generated
+code currently has a dubious copyright status in much of the world,
+LLM authored contributions will be rejected.
+
+If you are determined to have used an LLM and have knowingly
+misrepresented the authorship of a PR or commit, you will be banned
+from the project.
