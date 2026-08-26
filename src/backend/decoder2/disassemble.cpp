@@ -3,8 +3,8 @@
 #include <utility>
 
 #include "decoder2/address_modes.h"
-#include "decoder2/decoder_handlers.h"
-#include "decoder2/decoders.h"
+#include "decoder2/disassemble_handlers.h"
+#include "decoder2/disassemblers.h"
 #include "decoder2/string_util.h"
 
 namespace decoder2

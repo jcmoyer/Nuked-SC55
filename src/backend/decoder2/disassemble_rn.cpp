@@ -1,20 +1,20 @@
-#include "decoder2/decoders.h"
+#include "decoder2/disassemblers.h"
 //=============================================================================
 
-#include "decoder2/decoder_handlers.h"
+#include "decoder2/disassemble_handlers.h"
 
 namespace decoder2
 {
 
-constexpr Disassembler GENERIC_TABLE[256] = {
+constexpr Disassembler DIS_GENERAL_RN[256] = {
     nullptr,                // 00000000 TODO
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
     Dis_InvalidInstruction, // 00000011
-    Dis_CMP_G_imm8_EAd,     // 00000100
-    Dis_CMP_G_imm16_EAd,    // 00000101
-    Dis_MOV_G_imm8_EAd,     // 00000110
-    Dis_MOV_G_imm16_EAd,    // 00000111
+    Dis_InvalidInstruction, // 00000100
+    Dis_InvalidInstruction, // 00000101
+    Dis_InvalidInstruction, // 00000110
+    Dis_InvalidInstruction, // 00000111
     Dis_ADD_Q_1_EAd,        // 00001000
     Dis_ADD_Q_2_EAd,        // 00001001
     Dis_InvalidInstruction, // 00001010
@@ -23,9 +23,9 @@ constexpr Disassembler GENERIC_TABLE[256] = {
     Dis_ADD_Q_M2_EAd,       // 00001101
     Dis_InvalidInstruction, // 00001110
     Dis_InvalidInstruction, // 00001111
-    Dis_InvalidInstruction, // 00010000
-    Dis_InvalidInstruction, // 00010001
-    Dis_InvalidInstruction, // 00010010
+    Dis_SWAP_Rd,            // 00010000
+    Dis_EXTS_Rd,            // 00010001
+    Dis_EXTU_Rd,            // 00010010
     Dis_CLR_EAd,            // 00010011
     Dis_NEG_EAd,            // 00010100
     Dis_NOT_EAd,            // 00010101
@@ -151,14 +151,14 @@ constexpr Disassembler GENERIC_TABLE[256] = {
     Dis_LDC_EAs_CR,         // 10001101
     Dis_LDC_EAs_CR,         // 10001110
     Dis_LDC_EAs_CR,         // 10001111
-    Dis_MOV_G_Rs_EAd,       // 10010000
-    Dis_MOV_G_Rs_EAd,       // 10010001
-    Dis_MOV_G_Rs_EAd,       // 10010010
-    Dis_MOV_G_Rs_EAd,       // 10010011
-    Dis_MOV_G_Rs_EAd,       // 10010100
-    Dis_MOV_G_Rs_EAd,       // 10010101
-    Dis_MOV_G_Rs_EAd,       // 10010110
-    Dis_MOV_G_Rs_EAd,       // 10010111
+    Dis_XCH_Rs_Rd,          // 10010000
+    Dis_XCH_Rs_Rd,          // 10010001
+    Dis_XCH_Rs_Rd,          // 10010010
+    Dis_XCH_Rs_Rd,          // 10010011
+    Dis_XCH_Rs_Rd,          // 10010100
+    Dis_XCH_Rs_Rd,          // 10010101
+    Dis_XCH_Rs_Rd,          // 10010110
+    Dis_XCH_Rs_Rd,          // 10010111
     Dis_STC_CR_EAd,         // 10011000
     Dis_STC_CR_EAd,         // 10011001
     Dis_STC_CR_EAd,         // 10011010
@@ -265,9 +265,9 @@ constexpr Disassembler GENERIC_TABLE[256] = {
     Dis_BTST_imm4_EAd,      // 11111111
 };
 
-Disassembler GetDecoderGeneric(uint8_t byte)
+Disassembler GetDecoderRn(uint8_t byte)
 {
-    return GENERIC_TABLE[byte];
+    return DIS_GENERAL_RN[byte];
 }
 
 } // namespace decoder2

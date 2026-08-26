@@ -1,7 +1,7 @@
-#include "decoder2/decoders.h"
+#include "decoder2/disassemblers.h"
 //=============================================================================
 
-#include "decoder2/decoder_handlers.h"
+#include "decoder2/disassemble_handlers.h"
 
 namespace decoder2
 {
@@ -11,10 +11,10 @@ constexpr Disassembler DIS_GENERAL_IMM8[256] = {
     Dis_InvalidInstruction, // 00000001
     Dis_InvalidInstruction, // 00000010
     Dis_InvalidInstruction, // 00000011
-    Dis_CMP_G_imm8_EAd,     // 00000100
-    Dis_InvalidInstruction, // 00000101
-    Dis_MOV_G_imm8_EAd,     // 00000110
-    Dis_InvalidInstruction, // 00000111
+    Dis_InvalidInstruction, // 00000100
+    Dis_CMP_G_imm16_EAd,    // 00000101
+    Dis_InvalidInstruction, // 00000110
+    Dis_MOV_G_imm16_EAd,    // 00000111
     Dis_InvalidInstruction, // 00001000
     Dis_InvalidInstruction, // 00001001
     Dis_InvalidInstruction, // 00001010
@@ -265,7 +265,7 @@ constexpr Disassembler DIS_GENERAL_IMM8[256] = {
     Dis_InvalidInstruction, // 11111111
 };
 
-Disassembler GetDecoderimm8(uint8_t byte)
+Disassembler GetDecoderimm16(uint8_t byte)
 {
     return DIS_GENERAL_IMM8[byte];
 }
