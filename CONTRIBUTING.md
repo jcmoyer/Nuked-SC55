@@ -12,14 +12,8 @@ frontend.
 
 ### Backend
 
-The backend is the emulator itself. Roughly speaking, these modules are
-considered to be part of the backend:
-
-- mcu and mcu_*
-- submcu
-- lcd
-- pcm
-- emu
+The backend is the emulator itself. These are generally the source files under
+`src/backend`.
 
 Modifications to the backend should not add, change, or remove functionality.
 These are enhancements to the emulator itself and should be first submitted
