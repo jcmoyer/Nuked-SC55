@@ -1,6 +1,6 @@
 #include <array>
 
-#include "decoder2/dispatch_address.h"
+#include "decoder2/dispatchers_address.h"
 #include "decoder2/dispatchers.h"
 
 namespace decoder2

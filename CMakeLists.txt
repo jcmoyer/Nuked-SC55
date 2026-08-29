@@ -113,22 +113,22 @@ if(NUKED_ENABLE_DECODER2)
         PRIVATE
         src/backend/decoder2/address_modes.cpp
         src/backend/decoder2/cache.cpp
-        src/backend/decoder2/disassemble_address.cpp
-        src/backend/decoder2/disassemble_imm16.cpp
-        src/backend/decoder2/disassemble_imm8.cpp
-        src/backend/decoder2/disassemble_rn.cpp
-        src/backend/decoder2/disassemble_top.cpp
-        src/backend/decoder2/disassemble_handlers.cpp
         src/backend/decoder2/disassemble.cpp
-        src/backend/decoder2/dispatch_aa.cpp
-        src/backend/decoder2/dispatch_arn.cpp
-        src/backend/decoder2/dispatch_d8d16_rn.cpp
-        src/backend/decoder2/dispatch_imm16.cpp
-        src/backend/decoder2/dispatch_postinc_rn.cpp
-        src/backend/decoder2/dispatch_predec_rn.cpp
-        src/backend/decoder2/dispatch_rn.cpp
-        src/backend/decoder2/dispatch_top.cpp
+        src/backend/decoder2/disassemble_handlers.cpp
+        src/backend/decoder2/disassemblers_address.cpp
+        src/backend/decoder2/disassemblers_imm16.cpp
+        src/backend/decoder2/disassemblers_imm8.cpp
+        src/backend/decoder2/disassemblers_rn.cpp
+        src/backend/decoder2/disassemblers_top.cpp
         src/backend/decoder2/dispatch.cpp
+        src/backend/decoder2/dispatchers_aa.cpp
+        src/backend/decoder2/dispatchers_arn.cpp
+        src/backend/decoder2/dispatchers_d8d16_rn.cpp
+        src/backend/decoder2/dispatchers_imm16.cpp
+        src/backend/decoder2/dispatchers_postinc_rn.cpp
+        src/backend/decoder2/dispatchers_predec_rn.cpp
+        src/backend/decoder2/dispatchers_rn.cpp
+        src/backend/decoder2/dispatchers_top.cpp
         src/backend/decoder2/instruction_handlers.cpp
     )
 endif()
