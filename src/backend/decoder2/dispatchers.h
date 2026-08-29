@@ -4,10 +4,10 @@
 #include "decoder2/instruction.h"
 #include "decoder2/types.h"
 
-struct CodeReader;
-
 namespace decoder2
 {
+
+class CodeReader;
 
 using Dispatcher = DecodeError (*)(CodeReader& reader, uint8_t byte, DecodedInstruction& instr);
 

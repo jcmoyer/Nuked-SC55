@@ -1,5 +1,6 @@
+// clang-format off
 #include "decoder2/disassemblers.h"
-//=============================================================================
+// clang-format on
 
 #include <array>
 

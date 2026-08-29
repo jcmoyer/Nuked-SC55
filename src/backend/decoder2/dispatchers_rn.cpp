@@ -1,7 +1,10 @@
+// clang-format off
+#include "decoder2/dispatchers.h"
+// clang-format on
+
 #include <array>
 
 #include "decoder2/dispatch_handlers.h"
-#include "decoder2/dispatchers.h"
 
 namespace decoder2
 {
