@@ -57,6 +57,10 @@ extern uint8_t waverom3[];
 extern uint8_t waverom_card[];
 extern uint8_t waverom_exp[];
 
+const size_t WAVEROM1_MAX_SIZE = 0x200000;
+const size_t WAVEROM2_MAX_SIZE = 0x200000;
+const size_t WAVEROM3_MAX_SIZE = 0x100000;
+
 void PCM_Write(uint32_t address, uint8_t data);
 uint8_t PCM_Read(uint32_t address);
 void PCM_Reset(void);

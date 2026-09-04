@@ -55,6 +55,19 @@ const char* rs_name[ROM_SET_COUNT] = {
 
 static const int ROM_SET_N_FILES = 6;
 
+enum {
+    RL_ROM1,
+    RL_ROM2,
+    RL_SMROM,
+    RL_WAVEROM1,
+    RL_WAVEROM2,
+    RL_WAVEROM3,
+    RL_MAX,
+};
+
+const char* rom_overrides[RL_MAX] = {0, 0, 0, 0, 0, 0};
+bool use_rom_overrides = false;
+
 const char* roms[ROM_SET_COUNT][ROM_SET_N_FILES] =
 {
     "rom1.bin",
@@ -1608,6 +1621,90 @@ int main(int argc, char *argv[])
                     return 1;
                 }
             }
+            else if (!strcmp(argv[i], "--override-rom1"))
+            {
+                if (i + 1 < argc)
+                {
+                    rom_overrides[RL_ROM1] = argv[i + 1];
+                    use_rom_overrides = true;
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected ROM1 filename\n");
+                    return 1;
+                }
+            }
+            else if (!strcmp(argv[i], "--override-rom2"))
+            {
+                if (i + 1 < argc)
+                {
+                    rom_overrides[RL_ROM2] = argv[i + 1];
+                    use_rom_overrides = true;
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected ROM2 filename\n");
+                    return 1;
+                }
+            }
+            else if (!strcmp(argv[i], "--override-smrom"))
+            {
+                if (i + 1 < argc)
+                {
+                    rom_overrides[RL_SMROM] = argv[i + 1];
+                    use_rom_overrides = true;
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected SMROM filename\n");
+                    return 1;
+                }
+            }
+            else if (!strcmp(argv[i], "--override-waverom1"))
+            {
+                if (i + 1 < argc)
+                {
+                    rom_overrides[RL_WAVEROM1] = argv[i + 1];
+                    use_rom_overrides = true;
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected WAVEROM1 filename\n");
+                    return 1;
+                }
+            }
+            else if (!strcmp(argv[i], "--override-waverom2"))
+            {
+                if (i + 1 < argc)
+                {
+                    rom_overrides[RL_WAVEROM2] = argv[i + 1];
+                    use_rom_overrides = true;
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected WAVEROM2 filename\n");
+                    return 1;
+                }
+            }
+            else if (!strcmp(argv[i], "--override-waverom3"))
+            {
+                if (i + 1 < argc)
+                {
+                    rom_overrides[RL_WAVEROM3] = argv[i + 1];
+                    use_rom_overrides = true;
+                    ++i;
+                }
+                else
+                {
+                    fprintf(stderr, "Expected WAVEROM3 filename\n");
+                    return 1;
+                }
+            }
             else
             {
                 inputFilename = argv[i];
@@ -1632,7 +1729,7 @@ int main(int argc, char *argv[])
     if(Files::dirExists(basePath + "/../share/nuked-sc55"))
         basePath += "/../share/nuked-sc55";
 
-    if (autodetect)
+    if (autodetect && !use_rom_overrides)
     {
         for (size_t i = 0; i < ROM_SET_COUNT; i++)
         {
@@ -1705,139 +1802,158 @@ int main(int argc, char *argv[])
     bool r_ok = true;
     std::string errors_list;
 
-    for(size_t i = 0; i < ROM_SET_N_FILES; ++i)
+    if (use_rom_overrides)
     {
-        if (roms[romset][i][0] == '\0')
+        if (rom_overrides[RL_ROM1])
         {
-            rpaths[i] = "";
-            continue;
+            FILE* f = Files::utf8_fopen(rom_overrides[RL_ROM1], "rb");
+            if (fread(rom1, 1, ROM1_SIZE, f) != ROM1_SIZE)
+            {
+                fprintf(stderr, "Failed to read ROM1\n");
+                return 1;
+            }
+            fclose(f);
         }
-        rpaths[i] = basePath + "/" + roms[romset][i];
-        s_rf[i] = Files::utf8_fopen(rpaths[i].c_str(), "rb");
-        bool optional = mcu_jv880 && i >= 4;
-        r_ok &= optional || (s_rf[i] != nullptr);
-        if(!s_rf[i])
+        if (rom_overrides[RL_ROM2])
         {
-            if(!errors_list.empty())
-                errors_list.append(", ");
+            FILE* f = Files::utf8_fopen(rom_overrides[RL_ROM2], "rb");
+            const size_t size = fread(rom2, 1, ROM2_SIZE, f);
+            if (size != ROM2_SIZE && size != ROM2_SIZE / 2)
+            {
+                fprintf(stderr, "Failed to read ROM2\n");
+                return 1;
+            }
+            rom2_mask = size - 1;
+            fclose(f);
+        }
+        if (rom_overrides[RL_SMROM])
+        {
+            FILE* f = Files::utf8_fopen(rom_overrides[RL_SMROM], "rb");
+            const size_t size = fread(sm_rom, 1, ROMSM_SIZE, f);
+            if (size != ROMSM_SIZE)
+            {
+                fprintf(stderr, "Failed to read SMROM\n");
+                return 1;
+            }
+            fclose(f);
+        }
 
-            errors_list.append(rpaths[i]);
+        for (int i = RL_WAVEROM1; i <= RL_WAVEROM3; ++i)
+        {
+            if (!rom_overrides[i])
+            {
+                continue;
+            }
+            FILE* f = Files::utf8_fopen(rom_overrides[i], "rb");
+            fseek(f, 0, SEEK_END);
+            const long size = ftell(f);
+            fseek(f, 0, SEEK_SET);
+            if (fread(tempbuf, 1, size, f) != size)
+            {
+                fprintf(stderr, "Failed to read WAVEROM\n");
+                return 1;
+            }
+            fclose(f);
+            switch (i)
+            {
+            case RL_WAVEROM1:
+                if (size > (long)WAVEROM1_MAX_SIZE)
+                {
+                    fprintf(stderr, "WAVEROM1 too large\n");
+                    return 1;
+                }
+                unscramble(tempbuf, waverom1, size);
+                break;
+            case RL_WAVEROM2:
+                if (size > (long)WAVEROM2_MAX_SIZE)
+                {
+                    fprintf(stderr, "WAVEROM2 too large\n");
+                    return 1;
+                }
+                unscramble(tempbuf, waverom2, size);
+                break;
+            case RL_WAVEROM3:
+                if (size > (long)WAVEROM3_MAX_SIZE)
+                {
+                    fprintf(stderr, "WAVEROM3 too large\n");
+                    return 1;
+                }
+                unscramble(tempbuf, waverom3, size);
+                break;
+            }
         }
     }
-
-    if (!r_ok)
+    else
     {
-        fprintf(stderr, "FATAL ERROR: One of required data ROM files is missing: %s.\n", errors_list.c_str());
-        fflush(stderr);
-        closeAllR();
-        return 1;
+        for(size_t i = 0; i < ROM_SET_N_FILES; ++i)
+        {
+            if (roms[romset][i][0] == '\0')
+            {
+                rpaths[i] = "";
+                continue;
+            }
+            rpaths[i] = basePath + "/" + roms[romset][i];
+            s_rf[i] = Files::utf8_fopen(rpaths[i].c_str(), "rb");
+            bool optional = mcu_jv880 && i >= 4;
+            r_ok &= optional || (s_rf[i] != nullptr);
+            if(!s_rf[i])
+            {
+                if(!errors_list.empty())
+                    errors_list.append(", ");
+
+                errors_list.append(rpaths[i]);
+            }
+        }
+
+        if (!r_ok)
+        {
+            fprintf(stderr, "FATAL ERROR: One of required data ROM files is missing: %s.\n", errors_list.c_str());
+            fflush(stderr);
+            closeAllR();
+            return 1;
+        }
     }
 
     LCD_SetBackPath(basePath + "/back.data");
 
     memset(&mcu, 0, sizeof(mcu_t));
 
-
-    if (fread(rom1, 1, ROM1_SIZE, s_rf[0]) != ROM1_SIZE)
+    if (!use_rom_overrides)
     {
-        fprintf(stderr, "FATAL ERROR: Failed to read the mcu ROM1.\n");
-        fflush(stderr);
-        closeAllR();
-        return 1;
-    }
-
-    size_t rom2_read = fread(rom2, 1, ROM2_SIZE, s_rf[1]);
-
-    if (rom2_read == ROM2_SIZE || rom2_read == ROM2_SIZE / 2)
-    {
-        rom2_mask = rom2_read - 1;
-    }
-    else
-    {
-        fprintf(stderr, "FATAL ERROR: Failed to read the mcu ROM2.\n");
-        fflush(stderr);
-        closeAllR();
-        return 1;
-    }
-
-    if (mcu_mk1)
-    {
-        if (fread(tempbuf, 1, 0x100000, s_rf[2]) != 0x100000)
+        if (fread(rom1, 1, ROM1_SIZE, s_rf[0]) != ROM1_SIZE)
         {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
+            fprintf(stderr, "FATAL ERROR: Failed to read the mcu ROM1.\n");
             fflush(stderr);
             closeAllR();
             return 1;
         }
 
-        unscramble(tempbuf, waverom1, 0x100000);
+        size_t rom2_read = fread(rom2, 1, ROM2_SIZE, s_rf[1]);
 
-        if (fread(tempbuf, 1, 0x100000, s_rf[3]) != 0x100000)
+        if (rom2_read == ROM2_SIZE || rom2_read == ROM2_SIZE / 2)
         {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
-            fflush(stderr);
-            closeAllR();
-            return 1;
+            rom2_mask = rom2_read - 1;
         }
-
-        unscramble(tempbuf, waverom2, 0x100000);
-
-        if (fread(tempbuf, 1, 0x100000, s_rf[4]) != 0x100000)
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom3.\n");
-            fflush(stderr);
-            closeAllR();
-            return 1;
-        }
-
-        unscramble(tempbuf, waverom3, 0x100000);
-    }
-    else if (mcu_jv880)
-    {
-        if (fread(tempbuf, 1, 0x200000, s_rf[2]) != 0x200000)
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
-            fflush(stderr);
-            closeAllR();
-            return 1;
-        }
-
-        unscramble(tempbuf, waverom1, 0x200000);
-
-        if (fread(tempbuf, 1, 0x200000, s_rf[3]) != 0x200000)
-        {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
-            fflush(stderr);
-            closeAllR();
-            return 1;
-        }
-
-        unscramble(tempbuf, waverom2, 0x200000);
-        
-        if (s_rf[4] && fread(tempbuf, 1, 0x800000, s_rf[4]))
-            unscramble(tempbuf, waverom_exp, 0x800000);
         else
-            fprintf(stderr, "WaveRom EXP not found, skipping it.\n");
-        
-        if (s_rf[5] && fread(tempbuf, 1, 0x200000, s_rf[5]))
-            unscramble(tempbuf, waverom_card, 0x200000);
-        else
-            fprintf(stderr, "WaveRom PCM not found, skipping it.\n");
-    }
-    else
-    {
-        if (fread(tempbuf, 1, 0x200000, s_rf[2]) != 0x200000)
         {
-            fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
+            fprintf(stderr, "FATAL ERROR: Failed to read the mcu ROM2.\n");
             fflush(stderr);
             closeAllR();
             return 1;
         }
 
-        unscramble(tempbuf, waverom1, 0x200000);
-
-        if (s_rf[3])
+        if (mcu_mk1)
         {
+            if (fread(tempbuf, 1, 0x100000, s_rf[2]) != 0x100000)
+            {
+                fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
+                fflush(stderr);
+                closeAllR();
+                return 1;
+            }
+
+            unscramble(tempbuf, waverom1, 0x100000);
+
             if (fread(tempbuf, 1, 0x100000, s_rf[3]) != 0x100000)
             {
                 fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
@@ -1846,20 +1962,87 @@ int main(int argc, char *argv[])
                 return 1;
             }
 
-            unscramble(tempbuf, mcu_scb55 ? waverom3 : waverom2, 0x100000);
-        }
+            unscramble(tempbuf, waverom2, 0x100000);
 
-        if (s_rf[4] && fread(sm_rom, 1, ROMSM_SIZE, s_rf[4]) != ROMSM_SIZE)
+            if (fread(tempbuf, 1, 0x100000, s_rf[4]) != 0x100000)
+            {
+                fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom3.\n");
+                fflush(stderr);
+                closeAllR();
+                return 1;
+            }
+
+            unscramble(tempbuf, waverom3, 0x100000);
+        }
+        else if (mcu_jv880)
         {
-            fprintf(stderr, "FATAL ERROR: Failed to read the sub mcu ROM.\n");
-            fflush(stderr);
-            closeAllR();
-            return 1;
-        }
-    }
+            if (fread(tempbuf, 1, 0x200000, s_rf[2]) != 0x200000)
+            {
+                fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
+                fflush(stderr);
+                closeAllR();
+                return 1;
+            }
 
-    // Close all files as they no longer needed being open
-    closeAllR();
+            unscramble(tempbuf, waverom1, 0x200000);
+
+            if (fread(tempbuf, 1, 0x200000, s_rf[3]) != 0x200000)
+            {
+                fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
+                fflush(stderr);
+                closeAllR();
+                return 1;
+            }
+
+            unscramble(tempbuf, waverom2, 0x200000);
+
+            if (s_rf[4] && fread(tempbuf, 1, 0x800000, s_rf[4]))
+                unscramble(tempbuf, waverom_exp, 0x800000);
+            else
+                fprintf(stderr, "WaveRom EXP not found, skipping it.\n");
+
+            if (s_rf[5] && fread(tempbuf, 1, 0x200000, s_rf[5]))
+                unscramble(tempbuf, waverom_card, 0x200000);
+            else
+                fprintf(stderr, "WaveRom PCM not found, skipping it.\n");
+        }
+        else
+        {
+            if (fread(tempbuf, 1, 0x200000, s_rf[2]) != 0x200000)
+            {
+                fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom1.\n");
+                fflush(stderr);
+                closeAllR();
+                return 1;
+            }
+
+            unscramble(tempbuf, waverom1, 0x200000);
+
+            if (s_rf[3])
+            {
+                if (fread(tempbuf, 1, 0x100000, s_rf[3]) != 0x100000)
+                {
+                    fprintf(stderr, "FATAL ERROR: Failed to read the WaveRom2.\n");
+                    fflush(stderr);
+                    closeAllR();
+                    return 1;
+                }
+
+                unscramble(tempbuf, mcu_scb55 ? waverom3 : waverom2, 0x100000);
+            }
+
+            if (s_rf[4] && fread(sm_rom, 1, ROMSM_SIZE, s_rf[4]) != ROMSM_SIZE)
+            {
+                fprintf(stderr, "FATAL ERROR: Failed to read the sub mcu ROM.\n");
+                fflush(stderr);
+                closeAllR();
+                return 1;
+            }
+        }
+
+        // Close all files as they no longer needed being open
+        closeAllR();
+    }
 
     // We don't use any SDL features
 #if 0
