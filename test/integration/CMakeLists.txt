@@ -447,8 +447,8 @@ add_render_test("sc155-rev1" "avmidi/30.mid" "98beb9e2b5a8e8e730533f240b38ca65e7
 add_render_test("sc155-rev1" "avmidi/31.mid" "2cbd27d9807125f7d3b73db25013cfbea0687578b92be48300866148922fd111")
 add_render_test("sc155-rev1" "avmidi/32.mid" "57ae4b883f8af69ddeadd1f642335824924be6fa5eccb1f8559a98b57e62ea04")
 
-add_render_test("mk2" "issue_18/issue_18.mid" "ee613cc83e031a3b140312c07735a5ef6b20864d26aa6677f5e6501668c36c59")
+add_render_test("mk2-v1.01" "issue_18/issue_18.mid" "ee613cc83e031a3b140312c07735a5ef6b20864d26aa6677f5e6501668c36c59")
 
-add_render_test_multi_instance("mk2" "issue_42/anacrusis.mid" 2 "f0f8f5889e3f45bf54a0ee89d2d6a075ac566a1ab0f8532d8331740d484f6b43")
+add_render_test_multi_instance("mk2-v1.01" "issue_42/anacrusis.mid" 2 "f0f8f5889e3f45bf54a0ee89d2d6a075ac566a1ab0f8532d8331740d484f6b43")
 
 add_render_test("jv880-v1.0.1" "jv880/jv880.mid" "73feda3c5d7153e2ae04eb3a12e3b4a08e0a0e8eeebb39a77159b45385d3bbbc")
