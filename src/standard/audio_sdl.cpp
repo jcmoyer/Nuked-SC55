@@ -17,7 +17,7 @@
 
 #include "audio_sdl.h"
 
-#include <cstdio>
+#include "common/term_io.h"
 
 const char* SDLAudioFormatToString(SDL_AudioFormat format)
 {
@@ -58,7 +58,7 @@ SDL_AudioFormat AudioFormatToSDLAudioFormat(AudioFormat format)
     case AudioFormat::F32:
         return AUDIO_F32;
     default:
-        fprintf(stderr, "Invalid audio format conversion\n");
+        common::Printf("Invalid audio format conversion\n");
         exit(1);
     }
 }

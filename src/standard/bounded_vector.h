@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <utility>
 
+#include "common/term_io.h"
+
 // Provides inline storage for up to N elements of T. This container does not
 // reallocate so pointer stability is guaranteed as long as elements are only
 // appended.
@@ -50,7 +52,7 @@ public:
     {
         if (IsFull()) [[unlikely]]
         {
-            fprintf(stderr, "BoundedVector EmplaceBack when full\n");
+            common::Printf("BoundedVector EmplaceBack when full\n");
             exit(1);
         }
         T* ptr = new (&UncheckedAt(m_elem_count)) T(std::forward<Args>(args)...);
@@ -62,7 +64,7 @@ public:
     {
         if (IsEmpty()) [[unlikely]]
         {
-            fprintf(stderr, "BoundedVector PopBack when empty\n");
+            common::Printf("BoundedVector PopBack when empty\n");
             exit(1);
         }
         --m_elem_count;
@@ -88,7 +90,7 @@ public:
     {
         if (i >= m_elem_count) [[unlikely]]
         {
-            fprintf(stderr, "BoundedVector index out of range %zu\n", i);
+            common::Printf("BoundedVector index out of range %zu\n", i);
             exit(1);
         }
         return UncheckedAt(i);

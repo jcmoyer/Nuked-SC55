@@ -18,6 +18,7 @@
  */
 #include "midi.h"
 #include "common/command_line.h"
+#include "common/term_io.h"
 #include <RtMidi.h>
 #include <cstdint>
 #include <cstdio>
@@ -37,7 +38,7 @@ static void MidiOnReceive(double, std::vector<uint8_t> *message, void *)
 
 static void MidiOnError(RtMidiError::Type, const std::string &errorText, void *)
 {
-    fprintf(stderr, "RtMidi: Error has occured: %s\n", errorText.c_str());
+    common::Printf("RtMidi: Error has occured: %s\n", errorText.c_str());
     fflush(stderr);
 }
 
@@ -71,23 +72,23 @@ void MIDI_PrintDevices()
 
         if (num_devices == 0)
         {
-            fprintf(stderr, "No midi devices found.\n");
+            common::Printf("No midi devices found.\n");
         }
 
-        fprintf(stderr, "Known midi devices:\n\n");
+        common::Printf("Known midi devices:\n\n");
 
         for (unsigned int i = 0; i < num_devices; ++i)
         {
             std::string friendly_name = midi->getPortName(i);
             MIDI_StripRtmidiPortNumber(friendly_name);
 
-            fprintf(stderr, "  %d: %s\n", i, friendly_name.c_str());
+            common::Printf("  %d: %s\n", i, friendly_name.c_str());
         }
     }
     catch (const RtMidiError& err)
     {
         // this exception shouldn't escape to the caller since it's not exception-aware
-        fprintf(stderr, "Failed to enumerate midi devices: %s\n", err.getMessage().c_str());
+        common::Printf("Failed to enumerate midi devices: %s\n", err.getMessage().c_str());
     }
 }
 
@@ -104,7 +105,7 @@ bool MIDI_PickInputDevice(RtMidiIn& midi, std::string_view preferred_name, MIDI_
 
     if (num_devices == 0)
     {
-        fprintf(stderr, "No midi input\n");
+        common::Printf("No midi input\n");
         return false;
     }
 
@@ -146,7 +147,7 @@ bool MIDI_PickInputDevice(RtMidiIn& midi, std::string_view preferred_name, MIDI_
         }
     }
 
-    fprintf(stderr, "No input device named '%s'\n", std::string(preferred_name).c_str());
+    common::Printf("No input device named '%s'\n", std::string(preferred_name).c_str());
     return false;
 }
 
@@ -154,7 +155,7 @@ bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id)
 {
     if (s_midi_in)
     {
-        fprintf(stderr, "MIDI already running\n");
+        common::Printf("MIDI already running\n");
         return false; // Already running
     }
 
@@ -171,17 +172,17 @@ bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id)
     {
         if (!MIDI_PickInputDevice(*s_midi_in, port_name_or_id, picked_device))
         {
-            fprintf(stderr, "Failed to initialize RtMidi\n");
+            common::Printf("Failed to initialize RtMidi\n");
             return false;
         }
     }
     catch (const RtMidiError& err)
     {
-        fprintf(stderr, "Failed to initialize RtMidi: %s\n", err.getMessage().c_str());
+        common::Printf("Failed to initialize RtMidi: %s\n", err.getMessage().c_str());
     }
 
     s_midi_in->openPort(picked_device.device_id, "Nuked SC55");
-    fprintf(stderr, "Opened midi port: %s\n", picked_device.device_name.c_str());
+    common::Printf("Opened midi port: %s\n", picked_device.device_name.c_str());
 
     return true;
 }

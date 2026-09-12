@@ -19,6 +19,7 @@
 
 #include "common/gain.h"
 #include "common/path_util.h"
+#include "common/term_io.h"
 
 Application::~Application()
 {
@@ -29,7 +30,7 @@ Application::~Application()
         Out_ASIO_Stop();
         Out_ASIO_Destroy();
 #else
-        fprintf(stderr, "Out_ASIO_Stop() called without ASIO support\n");
+        common::Printf("Out_ASIO_Stop() called without ASIO support\n");
 #endif
         break;
     case AudioOutputKind::SDL:
@@ -48,7 +49,7 @@ bool Application::Initialize(const CliParameters& params)
     if (std::filesystem::exists(base_path / "../share/nuked-sc55"))
         base_path = base_path / "../share/nuked-sc55";
 
-    fprintf(stderr, "Base path is: %s\n", base_path.generic_string().c_str());
+    common::Printf("Base path is: %s\n", base_path.generic_string().c_str());
 
     std::filesystem::path rom_directory;
 
@@ -61,14 +62,14 @@ bool Application::Initialize(const CliParameters& params)
         rom_directory = base_path;
     }
 
-    fprintf(stderr, "ROM directory is: %s\n", rom_directory.generic_string().c_str());
+    common::Printf("ROM directory is: %s\n", rom_directory.generic_string().c_str());
 
     common::LoadRomsetResult load_result;
 
     common::LoadRomsetError err =
         common::LoadRomset(rom_directory, params.romset_name, params.rom_loader, params.adv.rom_overrides, load_result);
 
-    common::PrintLoadRomsetDiagnostics(stderr, err, load_result);
+    common::PrintLoadRomsetDiagnostics(err, load_result);
 
     if (err != common::LoadRomsetError{})
     {
@@ -86,17 +87,17 @@ bool Application::Initialize(const CliParameters& params)
     else if (!params.reset && m_romset == Romset::MK2)
     {
         // user didn't explicitly pass a reset and we're using a buggy romset
-        fprintf(stderr, "WARNING: No reset specified with mk2 romset; using gs\n");
+        common::Printf("WARNING: No reset specified with mk2 romset; using gs\n");
         reset = EMU_SystemReset::GS_RESET;
     }
 
-    fprintf(stderr, "Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
+    common::Printf("Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
 
     for (size_t i = 0; i < params.instances; ++i)
     {
         if (!CreateInstance(params))
         {
-            fprintf(stderr, "FATAL ERROR: Failed to create instance %zu\n", i);
+            common::Printf("FATAL ERROR: Failed to create instance %zu\n", i);
             return false;
         }
     }
@@ -110,14 +111,14 @@ bool Application::Initialize(const CliParameters& params)
 
     if (!OpenAudio(params))
     {
-        fprintf(stderr, "FATAL ERROR: Failed to open the audio stream.\n");
+        common::Printf("FATAL ERROR: Failed to open the audio stream.\n");
         fflush(stderr);
         return false;
     }
 
     if (!MIDI_Init(*this, params.midi_device))
     {
-        fprintf(stderr, "ERROR: Failed to initialize the MIDI Input.\nWARNING: Continuing without MIDI Input...\n");
+        common::Printf("ERROR: Failed to initialize the MIDI Input.\nWARNING: Continuing without MIDI Input...\n");
         fflush(stderr);
     }
 
@@ -165,7 +166,7 @@ void Application::RouteMIDI(std::span<const uint8_t> bytes)
 
     if (first < 0x80)
     {
-        fprintf(stderr, "Application::RouteMIDI received data byte %02x\n", first);
+        common::Printf("Application::RouteMIDI received data byte %02x\n", first);
         return;
     }
 
@@ -186,7 +187,7 @@ bool Application::OpenSDLAudio(const AudioOutputParameters& params, const char* 
 {
     if (!Out_SDL_Create(device_name, params))
     {
-        fprintf(stderr, "Failed to create SDL audio output\n");
+        common::Printf("Failed to create SDL audio output\n");
         return false;
     }
 
@@ -198,7 +199,7 @@ bool Application::OpenSDLAudio(const AudioOutputParameters& params, const char* 
 
     if (!Out_SDL_Start())
     {
-        fprintf(stderr, "Failed to start SDL audio output\n");
+        common::Printf("Failed to start SDL audio output\n");
         return false;
     }
 
@@ -210,7 +211,7 @@ bool Application::OpenASIOAudio(const ASIO_OutputParameters& params, const char*
 {
     if (!Out_ASIO_Create(name, params))
     {
-        fprintf(stderr, "Failed to create ASIO output\n");
+        common::Printf("Failed to create ASIO output\n");
         return false;
     }
 
@@ -221,7 +222,7 @@ bool Application::OpenASIOAudio(const ASIO_OutputParameters& params, const char*
 
     if (!Out_ASIO_Start())
     {
-        fprintf(stderr, "Failed to create ASIO output\n");
+        common::Printf("Failed to create ASIO output\n");
         return false;
     }
 
@@ -237,9 +238,9 @@ void FixupParameters(CliParameters& params)
         const uint32_t next_high = std::bit_ceil(params.buffer_size);
         const uint32_t closer =
             (uint32_t)PickCloser<int64_t>((int64_t)params.buffer_size, (int64_t)next_low, (int64_t)next_high);
-        fprintf(stderr, "WARNING: Audio buffer size must be a power-of-two; got %d\n", params.buffer_size);
-        fprintf(stderr, "         The next valid values are %d and %d\n", next_low, next_high);
-        fprintf(stderr, "         Continuing with the closer value %d\n", closer);
+        common::Printf("WARNING: Audio buffer size must be a power-of-two; got %d\n", params.buffer_size);
+        common::Printf("         The next valid values are %d and %d\n", next_low, next_high);
+        common::Printf("         Continuing with the closer value %d\n", closer);
         params.buffer_size = closer;
     }
 }
@@ -284,7 +285,7 @@ bool Application::OpenAudio(const CliParameters& params)
             asio_params.right_channel = params.asio_right_channel;
             return OpenASIOAudio(asio_params, output.name.c_str());
 #else
-            fprintf(stderr, "Attempted to open ASIO output without ASIO support\n");
+            common::Printf("Attempted to open ASIO output without ASIO support\n");
 #endif
         }
         return false;
@@ -292,11 +293,11 @@ bool Application::OpenAudio(const CliParameters& params)
         return OpenSDLAudio(out_params, nullptr);
     case PickOutputResult::NoOutputDevices:
         // in some cases this may still work
-        fprintf(stderr, "No output devices found; attempting to open default device\n");
+        common::Printf("No output devices found; attempting to open default device\n");
         return OpenSDLAudio(out_params, nullptr);
     case PickOutputResult::NoMatchingName:
         // in some cases SDL cannot list all audio devices so we should still try
-        fprintf(stderr, "No output device named '%s'; attempting to open it anyways...\n", params.audio_device.c_str());
+        common::Printf("No output device named '%s'; attempting to open it anyways...\n", params.audio_device.c_str());
         return OpenSDLAudio(out_params, output.name.c_str());
     }
 
@@ -380,7 +381,7 @@ bool Application::CreateInstance(const CliParameters& app_params)
 
     if (!AllocateInstance(&inst))
     {
-        fprintf(stderr, "ERROR: Failed to allocate instance.\n");
+        common::Printf("ERROR: Failed to allocate instance.\n");
         return false;
     }
 
@@ -399,7 +400,7 @@ bool Application::CreateInstance(const CliParameters& app_params)
 
     if (!inst->Initialize(inst_params))
     {
-        fprintf(stderr, "ERROR: Failed to initialize instance #%02zu.\n", instance_id);
+        common::Printf("ERROR: Failed to initialize instance #%02zu.\n", instance_id);
         return false;
     }
 

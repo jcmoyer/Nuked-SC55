@@ -16,7 +16,8 @@
  */
 
 #include "path_util.h"
-#include <cstdio>
+
+#include "common/term_io.h"
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -38,7 +39,7 @@ std::filesystem::path GetProcessPath()
     if (actual_size == 0)
     {
         // TODO: handle error
-        fprintf(stderr, "fatal: P_GetProcessPath failed\n");
+        common::Printf("fatal: P_GetProcessPath failed\n");
         exit(1);
     }
 #elif defined(__APPLE__)
@@ -47,7 +48,7 @@ std::filesystem::path GetProcessPath()
     if (_NSGetExecutablePath(path, &actual_size) != 0)
     {
         // TODO: handle error
-        fprintf(stderr, "fatal: P_GetProcessPath failed\n");
+        common::Printf("fatal: P_GetProcessPath failed\n");
         exit(1);
     }
 #else
@@ -56,7 +57,7 @@ std::filesystem::path GetProcessPath()
     if (actual_size == -1)
     {
         // TODO: handle error
-        fprintf(stderr, "fatal: P_GetProcessPath failed\n");
+        common::Printf("fatal: P_GetProcessPath failed\n");
         exit(1);
     }
 #endif

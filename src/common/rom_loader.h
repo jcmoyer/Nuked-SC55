@@ -97,12 +97,10 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
                            const RomOverrides&          overrides,
                            LoadRomsetResult&            result);
 
-// `output`: where to write romset list
-void PrintRomsets(FILE* output);
+void PrintRomsets();
 
-// `output`: where to write diagnostics to
 // `error`: error to write diagnostics for
 // `results`: results object to take diagnostics information from
-void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result);
+void PrintLoadRomsetDiagnostics(LoadRomsetError error, const LoadRomsetResult& result);
 
 } // namespace common

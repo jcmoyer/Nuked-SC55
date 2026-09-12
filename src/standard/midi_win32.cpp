@@ -23,8 +23,8 @@
 #include <Windows.h>
 
 #include "common/command_line.h"
+#include "common/term_io.h"
 #include <cstdint>
-#include <cstdio>
 #include <mmsystem.h>
 #include <span>
 #include <string>
@@ -108,7 +108,7 @@ void CALLBACK MIDI_Callback(
             break;
         }
         default:
-            fprintf(stderr, "hmm");
+            common::Printf("hmm");
             break;
     }
 }
@@ -119,20 +119,20 @@ void MIDI_PrintDevices()
 
     if (num_devices == 0)
     {
-        fprintf(stderr, "No midi devices found.\n");
+        common::Printf("No midi devices found.\n");
     }
 
     MMRESULT result;
     MIDIINCAPSA device_caps;
 
-    fprintf(stderr, "Known midi devices:\n\n");
+    common::Printf("Known midi devices:\n\n");
 
     for (UINT i = 0; i < num_devices; ++i)
     {
         result = midiInGetDevCapsA(i, &device_caps, sizeof(MIDIINCAPSA));
         if (result == MMSYSERR_NOERROR)
         {
-            fprintf(stderr, "  %d: %s\n", i, device_caps.szPname);
+            common::Printf("  %d: %s\n", i, device_caps.szPname);
         }
     }
 }
@@ -149,7 +149,7 @@ bool MIDI_PickInputDevice(std::string_view preferred_name, MIDI_PickedDevice& ou
 
     if (num_devices == 0)
     {
-        fprintf(stderr, "No midi input\n");
+        common::Printf("No midi input\n");
         return false;
     }
 
@@ -161,7 +161,7 @@ bool MIDI_PickInputDevice(std::string_view preferred_name, MIDI_PickedDevice& ou
         result = midiInGetDevCapsA(0, &out_picked.device_caps, sizeof(MIDIINCAPSA));
         if (result != MMSYSERR_NOERROR)
         {
-            fprintf(stderr, "midiInGetDevCapsA failed\n");
+            common::Printf("midiInGetDevCapsA failed\n");
             return false;
         }
         out_picked.device_id = 0;
@@ -173,7 +173,7 @@ bool MIDI_PickInputDevice(std::string_view preferred_name, MIDI_PickedDevice& ou
         result = midiInGetDevCapsA(i, &out_picked.device_caps, sizeof(MIDIINCAPSA));
         if (result != MMSYSERR_NOERROR)
         {
-            fprintf(stderr, "midiInGetDevCapsA failed\n");
+            common::Printf("midiInGetDevCapsA failed\n");
             return false;
         }
         if (std::string_view(out_picked.device_caps.szPname) == preferred_name)
@@ -191,7 +191,7 @@ bool MIDI_PickInputDevice(std::string_view preferred_name, MIDI_PickedDevice& ou
             result = midiInGetDevCaps(device_id, &out_picked.device_caps, sizeof(MIDIINCAPSA));
             if (result != MMSYSERR_NOERROR)
             {
-                fprintf(stderr, "midiInGetDevCapsA failed\n");
+                common::Printf("midiInGetDevCapsA failed\n");
                 return false;
             }
             out_picked.device_id = device_id;
@@ -199,7 +199,7 @@ bool MIDI_PickInputDevice(std::string_view preferred_name, MIDI_PickedDevice& ou
         }
     }
 
-    fprintf(stderr, "No input device named '%s'\n", std::string(preferred_name).c_str());
+    common::Printf("No input device named '%s'\n", std::string(preferred_name).c_str());
     return false;
 }
 
@@ -216,11 +216,11 @@ bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id)
     MMRESULT result = midiInOpen(&midi_handle, picked_device.device_id, (DWORD_PTR)MIDI_Callback, 0, CALLBACK_FUNCTION);
     if (result != MMSYSERR_NOERROR)
     {
-        fprintf(stderr, "midiInOpen failed\n");
+        common::Printf("midiInOpen failed\n");
         return false;
     }
 
-    fprintf(stderr, "Opened midi port: %s\n", picked_device.device_caps.szPname);
+    common::Printf("Opened midi port: %s\n", picked_device.device_caps.szPname);
 
     midi_buffer.lpData = (LPSTR)midi_in_buffer;
     midi_buffer.dwBufferLength = sizeof(midi_in_buffer);
@@ -228,21 +228,21 @@ bool MIDI_Init(MIDI_Output& output, std::string_view port_name_or_id)
     result = midiInPrepareHeader(midi_handle, &midi_buffer, sizeof(MIDIHDR));
     if (result != MMSYSERR_NOERROR)
     {
-        fprintf(stderr, "midiInPrepareHeader failed\n");
+        common::Printf("midiInPrepareHeader failed\n");
         return false;
     }
 
     result = midiInAddBuffer(midi_handle, &midi_buffer, sizeof(MIDIHDR));
     if (result != MMSYSERR_NOERROR)
     {
-        fprintf(stderr, "midiInAddBuffer failed\n");
+        common::Printf("midiInAddBuffer failed\n");
         return false;
     }
 
     result = midiInStart(midi_handle);
     if (result != MMSYSERR_NOERROR)
     {
-        fprintf(stderr, "midiInStart failed\n");
+        common::Printf("midiInStart failed\n");
         return false;
     }
 

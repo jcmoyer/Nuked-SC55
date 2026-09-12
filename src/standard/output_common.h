@@ -58,4 +58,4 @@ void QueryAllOutputs(AudioOutputList& outputs);
 
 PickOutputResult PickOutputDevice(std::string_view preferred_name, AudioOutput& out_device);
 
-void PrintAudioDevices(FILE* output);
+void PrintAudioDevices();

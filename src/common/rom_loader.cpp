@@ -20,6 +20,8 @@
 #include <cstddef>
 #include <cstdio>
 
+#include "common/term_io.h"
+
 #include "rom.h"
 #include "rom_io.h"
 
@@ -218,16 +220,16 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
     return LoadRomsetError{};
 }
 
-void PrintRomsets(FILE* output)
+void PrintRomsets()
 {
     RomsetRegistry romsets = RomsetRegistry::CreateWithDefaultHashes();
     StringVector   specific_names;
 
-    fprintf(output, "Accepted romset names:\n");
+    Printf("Accepted romset names:\n");
     for (size_t i = 0; i < ROMSET_COUNT; ++i)
     {
         Romset romset = (Romset)i;
-        fprintf(output, "  %s\n", ParsableRomsetName(romset));
+        Printf("  %s\n", ParsableRomsetName(romset));
 
         romsets.GetNamesForFamily(romset, specific_names);
         for (const auto& spec_name : specific_names)
@@ -236,14 +238,14 @@ void PrintRomsets(FILE* output)
             // in that case we give them the same name
             if (spec_name != ParsableRomsetName(romset))
             {
-                fprintf(output, "      %s\n", spec_name.c_str());
+                Printf("      %s\n", spec_name.c_str());
             }
         }
     }
-    fprintf(output, "\n");
+    Printf("\n");
 }
 
-void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadRomsetResult& result)
+void PrintLoadRomsetDiagnostics(LoadRomsetError error, const LoadRomsetResult& result)
 {
     switch (error)
     {
@@ -251,11 +253,11 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
         // TODO: DetectRomsets* will print its own diagnostics
         break;
     case LoadRomsetError::InvalidRomsetName:
-        fprintf(output, "error: %s\n", ToCString(error));
-        PrintRomsets(output);
+        Printf("error: %s\n", ToCString(error));
+        PrintRomsets();
         break;
     case LoadRomsetError::NoCompleteRomsets: {
-        fprintf(output, "No complete romsets for %s found.\n", ParsableRomsetName(result.romset));
+        Printf("No complete romsets for %s found.\n", ParsableRomsetName(result.romset));
 
         StringVector partial_names;
         GetPartialRomsetNames(result.registries.romsets, result.registries.hashes, ROMLOCATION_ALL, partial_names);
@@ -281,20 +283,20 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
                 format = "Romset %s (%s) partially complete:\n";
             }
 
-            fprintf(output, format, name.c_str(), RomsetName(family));
+            Printf(format, name.c_str(), RomsetName(family));
             for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
             {
                 if (completion[i] != RomCompletionStatus::Unused)
                 {
-                    fprintf(output, "  * %7s: %-12s", ToCString(completion[i]), ToCString((RomLocation)i));
+                    Printf("  * %7s: %-12s", ToCString(completion[i]), ToCString((RomLocation)i));
 
                     if (completion[i] == RomCompletionStatus::Present)
                     {
-                        fprintf(output, "%s\n", info.rom_paths[i].generic_string().c_str());
+                        Printf("%s\n", info.rom_paths[i].generic_string().c_str());
                     }
                     else
                     {
-                        fprintf(output, "\n");
+                        Printf("\n");
                     }
                 }
             }
@@ -303,40 +305,39 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
         break;
     }
     case LoadRomsetError::IncompleteRomset:
-        fprintf(output, "Romset %s is incomplete:\n", RomsetName(result.romset));
+        Printf("Romset %s is incomplete:\n", RomsetName(result.romset));
         for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
         {
             if (result.completion[i] != RomCompletionStatus::Unused)
             {
-                fprintf(output, "  * %7s: %-12s", ToCString(result.completion[i]), ToCString((RomLocation)i));
+                Printf("  * %7s: %-12s", ToCString(result.completion[i]), ToCString((RomLocation)i));
 
                 if (result.completion[i] == RomCompletionStatus::Present)
                 {
-                    fprintf(output, "%s\n", result.romset_info.rom_paths[i].generic_string().c_str());
+                    Printf("%s\n", result.romset_info.rom_paths[i].generic_string().c_str());
                 }
                 else
                 {
-                    fprintf(output, "\n");
+                    Printf("\n");
                 }
             }
         }
         break;
     case LoadRomsetError::RomLoadFailed:
-        fprintf(output, "Failed to load some %s roms:\n", RomsetName(result.romset));
+        Printf("Failed to load some %s roms:\n", RomsetName(result.romset));
         for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] != RomLoadStatus::Unused)
             {
-                fprintf(output,
-                        "  * %s: %-12s %s\n",
-                        ToCString(result.loaded[i]),
-                        ToCString((RomLocation)i),
-                        result.romset_info.rom_paths[i].generic_string().c_str());
+                Printf("  * %s: %-12s %s\n",
+                       ToCString(result.loaded[i]),
+                       ToCString((RomLocation)i),
+                       result.romset_info.rom_paths[i].generic_string().c_str());
             }
         }
         break;
     case LoadRomsetError::AmbiguousRomset: {
-        fprintf(output, "Requested romset `%s` is ambiguous:\n", ParsableRomsetName(result.romset));
+        Printf("Requested romset `%s` is ambiguous:\n", ParsableRomsetName(result.romset));
 
         StringVector names;
         for (const RomsetDefinition& def : result.registries.romsets)
@@ -355,19 +356,18 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
             RomCompletionStatusSet completion;
             if (GetDefinitionCompletion(def, result.registries.hashes, ROMLOCATION_ALL, completion))
             {
-                fprintf(output, "Found %s:\n", def.name);
+                Printf("Found %s:\n", def.name);
 
                 for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
                 {
                     if (completion[i] == RomCompletionStatus::Present)
                     {
-                        fprintf(output,
-                                "  * %7s: %-12s %s\n",
-                                ToCString(completion[i]),
-                                ToCString((RomLocation)i),
-                                result.registries.hashes.GetFile(def.GetHash((RomLocation)i))
-                                    ->path.generic_string()
-                                    .c_str());
+                        Printf("  * %7s: %-12s %s\n",
+                               ToCString(completion[i]),
+                               ToCString((RomLocation)i),
+                               result.registries.hashes.GetFile(def.GetHash((RomLocation)i))
+                                   ->path.generic_string()
+                                   .c_str());
                     }
                 }
             }
@@ -379,20 +379,19 @@ void PrintLoadRomsetDiagnostics(FILE* output, LoadRomsetError error, const LoadR
     {
         if (result.picked_name.size())
         {
-            fprintf(output, "Using %s romset %s:\n", RomsetName(result.romset), result.picked_name.c_str());
+            Printf("Using %s romset %s:\n", RomsetName(result.romset), result.picked_name.c_str());
         }
         else
         {
-            fprintf(output, "Using %s romset:\n", RomsetName(result.romset));
+            Printf("Using %s romset:\n", RomsetName(result.romset));
         }
         for (size_t i = 0; i < ROMLOCATION_COUNT; ++i)
         {
             if (result.loaded[i] == RomLoadStatus::Loaded)
             {
-                fprintf(output,
-                        "  * %-12s %s\n",
-                        ToCString((RomLocation)i),
-                        result.romset_info.rom_paths[i].generic_string().c_str());
+                Printf("  * %-12s %s\n",
+                       ToCString((RomLocation)i),
+                       result.romset_info.rom_paths[i].generic_string().c_str());
             }
         }
     }

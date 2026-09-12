@@ -23,6 +23,8 @@
 #include "output_asio.h"
 #include "output_sdl.h"
 
+#include "common/term_io.h"
+
 template <typename ElemT>
 size_t CalcRingbufferSizeBytes(uint32_t buffer_size, uint32_t buffer_count)
 {
@@ -44,7 +46,7 @@ bool Instance::Initialize(const InstanceParameters& params)
 {
     if (!params.romset_info)
     {
-        fprintf(stderr, "FATAL: romset_info not provided to instance %02zu\n", params.instance_id);
+        common::Printf("FATAL: romset_info not provided to instance %02zu\n", params.instance_id);
         return false;
     }
 
@@ -68,13 +70,13 @@ bool Instance::Initialize(const InstanceParameters& params)
 
     if (!m_emu.Init({.lcd_backend = m_sdl_lcd.get(), .nvram_filename = this_nvram}))
     {
-        fprintf(stderr, "ERROR: Failed to init emulator.\n");
+        common::Printf("ERROR: Failed to init emulator.\n");
         return false;
     }
 
     if (!m_emu.LoadRoms(params.romset, *params.romset_info))
     {
-        fprintf(stderr, "ERROR: Failed to load roms for instance %02zu\n", params.instance_id);
+        common::Printf("ERROR: Failed to load roms for instance %02zu\n", params.instance_id);
         return false;
     }
 
@@ -83,7 +85,7 @@ bool Instance::Initialize(const InstanceParameters& params)
 
     if (!m_emu.StartLCD())
     {
-        fprintf(stderr, "ERROR: Failed to start LCD.\n");
+        common::Printf("ERROR: Failed to start LCD.\n");
         return false;
     }
 
@@ -255,14 +257,14 @@ mcu_sample_callback Instance::PickSampleCallback(AudioOutputKind kind) const
             }
         }
 #else
-        fprintf(stderr, "PANIC: Instance::PickSampleCallback tried to select ASIO output without ASIO support\n");
+        common::Printf("PANIC: Instance::PickSampleCallback tried to select ASIO output without ASIO support\n");
         std::abort();
 #endif
     }
 
-    fprintf(stderr, "output kind = %d\n", (int)kind);
-    fprintf(stderr, "gain = %f\n", m_gain);
-    fprintf(stderr, "format = %d\n", (int)m_format);
+    common::Printf("output kind = %d\n", (int)kind);
+    common::Printf("gain = %f\n", m_gain);
+    common::Printf("format = %d\n", (int)m_format);
     return nullptr;
 }
 
@@ -283,7 +285,7 @@ void Instance::OpenSDLAudio()
         break;
     }
     Out_SDL_AddSource(m_view);
-    fprintf(stderr, "#%02zu: allocated %zu bytes for audio\n", m_instance_id, m_sample_buffer.GetByteLength());
+    common::Printf("#%02zu: allocated %zu bytes for audio\n", m_instance_id, m_sample_buffer.GetByteLength());
 }
 
 #if NUKED_ENABLE_ASIO
@@ -312,7 +314,7 @@ void Instance::OpenASIOAudio()
         CreateAndPrepareBuffer<float>();
         break;
     }
-    fprintf(stderr, "#%02zu: allocated %zu bytes for audio\n", m_instance_id, m_sample_buffer.GetByteLength());
+    common::Printf("#%02zu: allocated %zu bytes for audio\n", m_instance_id, m_sample_buffer.GetByteLength());
 }
 #endif
 
@@ -339,7 +341,7 @@ void Instance::StartThread()
 #if NUKED_ENABLE_ASIO
         m_thread = std::thread(RunInstanceASIO, std::ref(*this));
 #else
-        fprintf(stderr, "Attempted to start ASIO instance without ASIO support\n");
+        common::Printf("Attempted to start ASIO instance without ASIO support\n");
 #endif
     }
 }

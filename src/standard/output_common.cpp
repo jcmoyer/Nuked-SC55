@@ -22,6 +22,7 @@
 #include "config.h"
 
 #include "common/command_line.h"
+#include "common/term_io.h"
 
 void QueryAllOutputs(AudioOutputList& outputs)
 {
@@ -29,14 +30,14 @@ void QueryAllOutputs(AudioOutputList& outputs)
 
     if (!Out_SDL_QueryOutputs(outputs))
     {
-        fprintf(stderr, "Failed to query SDL outputs: %s\n", SDL_GetError());
+        common::Printf("Failed to query SDL outputs: %s\n", SDL_GetError());
         return;
     }
 
 #if NUKED_ENABLE_ASIO
     if (!Out_ASIO_QueryOutputs(outputs))
     {
-        fprintf(stderr, "Failed to query ASIO outputs.\n");
+        common::Printf("Failed to query ASIO outputs.\n");
         return;
     }
 #endif
@@ -93,7 +94,7 @@ const char* FE_AudioOutputMarkerString(AudioOutputKind kind)
     case AudioOutputKind::ASIO:
         return "(ASIO)";
     }
-    fprintf(stderr, "PANIC: FE_AudioOutputMarkerString got invalid kind");
+    common::Printf("PANIC: FE_AudioOutputMarkerString got invalid kind");
     std::abort();
 }
 
@@ -106,27 +107,27 @@ void FE_WriteSpaces(int count)
 {
     for (int i = 0; i < count; ++i)
     {
-        fprintf(stderr, " ");
+        common::Printf(" ");
     }
 }
 
-void PrintAudioDevices(FILE* output)
+void PrintAudioDevices()
 {
     AudioOutputList outputs;
     QueryAllOutputs(outputs);
 
     if (outputs.size() == 0)
     {
-        fprintf(output, "No output devices found.\n");
+        common::Printf("No output devices found.\n");
     }
     else
     {
-        fprintf(output, "\nKnown output devices:\n\n");
+        common::Printf("\nKnown output devices:\n\n");
 
         for (size_t i = 0; i < outputs.size(); ++i)
         {
 #if NUKED_ENABLE_ASIO
-            fprintf(output, "  %s %zu: %s\n", FE_AudioOutputMarkerString(outputs[i].kind), i, outputs[i].name.c_str());
+            common::Printf("  %s %zu: %s\n", FE_AudioOutputMarkerString(outputs[i].kind), i, outputs[i].name.c_str());
             if (outputs[i].kind == AudioOutputKind::ASIO)
             {
                 ASIO_OutputChannelList channels;
@@ -142,14 +143,13 @@ void PrintAudioDevices(FILE* output)
                         // 2 space indent, 6 marker string, 1 space, variable width number, ': '
                         FE_WriteSpaces(2 + 6 + 1 + (int)NDigits((int)i) + 2);
 
-                        fprintf(output,
-                                "%c-- channel %ld: ",
-                                FE_ChannelsTreeChar(channel == channels.size() - 1),
-                                channels[channel].id);
+                        common::Printf("%c-- channel %ld: ",
+                                       FE_ChannelsTreeChar(channel == channels.size() - 1),
+                                       channels[channel].id);
 
                         FE_WriteSpaces((int)(max_digits - this_digits));
 
-                        fprintf(output, "%s\n", channels[channel].name.c_str());
+                        common::Printf("%s\n", channels[channel].name.c_str());
                     }
                 }
                 else
@@ -157,14 +157,14 @@ void PrintAudioDevices(FILE* output)
                     // align under first character of output name
                     // 2 space indent, 6 marker string, 1 space, variable width number, ': '
                     FE_WriteSpaces(2 + 6 + 1 + (int)NDigits((int)i) + 2);
-                    fprintf(output, "(failed to query channels)\n");
+                    common::Printf("(failed to query channels)\n");
                 }
             }
 #else
-            fprintf(output, "  %zu: %s\n", i, outputs[i].name.c_str());
+            common::Printf("  %zu: %s\n", i, outputs[i].name.c_str());
 #endif
         }
 
-        fprintf(output, "\n");
+        common::Printf("\n");
     }
 }

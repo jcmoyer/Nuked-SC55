@@ -17,6 +17,7 @@
 #include "application.h"
 
 #include "common/path_util.h"
+#include "common/term_io.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -40,7 +41,7 @@ bool GlobalInit()
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0)
     {
-        fprintf(stderr, "FATAL ERROR: Failed to initialize SDL: %s.\n", SDL_GetError());
+        common::Printf("FATAL ERROR: Failed to initialize SDL: %s.\n", SDL_GetError());
         fflush(stderr);
         return false;
     }
@@ -96,13 +97,13 @@ ROM management options:
 #endif
 
     std::string name = common::GetProcessPath().stem().generic_string();
-    fprintf(stderr, USAGE_STR, name.c_str());
-    common::PrintRomsets(stderr);
+    common::Printf(USAGE_STR, name.c_str());
+    common::PrintRomsets();
 #if NUKED_ENABLE_ASIO
-    fprintf(stderr, EXTRA_ASIO_STR);
+    common::Printf(EXTRA_ASIO_STR);
 #endif
     MIDI_PrintDevices();
-    PrintAudioDevices(stderr);
+    PrintAudioDevices();
 }
 
 int main(int argc, char* argv[])
@@ -111,7 +112,7 @@ int main(int argc, char* argv[])
     CliParseError result = ParseCommandLine(argc, argv, params);
     if (result != CliParseError::Success)
     {
-        fprintf(stderr, "error: %s\n", ParseErrorStr(result));
+        common::Printf("error: %s\n", ParseErrorStr(result));
         PrintUsage();
         return 1;
     }
@@ -135,7 +136,7 @@ int main(int argc, char* argv[])
 
     if (!GlobalInit())
     {
-        fprintf(stderr, "FATAL ERROR: Failed to initialize global state\n");
+        common::Printf("FATAL ERROR: Failed to initialize global state\n");
         return 1;
     }
 
@@ -147,7 +148,7 @@ int main(int argc, char* argv[])
 
         if (!app.Initialize(params))
         {
-            fprintf(stderr, "FATAL ERROR: Failed to initialize application\n");
+            common::Printf("FATAL ERROR: Failed to initialize application\n");
             return 1;
         }
 
