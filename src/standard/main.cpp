@@ -140,6 +140,12 @@ int main(int argc, char* argv[])
         common::SetMinBackendLevel(Diag_Category::Debug);
     }
 
+    if (params.quiet)
+    {
+        common::SetBackendLoggingEnabled(false);
+        common::SetFrontendLoggingEnabled(false);
+    }
+
     FixupParameters(params);
 
     if (!GlobalInit())

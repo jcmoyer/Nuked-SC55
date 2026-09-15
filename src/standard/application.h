@@ -42,6 +42,7 @@ struct CliParameters
     bool help    = false;
     bool version = false;
     bool debug   = false;
+    bool quiet   = false;
 
     // Audio options
     std::string midi_device;

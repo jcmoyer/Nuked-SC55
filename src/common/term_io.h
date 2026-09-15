@@ -55,6 +55,14 @@ void ConfigureTermIO(const TIO_Config& config);
 // before spawning any threads. See `TIO_Config::min_backend_level`.
 void SetMinBackendLevel(Diag_Category new_min);
 
+// Enables or disables backend logging. This should be called before
+// spawning any threads. See `TIO_Config::enable_backend`.
+void SetBackendLoggingEnabled(bool enabled);
+
+// Enables or disables frontend logging. This should be called before
+// spawning any threads. See `TIO_Config::enable_frontend`.
+void SetFrontendLoggingEnabled(bool enabled);
+
 void Printf(const char* format, ...);
 
 } // namespace common

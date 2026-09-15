@@ -59,6 +59,16 @@ void SetMinBackendLevel(Diag_Category new_min)
     g_config.min_backend_level = new_min;
 }
 
+void SetBackendLoggingEnabled(bool enabled)
+{
+    g_config.enable_backend = enabled;
+}
+
+void SetFrontendLoggingEnabled(bool enabled)
+{
+    g_config.enable_frontend = enabled;
+}
+
 void Printf(const char* format, ...)
 {
     if (!g_config.enable_frontend)

@@ -80,6 +80,7 @@ struct R_Parameters
     bool dump_emidi_loop_points = false;
     float gain = 1.0f;
     R_AdvancedParameters adv;
+    bool quiet = false;
 };
 
 enum class R_ParseError
@@ -158,6 +159,10 @@ R_ParseError R_ParseCommandLine(int argc, char* argv[], R_Parameters& result)
         else if (reader.Any("--debug"))
         {
             result.debug = true;
+        }
+        else if (reader.Any("--quiet"))
+        {
+            result.quiet = true;
         }
         else if (reader.Any("-n", "--instances"))
         {
@@ -1504,6 +1509,7 @@ General options:
   -o <filename>                Render WAVE file to filename.
   --stdout                     Render raw sample data to stdout. No header
   --debug                      Enables debug messages.
+  --quiet                      Do not print messages to stderr.
 
 Audio options:
   -f, --format s16|s32|f32     Set output format.
@@ -1568,6 +1574,12 @@ int main(int argc, char* argv[])
     if (params.debug)
     {
         common::SetMinBackendLevel(Diag_Category::Debug);
+    }
+
+    if (params.quiet)
+    {
+        common::SetBackendLoggingEnabled(false);
+        common::SetFrontendLoggingEnabled(false);
     }
 
     SMF_Data data;

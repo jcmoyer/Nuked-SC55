@@ -75,6 +75,10 @@ CliParseError ParseCommandLine(int argc, char* argv[], CliParameters& result)
         {
             result.debug = true;
         }
+        else if (reader.Any("--quiet"))
+        {
+            result.quiet = true;
+        }
         else if (reader.Any("-p", "--port"))
         {
             if (!reader.Next())
