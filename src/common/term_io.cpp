@@ -32,11 +32,14 @@ static TIO_Config g_config = {
 
 static void BackendCallback(Diag_Category cat, std::string_view message)
 {
+    (void)cat;
+
     if (!g_config.enable_backend)
     {
         return;
     }
-    Diag_DefaultCallback(cat, message);
+
+    Printf("%.*s", (int)message.size(), message.data());
 }
 
 void ConfigureTermIO(const TIO_Config& config)
@@ -61,7 +64,7 @@ void Printf(const char* format, ...)
     int len = vsnprintf(buf, sizeof(buf), format, list);
     va_end(list);
 
-    fprintf(stderr, "%.*s", len, buf);
+    fprintf(g_config.output_file, "%.*s", len, buf);
 }
 
 } // namespace common
