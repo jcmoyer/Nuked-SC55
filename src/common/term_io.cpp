@@ -54,6 +54,11 @@ void ConfigureTermIO(const TIO_Config& config)
     g_config = config;
 }
 
+void SetMinBackendLevel(Diag_Category new_min)
+{
+    g_config.min_backend_level = new_min;
+}
+
 void Printf(const char* format, ...)
 {
     if (!g_config.enable_frontend)

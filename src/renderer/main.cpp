@@ -1503,6 +1503,7 @@ General options:
   -v, --version                Display version information.
   -o <filename>                Render WAVE file to filename.
   --stdout                     Render raw sample data to stdout. No header
+  --debug                      Enables debug messages.
 
 Audio options:
   -f, --format s16|s32|f32     Set output format.
@@ -1562,6 +1563,11 @@ int main(int argc, char* argv[])
         // without requiring stream redirection
         Cfg_WriteVersionInfo(stdout);
         return 0;
+    }
+
+    if (params.debug)
+    {
+        common::SetMinBackendLevel(Diag_Category::Debug);
     }
 
     SMF_Data data;

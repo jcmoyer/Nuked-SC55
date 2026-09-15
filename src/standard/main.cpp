@@ -65,6 +65,7 @@ void PrintUsage()
 General options:
   -?, -h, --help                                Display this information.
   -v, --version                                 Display version information.
+  --debug                                       Enables debug messages.
 
 Audio options:
   -p, --port         <device_name_or_number>    Set MIDI input port.
@@ -132,6 +133,11 @@ int main(int argc, char* argv[])
         // without requiring stream redirection
         Cfg_WriteVersionInfo(stdout);
         return 0;
+    }
+
+    if (params.debug)
+    {
+        common::SetMinBackendLevel(Diag_Category::Debug);
     }
 
     FixupParameters(params);

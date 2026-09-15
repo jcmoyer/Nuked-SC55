@@ -71,6 +71,10 @@ CliParseError ParseCommandLine(int argc, char* argv[], CliParameters& result)
             result.version = true;
             return CliParseError::Success;
         }
+        else if (reader.Any("--debug"))
+        {
+            result.debug = true;
+        }
         else if (reader.Any("-p", "--port"))
         {
             if (!reader.Next())

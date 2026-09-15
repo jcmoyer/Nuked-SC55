@@ -51,6 +51,10 @@ void InitTermIO();
 // - output_file: stderr
 void ConfigureTermIO(const TIO_Config& config);
 
+// Adjusts the min backend level globally. This should be called
+// before spawning any threads. See `TIO_Config::min_backend_level`.
+void SetMinBackendLevel(Diag_Category new_min);
+
 void Printf(const char* format, ...);
 
 } // namespace common
