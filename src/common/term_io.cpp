@@ -44,11 +44,14 @@ static void BackendCallback(Diag_Category cat, std::string_view message)
     }
 }
 
+void InitTermIO()
+{
+    Diag_SetCallback(BackendCallback);
+}
+
 void ConfigureTermIO(const TIO_Config& config)
 {
     g_config = config;
-
-    Diag_SetCallback(BackendCallback);
 }
 
 void Printf(const char* format, ...)

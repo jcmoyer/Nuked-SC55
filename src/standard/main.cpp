@@ -108,6 +108,8 @@ ROM management options:
 
 int main(int argc, char* argv[])
 {
+    common::InitTermIO();
+
     CliParameters params;
     CliParseError result = ParseCommandLine(argc, argv, params);
     if (result != CliParseError::Success)

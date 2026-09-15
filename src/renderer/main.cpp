@@ -1537,6 +1537,8 @@ MIDI options:
 
 int main(int argc, char* argv[])
 {
+    common::InitTermIO();
+
     R_Parameters params;
     R_ParseError result = R_ParseCommandLine(argc, argv, params);
 

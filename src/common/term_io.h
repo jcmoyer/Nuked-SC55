@@ -40,6 +40,10 @@ struct TIO_Config
     Diag_Category min_backend_level;
 };
 
+// Initializes the term_io subsystem. This sets the backend
+// diagnostics callback.
+void InitTermIO();
+
 // Reconfigures term_io subsystem. The defaults are as follows:
 //
 // - enable_backend: true
