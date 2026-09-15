@@ -25,21 +25,23 @@ namespace common
 {
 
 static TIO_Config g_config = {
-    .enable_backend  = true,
-    .enable_frontend = true,
-    .output_file     = stderr,
+    .enable_backend    = true,
+    .enable_frontend   = true,
+    .output_file       = stderr,
+    .min_backend_level = Diag_Category::Warning,
 };
 
 static void BackendCallback(Diag_Category cat, std::string_view message)
 {
-    (void)cat;
-
     if (!g_config.enable_backend)
     {
         return;
     }
 
-    Printf("%.*s", (int)message.size(), message.data());
+    if ((int)cat >= (int)g_config.min_backend_level)
+    {
+        Printf("%.*s", (int)message.size(), message.data());
+    }
 }
 
 void ConfigureTermIO(const TIO_Config& config)

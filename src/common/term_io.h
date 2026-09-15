@@ -19,6 +19,8 @@
 
 #include <cstdio>
 
+#include "backend/diagnostics.h"
+
 namespace common
 {
 
@@ -32,6 +34,10 @@ struct TIO_Config
 
     // where output will be written to
     FILE* output_file;
+
+    // backend messages greater or equal to this category will be
+    // printed if enable_backend is true
+    Diag_Category min_backend_level;
 };
 
 // Reconfigures term_io subsystem. The defaults are as follows:
