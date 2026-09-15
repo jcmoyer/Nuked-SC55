@@ -28,6 +28,13 @@ your hardware.
 - Reduced the amount of hashing done when loading roms by hash.
 - Added the ability to load specific versions of romsets when loading roms by
   hash. Pass `--help` to see the list of accepted names.
+- Fixed bit-flips in interp table ([upstream
+  commit](https://github.com/nukeykt/Nuked-SC55/commit/9c98ab97b8d7b1af841845bbd65c4d2371f33ad0))
+- Relicensed source code to GPL-2.0-or-later ([upstream
+  commit](https://github.com/nukeykt/Nuked-SC55/commit/f6e50220d5de4241080e1811a30d29f7113a0929))
+- Hid debug messages coming from the backend. These can be re-enabled
+  by passing `--debug` to either frontend.
+- Added a `--quiet` flag to suppress messages entirely. (#43)
 
 ## Notes for developers
 
