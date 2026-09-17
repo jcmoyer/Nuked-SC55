@@ -114,7 +114,7 @@ LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
             return ent.file_size() <= MAX_ROM_FILESIZE;
         };
 
-        if (!HashDirectoryFiles(rom_directory, result.registries.hashes, FILTER_FILESIZE))
+        if (!HashDirectoryFiles(rom_directory, HashDirectoryKind::Recursive, result.registries.hashes, FILTER_FILESIZE))
         {
             return LoadRomsetError::DetectionFailed;
         }

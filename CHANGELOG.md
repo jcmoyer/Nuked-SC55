@@ -35,6 +35,8 @@ your hardware.
 - Hid debug messages coming from the backend. These can be re-enabled
   by passing `--debug` to either frontend.
 - Added a `--quiet` flag to suppress messages entirely. (#43)
+- The hash based rom loader now looks for roms in the rom directory
+  recursively.
 
 ## Notes for developers
 

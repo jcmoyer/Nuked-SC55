@@ -56,9 +56,11 @@ private:
     std::unordered_map<SHA256_Digest, size_t> m_hash_map;
 };
 
-// If `filter` returns true for a file, it will be hashed; otherwise it will be skipped.
-template <std::invocable<const std::filesystem::directory_entry&> FileFilter>
-bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistry& registry, FileFilter filter)
+namespace detail
+{
+
+template <typename DirIter, std::invocable<const std::filesystem::directory_entry&> FileFilter>
+bool HashDirectoryFilesImpl(const std::filesystem::path& dir_path, HashedFileRegistry& registry, FileFilter filter)
 {
     using namespace std::filesystem;
 
@@ -67,7 +69,7 @@ bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistr
     {
         std::vector<uint8_t> buffer;
 
-        for (directory_iterator dir_iter(dir_path); dir_iter != directory_iterator{}; ++dir_iter)
+        for (DirIter dir_iter(dir_path); dir_iter != DirIter{}; ++dir_iter)
         {
             if (!dir_iter->is_regular_file())
             {
@@ -106,4 +108,44 @@ bool HashDirectoryFiles(const std::filesystem::path& dir_path, HashedFileRegistr
         return false;
     }
     return true;
+}
+
+} // namespace detail
+
+enum class HashDirectoryKind
+{
+    TopLevel,
+    Recursive,
+};
+
+// Hashes files under `dir_path`.
+//
+// If `kind` is `HashDirectoryKind::TopLevel`, only the files directly under
+// `dir_path` will be considered. If it is `HashDirectoryKind::Recursive`, all
+// files in all subdirectories will also be considered.
+//
+// `registry` will be populated with the file hashes.
+//
+// `filter` is a function that receives a
+// `std::filesystem::directory_entry`. The entry passed will only ever be a
+// regular file, i.e. it will never be a directory or a symlink. If this
+// function returns true for an entry, it will be hashed; otherwise it will be
+// skipped.
+template <std::invocable<const std::filesystem::directory_entry&> FileFilter>
+inline bool HashDirectoryFiles(const std::filesystem::path& dir_path,
+                               HashDirectoryKind            kind,
+                               HashedFileRegistry&          registry,
+                               FileFilter                   filter)
+{
+    switch (kind)
+    {
+    case HashDirectoryKind::TopLevel:
+        return detail::HashDirectoryFilesImpl<std::filesystem::directory_iterator, FileFilter>(
+            dir_path, registry, filter);
+    case HashDirectoryKind::Recursive:
+        return detail::HashDirectoryFilesImpl<std::filesystem::recursive_directory_iterator, FileFilter>(
+            dir_path, registry, filter);
+    }
+    Diag_Printf(Diag_Category::Error, "HashDirectoryFiles: invalid kind\n");
+    return false;
 }
