@@ -257,7 +257,7 @@ void PrintLoadRomsetDiagnostics(LoadRomsetError error, const LoadRomsetResult& r
         PrintRomsets();
         break;
     case LoadRomsetError::NoCompleteRomsets: {
-        Printf("No complete romsets for %s found.\n", ParsableRomsetName(result.romset));
+        Printf("No complete romsets found.\n");
 
         StringVector partial_names;
         GetPartialRomsetNames(result.registries.romsets, result.registries.hashes, ROMLOCATION_ALL, partial_names);
