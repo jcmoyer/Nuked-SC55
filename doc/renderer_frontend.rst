@@ -29,6 +29,19 @@ Writes a wave file to ``filename``. Cannot be combined with ``--stdout``.
 Writes the raw sample data to stdout. This is mostly used for testing the
 emulator.
 
+``--debug``
+===========
+
+Enables debug messages from the backend and renderer. The renderer will emit
+performance data after a render when this flag is present. These messages are
+intended for developers and are not generally useful to users.
+
+``--quiet``
+===========
+
+Suppresses **all** message output that would normally go to your terminal or
+console.
+
 ``-f, --format s16|s32|f32``
 ============================
 

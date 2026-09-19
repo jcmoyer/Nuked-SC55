@@ -26,6 +26,18 @@ Command line options
 Prints the version number and build configuration to stdout then exits
 immediately.
 
+``--debug``
+===========
+
+Enables debug messages from the backend. These are intended for developers and
+are not generally useful to users.
+
+``--quiet``
+===========
+
+Suppresses **all** message output that would normally go to your terminal or
+console.
+
 ``-p``, ``--port <device_name_or_number>``
 ==========================================
 
