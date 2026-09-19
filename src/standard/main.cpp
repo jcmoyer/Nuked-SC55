@@ -66,6 +66,7 @@ General options:
   -?, -h, --help                                Display this information.
   -v, --version                                 Display version information.
   --debug                                       Enables debug messages.
+  --quiet                                       Do not print messages to stderr.
 
 Audio options:
   -p, --port         <device_name_or_number>    Set MIDI input port.
