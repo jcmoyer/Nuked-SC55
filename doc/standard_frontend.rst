@@ -8,9 +8,11 @@ The standard frontend is an enhanced version of the program packaged by
 1. Better performance
 2. Ability to run multiple emulators to increase effective polyphony
 3. Various QOL enhancements
+
    - Set rom directory
    - List audio and midi devices and pick them by index or name
    - Launch without a window
+
 4. More audio output formats
 5. (Windows, requires building from source) ASIO output for lower latency
 
