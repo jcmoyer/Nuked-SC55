@@ -22,7 +22,7 @@ Differences from upstream:
 
 ## Building
 
-See [BUILDING.md](BUILDING.md).
+See [BUILDING](doc/building.rst).
 
 ## Contributing
 
