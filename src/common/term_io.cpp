@@ -76,15 +76,10 @@ void Printf(const char* format, ...)
         return;
     }
 
-    // no message we print requires a larger buffer than this
-    char buf[1024] = {0};
-
     va_list list;
     va_start(list, format);
-    int len = vsnprintf(buf, sizeof(buf), format, list);
+    vfprintf(g_config.output_file, format, list);
     va_end(list);
-
-    fprintf(g_config.output_file, "%.*s", len, buf);
 }
 
 } // namespace common
