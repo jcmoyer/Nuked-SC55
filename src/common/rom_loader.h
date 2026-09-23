@@ -27,22 +27,34 @@ using RomOverrides = std::array<std::filesystem::path, ROMLOCATION_COUNT>;
 
 enum class LoadRomsetError
 {
-    // `desired_romset` should be one of the strings returned by `GetParsableRomsetNames`
+    // User passed a romset name that we don't recognize.
     InvalidRomsetName = 1,
 
-    DetectionFailed,
+    // Hashing files failed due to an IO error.
+    HashFilesIoFailure,
 
-    // tried to autodetect a romset, but none of them were complete
+    // User gave a valid romset family, but we couldn't find a romset for
+    // it. `romset` will contain the family.
+    RequestedFamilyNotFound,
+
+    // User requested a romset family, but there are multiple suitable romsets
+    // in the rom directory. `romset` will contain the family.
+    RequestedFamilyAmbiguous,
+
+    // Tried to pick a romset automatically, but none of them were
+    // complete. `romset` will be invalid.
     NoCompleteRomsets,
 
-    // picked a romset, but it has missing roms; they will be available through `completion`
+    // User requested a valid romset, but there are missing roms. `romset` and
+    // `completion` will be valid.
     IncompleteRomset,
 
-    // loaded roms will be available through `loaded`
+    // User requested a valid romset, but one or more roms could not be
+    // read. `romset`, `completion`, and `loaded` will be valid.
     RomLoadFailed,
 
-    // user requested a romset family, but there are multiple suitable romsets in the rom directory
-    AmbiguousRomset,
+    // Caller passed an invalid loader.
+    InvalidLoader,
 };
 
 // `error`: error code to convert to string
@@ -56,21 +68,43 @@ struct LoaderRegistries
 
 struct LoadRomsetResult
 {
+    // Contains the romset family. Depending on what the user provides as
+    // `requested_romset`, this value may or may not be valid.
     Romset romset;
 
-    // on successful load, this field contains the paths and data for each rom location
+    // On successful load, this field contains the paths and data for each rom
+    // location.
     RomsetInfo romset_info;
+
+    // True for each location the loader needed to determine a rom for. False
+    // implies the rom is overridden. Values for locations not used by the
+    // romset are not meaningful.
+    //
+    // This value will always be populated.
+    RomLocationSet rom_mask;
+
+    // This is the value passed to LoadRomset.
+    //
+    // This value will always be populated.
+    RomOverrides overrides;
 
     RomLoadStatusSet       loaded;
     RomCompletionStatusSet completion;
 
     LoaderRegistries registries;
 
+    // User-requested name. This is the string passed to LoadRomset.
+    //
+    // This value will always be populated.
+    std::string requested_name;
+
+    // Name the loader decided on.
     std::string picked_name;
 
-    // Frees any allocated buffers from loading roms and hashing files. This happens automatically when the result
-    // object goes out of scope, but it is useful in cases where we keep the result object around and no longer need
-    // the data.
+    // Frees any allocated buffers from loading roms and hashing files. This
+    // happens automatically when the result object goes out of scope, but it
+    // is useful in cases where we keep the result object around and no longer
+    // need the data.
     void Purge();
 };
 
@@ -84,15 +118,16 @@ enum class RomLoader
 };
 
 // `rom_directory`: directory containing complete romset(s)
-// `desired_romset`: romset the user wants to load; if empty this defaults to mk2 for the legacy loader and the first
-//                   detected romset in `rom_directory` for the hashing loader
+// `requested_romset`: romset the user wants to load; if empty this defaults to
+//                     mk2 for the legacy loader and the first detected romset
+//                     in `rom_directory` for the hashing loader
 // `loader`: which loader to use
 // `overrides`: overrides for specific roms in the romset
 // `result`: receives the results of loading `desired_romset`
 //
 // Returns `LoadRomsetError{}` on success.
 LoadRomsetError LoadRomset(const std::filesystem::path& rom_directory,
-                           std::string_view             desired_romset,
+                           std::string_view             requested_romset,
                            RomLoader                    loader,
                            const RomOverrides&          overrides,
                            LoadRomsetResult&            result);
