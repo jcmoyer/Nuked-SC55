@@ -358,10 +358,21 @@ bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded)
                 continue;
             }
 
+            if (RomSize(location) < on_demand_buffer.size())
+            {
+                all_loaded = false;
+                if (loaded)
+                {
+                    (*loaded)[i] = RomLoadStatus::Failed;
+                }
+                continue;
+            }
+
             if (IsWaverom(location))
             {
                 info.rom_data[i].resize(on_demand_buffer.size());
                 unscramble(on_demand_buffer.data(), info.rom_data[i].data(), (int)on_demand_buffer.size());
+                on_demand_buffer.resize(0);
             }
             else
             {
@@ -376,11 +387,22 @@ bool LoadRomset(RomsetInfo& info, RomLoadStatusSet* loaded)
         }
         else if (!info.rom_data[i].empty())
         {
+            if (RomSize(location) < on_demand_buffer.size())
+            {
+                all_loaded = false;
+                if (loaded)
+                {
+                    (*loaded)[i] = RomLoadStatus::Failed;
+                }
+                continue;
+            }
+
             if (IsWaverom(location))
             {
                 on_demand_buffer.resize(info.rom_data[i].size());
                 unscramble(info.rom_data[i].data(), on_demand_buffer.data(), (int)on_demand_buffer.size());
                 std::swap(info.rom_data[i], on_demand_buffer);
+                on_demand_buffer.resize(0);
             }
 
             if (loaded)
