@@ -24,6 +24,15 @@ if(NUKED_ENABLE_TESTS)
 endif()
 
 #==============================================================================
+# Documentation
+#==============================================================================
+option(NUKED_ENABLE_DOCS "Enable building documentation" OFF)
+
+if(NUKED_ENABLE_DOCS)
+    add_subdirectory("doc")
+endif()
+
+#==============================================================================
 # Dependencies
 #==============================================================================
 find_package(SDL2)
@@ -262,4 +271,3 @@ target_enable_conversion_warnings(nuked-sc55-render)
 # Installables
 #==============================================================================
 install(TARGETS nuked-sc55-render)
-install(DIRECTORY doc/ DESTINATION ${CMAKE_INSTALL_DOCDIR})

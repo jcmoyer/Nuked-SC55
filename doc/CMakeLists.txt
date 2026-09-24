@@ -1,0 +1,19 @@
+find_program(SPHINX_BUILD_EXECUTABLE sphinx-build REQUIRED)
+
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/html"
+    COMMAND "${SPHINX_BUILD_EXECUTABLE}" -M html "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
+add_custom_target(
+    nuked-sc55-docs ALL
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/html"
+)
+
+set_property(
+    TARGET nuked-sc55-docs
+    APPEND
+    PROPERTY ADDITIONAL_CLEAN_FILES "${CMAKE_CURRENT_BINARY_DIR}/html"
+)
+
+install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html" DESTINATION "${CMAKE_INSTALL_DOCDIR}")
