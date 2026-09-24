@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2021, 2024 nukeykt
+ * Modified by J.C. Moyer
  * Original source file: src/submcu.h
  *
  * This file is part of Nuked-SC55.
@@ -18,6 +19,8 @@
 #pragma once
 
 #include <cstdint>
+
+#include "rom.h"
 
 struct mcu_t;
 
@@ -42,7 +45,7 @@ struct submcu_t {
     uint64_t cycles = 0;
     uint8_t sleep = 0;
     mcu_t* mcu = nullptr;
-    uint8_t rom[4096]{};
+    uint8_t rom[SMROM_SIZE]{};
 
     uint8_t ram[128]{};
     uint8_t shared_ram[192]{};

@@ -203,13 +203,10 @@ enum {
     VECTOR_INTERNAL_INTERRUPT_E0, // ADI
 };
 
-static const int ROM1_SIZE = 0x8000;
-static const int ROM2_SIZE = 0x80000;
 static const int RAM_SIZE = 0x400;
 static const int SRAM_SIZE = 0x8000;
 static const int NVRAM_SIZE = 0x8000; // JV880 only
 static const int CARDRAM_SIZE = 0x8000; // JV880 only
-static const int ROMSM_SIZE = 0x1000;
 
 static const uint32_t uart_buffer_size = 8192;
 

@@ -24,6 +24,8 @@
 
 #include <cstdint>
 
+#include "rom.h"
+
 struct mcu_t;
 
 struct PCM_Config
@@ -68,11 +70,11 @@ struct pcm_t
 
     uint16_t eram[0x4000]{};
 
-    uint8_t waverom1[0x200000]{};
-    uint8_t waverom2[0x200000]{};
-    uint8_t waverom3[0x100000]{};
-    uint8_t waverom_card[0x200000]{};
-    uint8_t waverom_exp[0x800000]{};
+    uint8_t waverom1[WAVEROM1_SIZE]{};
+    uint8_t waverom2[WAVEROM2_SIZE]{};
+    uint8_t waverom3[WAVEROM3_SIZE]{};
+    uint8_t waverom_card[WAVEROM_CARD_SIZE]{};
+    uint8_t waverom_exp[WAVEROM_EXP_SIZE]{};
 
     bool enable_oversampling = true;
 };

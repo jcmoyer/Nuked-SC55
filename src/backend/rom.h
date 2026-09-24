@@ -76,6 +76,40 @@ constexpr size_t ROMLOCATION_COUNT = 8;
 
 const char* ToCString(RomLocation location);
 
+// Rom sizes in bytes.
+const size_t ROM1_SIZE         = 0x8000;
+const size_t ROM2_SIZE         = 0x80000;
+const size_t SMROM_SIZE        = 0x1000;
+const size_t WAVEROM1_SIZE     = 0x200000;
+const size_t WAVEROM2_SIZE     = 0x200000;
+const size_t WAVEROM3_SIZE     = 0x100000;
+const size_t WAVEROM_CARD_SIZE = 0x200000;
+const size_t WAVEROM_EXP_SIZE  = 0x800000;
+
+constexpr size_t RomSize(RomLocation location)
+{
+    switch (location)
+    {
+    case RomLocation::ROM1:
+        return ROM1_SIZE;
+    case RomLocation::ROM2:
+        return ROM2_SIZE;
+    case RomLocation::SMROM:
+        return SMROM_SIZE;
+    case RomLocation::WAVEROM1:
+        return WAVEROM1_SIZE;
+    case RomLocation::WAVEROM2:
+        return WAVEROM2_SIZE;
+    case RomLocation::WAVEROM3:
+        return WAVEROM3_SIZE;
+    case RomLocation::WAVEROM_CARD:
+        return WAVEROM_CARD_SIZE;
+    case RomLocation::WAVEROM_EXP:
+        return WAVEROM_EXP_SIZE;
+    }
+    return 0;
+}
+
 // Set of rom locations. Indexed by RomLocation.
 using RomLocationSet = std::array<bool, ROMLOCATION_COUNT>;
 
