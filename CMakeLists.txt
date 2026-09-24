@@ -7,7 +7,7 @@ include(GNUInstallDirs)
 include(TargetWarnings)
 
 set(NUKED_SOURCE "unknown" CACHE STRING "Origin of this build")
-option(NUKED_ENABLE_DECODER2 "Enable new instruction decoder" OFF)
+option(NUKED_ENABLE_DECODER2 "Enable new instruction decoder" ON)
 
 #==============================================================================
 # Tests
