@@ -118,7 +118,7 @@ inline void I_BSET_imm4_EAd(mcu_t& mcu, const InstructionParams& st)
 {
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> mask   = 1 << st.op_data;
+    const SizeToIntType<Sz> mask   = static_cast<SizeToIntType<Sz>>(1 << st.op_data);
     const SizeToIntType<Sz> data   = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> result = data | mask;
     const bool              Z      = (data & mask) == 0;
@@ -133,7 +133,7 @@ inline void I_BSET_Rs_EAd(mcu_t& mcu, const InstructionParams& st)
 
     // Both Byte and Word loads work here since we truncate to 4 bits either way.
     const uint8_t           bit    = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const SizeToIntType<Sz> mask   = 1 << bit;
+    const SizeToIntType<Sz> mask   = static_cast<SizeToIntType<Sz>>(1 << bit);
     const SizeToIntType<Sz> data   = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> result = data | mask;
     const bool              Z      = (data & mask) == 0;
@@ -147,7 +147,7 @@ inline void I_BNOT_imm4_EAd(mcu_t& mcu, const InstructionParams& st)
 {
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> mask   = 1 << st.op_data;
+    const SizeToIntType<Sz> mask   = static_cast<SizeToIntType<Sz>>(1 << st.op_data);
     const SizeToIntType<Sz> data   = LoadFromEA<Sz>(Mode{}, mcu, st);
     const SizeToIntType<Sz> result = data ^ mask;
     const bool              Z      = (data & mask) == 0;
@@ -161,7 +161,7 @@ inline void I_BCLR_imm4_EAd(mcu_t& mcu, const InstructionParams& st)
 {
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> mask = 1 << st.op_data;
+    const SizeToIntType<Sz> mask = static_cast<SizeToIntType<Sz>>(1 << st.op_data);
     const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
     StoreToEA<Sz>(Mode{}, mcu, st, data & (~mask));
@@ -174,7 +174,7 @@ inline void I_BCLR_Rs_EAd(mcu_t& mcu, const InstructionParams& st)
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const uint8_t           bit  = LoadFromOpReg<Size::Word>(mcu, st) & 0b1111;
-    const SizeToIntType<Sz> mask = 1 << bit;
+    const SizeToIntType<Sz> mask = static_cast<SizeToIntType<Sz>>(1 << bit);
     const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     MCU_SetStatus(mcu, (data & mask) == 0, STATUS_Z);
     StoreToEA<Sz>(Mode{}, mcu, st, data & (~mask));
@@ -185,7 +185,7 @@ inline void I_BTST_imm4_EAd(mcu_t& mcu, const InstructionParams& st)
 {
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> mask = 1 << st.op_data;
+    const SizeToIntType<Sz> mask = static_cast<SizeToIntType<Sz>>(1 << st.op_data);
     const SizeToIntType<Sz> data = LoadFromEA<Sz>(Mode{}, mcu, st);
     const bool              Z    = (data & mask) == 0;
     MCU_SetStatus(mcu, Z, STATUS_Z);
@@ -198,7 +198,7 @@ inline void I_BTST_Rs_EAd(mcu_t& mcu, const InstructionParams& st)
 
     const SizeToIntType<Sz> data  = LoadFromEA<Sz>(Mode{}, mcu, st);
     const uint8_t           shift = LoadFromOpReg<Sz>(mcu, st) & 0b1111;
-    const SizeToIntType<Sz> mask  = 1 << shift;
+    const SizeToIntType<Sz> mask  = static_cast<SizeToIntType<Sz>>(1 << shift);
     const bool              Z     = (data & mask) == 0;
     MCU_SetStatus(mcu, Z, STATUS_Z);
 }
@@ -514,7 +514,7 @@ inline void I_SHLL_EAd(mcu_t& mcu, const InstructionParams& st)
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(Mode{}, mcu, st);
-    const SizeToIntType<Sz> val_new = val_old << 1;
+    const SizeToIntType<Sz> val_new = static_cast<SizeToIntType<Sz>>(val_old << 1);
     StoreToEA<Sz>(Mode{}, mcu, st, val_new);
 
     const bool N = val_new & MSB<Sz>;
@@ -556,7 +556,7 @@ inline void I_SHAL_EAd(mcu_t& mcu, const InstructionParams& st)
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     const SizeToIntType<Sz> val_old = LoadFromEA<Sz>(Mode{}, mcu, st);
-    const SizeToIntType<Sz> val_new = val_old << 1;
+    const SizeToIntType<Sz> val_new = static_cast<SizeToIntType<Sz>>(val_old << 1);
     StoreToEA<Sz>(Mode{}, mcu, st, val_new);
 
     const bool N = val_new & MSB<Sz>;
@@ -713,7 +713,7 @@ inline void I_NOT_EAd(mcu_t& mcu, const InstructionParams& st)
 {
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
-    const SizeToIntType<Sz> value = ~LoadFromEA<Sz>(Mode{}, mcu, st);
+    const SizeToIntType<Sz> value = static_cast<SizeToIntType<Sz>>(~LoadFromEA<Sz>(Mode{}, mcu, st));
     StoreToEA<Sz>(Mode{}, mcu, st, value);
     MCU_SetStatus(mcu, value & MSB<Sz>, STATUS_N);
     MCU_SetStatus(mcu, value == 0, STATUS_Z);
