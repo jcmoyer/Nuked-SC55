@@ -85,6 +85,7 @@ const size_t WAVEROM2_SIZE     = 0x200000;
 const size_t WAVEROM3_SIZE     = 0x100000;
 const size_t WAVEROM_CARD_SIZE = 0x200000;
 const size_t WAVEROM_EXP_SIZE  = 0x800000;
+const size_t ROM_MAX_SIZE      = WAVEROM_EXP_SIZE;
 
 constexpr size_t RomSize(RomLocation location)
 {
