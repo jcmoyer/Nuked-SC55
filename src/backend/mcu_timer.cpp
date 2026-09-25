@@ -83,6 +83,13 @@ enum FRT_Field_Offset : uint8_t
     REG_ICRL  = 0x09,
 };
 
+// Calculates the next deadline for a timer. This is actually just a
+// pointer alignment algorithm. `interval` must be power-of-two.
+constexpr uint64_t AlignForward(uint64_t value, uint64_t interval)
+{
+    return (value + (interval - 1)) & (~(interval - 1));
+}
+
 void TIMER_Init(mcu_timer_t& timer, mcu_t& mcu)
 {
     timer.mcu = &mcu;
@@ -100,6 +107,8 @@ void TIMER_Reset(mcu_timer_t& timer)
             .ocrb      = 0xffff,
             .icr       = 0,
             .status_rd = 0,
+            .stride    = 4,
+            .deadline  = 0,
         };
     }
     timer.tmr = {
@@ -109,6 +118,8 @@ void TIMER_Reset(mcu_timer_t& timer)
         .tcorb     = 0xff,
         .tcnt      = 0,
         .status_rd = 0,
+        .stride    = 0,
+        .deadline  = static_cast<uint64_t>(-1),
     };
 }
 
@@ -122,9 +133,16 @@ void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
     address &= 0x0f;
     switch (address)
     {
-    case REG_TCR:
+    case REG_TCR: {
         frt.tcr = data;
+
+        const uint8_t stride = timer.frt_step_table[frt.tcr & (FRT_TCR_CKS0 | FRT_TCR_CKS1)];
+
+        frt.deadline = AlignForward(timer.cycles, stride);
+        frt.stride   = stride;
+
         break;
+    }
     case REG_TCSR:
         frt.tcsr &= ~0xf;
         frt.tcsr |= data & 0xf;
@@ -213,9 +231,24 @@ void TIMER2_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
 
     switch (address)
     {
-    case DEV_TMR_TCR:
+    case DEV_TMR_TCR: {
         tmr.tcr = data;
+
+        const uint16_t stride = timer.tmr_step_table[tmr.tcr & (TMR_TCR_CKS0 | TMR_TCR_CKS1 | TMR_TCR_CKS2)];
+
+        if (stride == 0)
+        {
+            tmr.deadline = static_cast<uint64_t>(-1);
+        }
+        else
+        {
+            tmr.deadline = AlignForward(timer.cycles, stride);
+        }
+
+        tmr.stride = stride;
+
         break;
+    }
     case DEV_TMR_TCSR:
         tmr.tcsr &= ~0xf;
         tmr.tcsr |= data & 0xf;
@@ -273,15 +306,9 @@ uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address)
     return 0xff;
 }
 
-
 inline void TIMER_ClockFrt(mcu_timer_t& timer, int frt_id)
 {
     frt_t& frt = timer.frt[frt_id];
-
-    if (timer.cycles & timer.frt_step_table[frt.tcr & (FRT_TCR_CKS0 | FRT_TCR_CKS1)])
-    {
-        return;
-    }
 
     const bool matcha = frt.frc == frt.ocra;
     const bool matchb = frt.frc == frt.ocrb;
@@ -315,18 +342,6 @@ inline void TIMER_ClockFrt(mcu_timer_t& timer, int frt_id)
 inline void TIMER_ClockTmr(mcu_timer_t& timer)
 {
     tmr_t& tmr = timer.tmr;
-
-    const uint16_t step_mask = timer.tmr_step_table[tmr.tcr & (TMR_TCR_CKS0 | TMR_TCR_CKS1 | TMR_TCR_CKS2)];
-
-    if (step_mask == 0)
-    {
-        return;
-    }
-
-    if (timer.cycles & step_mask)
-    {
-        return;
-    }
 
     const bool matcha = tmr.tcnt == tmr.tcora;
     const bool matchb = tmr.tcnt == tmr.tcorb;
@@ -363,26 +378,33 @@ inline void TIMER_ClockTmr(mcu_timer_t& timer)
 
 void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles)
 {
-    while (timer.cycles * 2 < cycles) // FIXME
+    const uint64_t target_cycles = cycles / 2;
+
+    timer.cycles = target_cycles;
+
+    for (int i = 0; i < 3; i++)
     {
-        for (int i = 0; i < 3; i++)
+        while (timer.frt[i].deadline < target_cycles)
         {
             TIMER_ClockFrt(timer, i);
+            timer.frt[i].deadline += timer.frt[i].stride;
         }
+    }
 
+    while (timer.tmr.deadline < target_cycles)
+    {
         TIMER_ClockTmr(timer);
-
-        ++timer.cycles;
+        timer.tmr.deadline += timer.tmr.stride;
     }
 }
 
 // These tables are indexed by the low CKSn bits of the TCR.
-constexpr FRT_Step_Table FRT_STEP_TABLE_GENERIC = {3, 7, 31, 1};
-constexpr FRT_Step_Table FRT_STEP_TABLE_MK1     = {3, 7, 31, 3};
+constexpr FRT_Step_Table FRT_STEP_TABLE_GENERIC = {4, 8, 32, 2};
+constexpr FRT_Step_Table FRT_STEP_TABLE_MK1     = {4, 8, 32, 4};
 
 // A value of 0 means do not step.
-constexpr TMR_Step_Table TMR_STEP_TABLE_GENERIC = {0, 7, 63, 1023, 0, 1, 1, 1};
-constexpr TMR_Step_Table TMR_STEP_TABLE_MK1     = {0, 7, 63, 1023, 0, 3, 3, 3};
+constexpr TMR_Step_Table TMR_STEP_TABLE_GENERIC = {0, 8, 64, 1024, 0, 2, 2, 2};
+constexpr TMR_Step_Table TMR_STEP_TABLE_MK1     = {0, 8, 64, 1024, 0, 4, 4, 4};
 
 void TIMER_NotifyRomsetChange(mcu_timer_t& timer)
 {

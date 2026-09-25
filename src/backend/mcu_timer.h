@@ -36,17 +36,21 @@ struct frt_t
     uint16_t ocrb      = 0;
     uint16_t icr       = 0;
     uint8_t  status_rd = 0; // not an actual FRT register
+    uint8_t  stride    = 4;
+    uint64_t deadline  = 0;
 };
 
 // 8-bit timer
 struct tmr_t
 {
-    uint8_t tcr       = 0;
-    uint8_t tcsr      = 0;
-    uint8_t tcora     = 0;
-    uint8_t tcorb     = 0;
-    uint8_t tcnt      = 0;
-    uint8_t status_rd = 0;
+    uint8_t  tcr       = 0;
+    uint8_t  tcsr      = 0;
+    uint8_t  tcora     = 0;
+    uint8_t  tcorb     = 0;
+    uint8_t  tcnt      = 0;
+    uint8_t  status_rd = 0;
+    uint16_t stride    = 0;
+    uint64_t deadline  = static_cast<uint64_t>(-1);
 };
 
 struct mcu_timer_t
