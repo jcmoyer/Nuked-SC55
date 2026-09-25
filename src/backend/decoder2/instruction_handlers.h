@@ -242,11 +242,11 @@ inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
     InstructionScope<Sz, Mode> scope(mcu, st, 1);
 
     WideType dividend;
-    if (Sz == Size::Byte)
+    if constexpr (Sz == Size::Byte)
     {
         dividend = LoadFromOpReg<Size::Word>(mcu, st);
     }
-    else if (Sz == Size::Word)
+    else if constexpr (Sz == Size::Word)
     {
         dividend = static_cast<uint32_t>((mcu.r[st.op_reg] << 16) | mcu.r[st.op_reg + 1]);
     }
@@ -275,11 +275,11 @@ inline void I_DIVXU_EAs_Rd(mcu_t& mcu, const InstructionParams& st)
         return;
     }
 
-    if (Sz == Size::Byte)
+    if constexpr (Sz == Size::Byte)
     {
         mcu.r[st.op_reg] = (uint16_t)((r << 8) | q);
     }
-    else if (Sz == Size::Word)
+    else if constexpr (Sz == Size::Word)
     {
         mcu.r[st.op_reg + 0] = (uint16_t)r;
         mcu.r[st.op_reg + 1] = (uint16_t)q;
@@ -328,11 +328,11 @@ inline void I_MOV_G_imm8_EAd(mcu_t& mcu, const InstructionParams& st)
     InstructionScope<Sz, Mode> scope(mcu, st, 2);
 
     SizeToIntType<Sz> data;
-    if (Sz == Size::Byte)
+    if constexpr (Sz == Size::Byte)
     {
         data = LoadFromOpData<Size::Byte>(mcu, st);
     }
-    else if (Sz == Size::Word)
+    else if constexpr (Sz == Size::Word)
     {
         data = SX(LoadFromOpData<Size::Byte>(mcu, st));
     }
@@ -393,7 +393,7 @@ inline void I_ADD_Q_n(mcu_t& mcu, const InstructionParams& st)
 
     const SizeToIntType<Sz> ea_byte = LoadFromEA<Sz>(Mode{}, mcu, st);
 
-    const BinopResult<Sz> result = GenericAdd<Sz>(ea_byte, N);
+    const BinopResult<Sz> result = GenericAdd<Sz>(ea_byte, static_cast<SizeToIntType<Sz>>(N));
 
     StoreToEA<Sz>(Mode{}, mcu, st, result.result_bits);
     MCU_SetStatus(mcu, result.negative, STATUS_N);
@@ -974,14 +974,14 @@ inline void I_STM_Fast(mcu_t& mcu, const InstructionParams& st)
 {
     (void)st;
     // clang-format off
-    if (Reglist & 0b10000000) MCU_PushStack(mcu, mcu.r[7]);
-    if (Reglist & 0b01000000) MCU_PushStack(mcu, mcu.r[6]);
-    if (Reglist & 0b00100000) MCU_PushStack(mcu, mcu.r[5]);
-    if (Reglist & 0b00010000) MCU_PushStack(mcu, mcu.r[4]);
-    if (Reglist & 0b00001000) MCU_PushStack(mcu, mcu.r[3]);
-    if (Reglist & 0b00000100) MCU_PushStack(mcu, mcu.r[2]);
-    if (Reglist & 0b00000010) MCU_PushStack(mcu, mcu.r[1]);
-    if (Reglist & 0b00000001) MCU_PushStack(mcu, mcu.r[0]);
+    if constexpr (Reglist & 0b10000000) MCU_PushStack(mcu, mcu.r[7]);
+    if constexpr (Reglist & 0b01000000) MCU_PushStack(mcu, mcu.r[6]);
+    if constexpr (Reglist & 0b00100000) MCU_PushStack(mcu, mcu.r[5]);
+    if constexpr (Reglist & 0b00010000) MCU_PushStack(mcu, mcu.r[4]);
+    if constexpr (Reglist & 0b00001000) MCU_PushStack(mcu, mcu.r[3]);
+    if constexpr (Reglist & 0b00000100) MCU_PushStack(mcu, mcu.r[2]);
+    if constexpr (Reglist & 0b00000010) MCU_PushStack(mcu, mcu.r[1]);
+    if constexpr (Reglist & 0b00000001) MCU_PushStack(mcu, mcu.r[0]);
     // clang-format on
     mcu.pc += 2;
 }
@@ -1010,14 +1010,14 @@ inline void I_LDM_Fast(mcu_t& mcu, const InstructionParams& st)
 {
     (void)st;
     // clang-format off
-    if (Reglist & 0b00000001) mcu.r[0] = MCU_PopStack(mcu);
-    if (Reglist & 0b00000010) mcu.r[1] = MCU_PopStack(mcu);
-    if (Reglist & 0b00000100) mcu.r[2] = MCU_PopStack(mcu);
-    if (Reglist & 0b00001000) mcu.r[3] = MCU_PopStack(mcu);
-    if (Reglist & 0b00010000) mcu.r[4] = MCU_PopStack(mcu);
-    if (Reglist & 0b00100000) mcu.r[5] = MCU_PopStack(mcu);
-    if (Reglist & 0b01000000) mcu.r[6] = MCU_PopStack(mcu);
-    if (Reglist & 0b10000000) mcu.r[7] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b00000001) mcu.r[0] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b00000010) mcu.r[1] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b00000100) mcu.r[2] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b00001000) mcu.r[3] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b00010000) mcu.r[4] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b00100000) mcu.r[5] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b01000000) mcu.r[6] = MCU_PopStack(mcu);
+    if constexpr (Reglist & 0b10000000) mcu.r[7] = MCU_PopStack(mcu);
     // clang-format on
     mcu.pc += 2;
 }
