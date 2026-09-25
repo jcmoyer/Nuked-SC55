@@ -122,7 +122,7 @@ static PickRomsetError PickSpecificRomset(const LoaderRegistries& registries,
 // size of largest loadable rom (waverom expansion)
 constexpr uintmax_t MAX_ROM_FILESIZE = (uintmax_t)0x800000;
 
-constexpr bool FilterToRomSize(const std::filesystem::directory_entry& ent)
+static bool FilterToRomSize(const std::filesystem::directory_entry& ent)
 {
     return ent.file_size() <= MAX_ROM_FILESIZE;
 }
