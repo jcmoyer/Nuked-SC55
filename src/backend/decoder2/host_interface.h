@@ -32,6 +32,7 @@ namespace decoder2
 // Implements pre/post decrement/increment for @-Rn and @Rn+ addressing modes
 // and automatically adjusts the program counter on scope exit.
 template <Size Sz, typename Mode>
+    requires(Sz == Size::Byte || Sz == Size::Word)
 class InstructionScope
 {
 public:
@@ -65,6 +66,8 @@ private:
         case Size::Word:
             return 2;
         }
+        // we statically assert Sz is valid
+        std::unreachable();
     }
 
 private:
