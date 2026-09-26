@@ -100,6 +100,7 @@ void TIMER_Reset(mcu_timer_t& timer)
     for (int i = 0; i < 3; ++i)
     {
         timer.frt[i] = {
+            .deadline  = 0,
             .tcr       = 0,
             .tcsr      = 0,
             .frc       = 0,
@@ -108,18 +109,17 @@ void TIMER_Reset(mcu_timer_t& timer)
             .icr       = 0,
             .status_rd = 0,
             .stride    = 4,
-            .deadline  = 0,
         };
     }
     timer.tmr = {
+        .deadline  = static_cast<uint64_t>(-1),
+        .stride    = 0,
         .tcr       = 0,
         .tcsr      = TMR_TCSR_BIT4,
         .tcora     = 0xff,
         .tcorb     = 0xff,
         .tcnt      = 0,
         .status_rd = 0,
-        .stride    = 0,
-        .deadline  = static_cast<uint64_t>(-1),
     };
 }
 
