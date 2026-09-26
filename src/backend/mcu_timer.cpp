@@ -123,7 +123,7 @@ void TIMER_Reset(mcu_timer_t& timer)
     };
 }
 
-void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
+void TIMER_WriteFRT(mcu_timer_t& timer, uint32_t address, uint8_t data)
 {
     uint32_t t = (address >> 4) - 1;
     if (t > 2)
@@ -186,7 +186,7 @@ void TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
     }
 }
 
-uint8_t TIMER_Read(mcu_timer_t& timer, uint32_t address)
+uint8_t TIMER_ReadFRT(mcu_timer_t& timer, uint32_t address)
 {
     uint32_t t = (address >> 4) - 1;
     if (t > 2)
@@ -225,7 +225,7 @@ uint8_t TIMER_Read(mcu_timer_t& timer, uint32_t address)
     return 0xff;
 }
 
-void TIMER2_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
+void TIMER_WriteTMR(mcu_timer_t& timer, uint32_t address, uint8_t data)
 {
     tmr_t& tmr = timer.tmr;
 
@@ -283,7 +283,7 @@ void TIMER2_Write(mcu_timer_t& timer, uint32_t address, uint8_t data)
     }
 }
 
-uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address)
+uint8_t TIMER_ReadTMR(mcu_timer_t& timer, uint32_t address)
 {
     tmr_t& tmr = timer.tmr;
 

@@ -153,12 +153,12 @@ void MCU_DeviceWrite(mcu_t& mcu, uint32_t address, uint8_t data)
     address &= 0x7f;
     if (address >= 0x10 && address < 0x40)
     {
-        TIMER_Write(*mcu.timer, address, data);
+        TIMER_WriteFRT(*mcu.timer, address, data);
         return;
     }
     if (address >= 0x50 && address < 0x55)
     {
-        TIMER2_Write(*mcu.timer, address, data);
+        TIMER_WriteTMR(*mcu.timer, address, data);
         return;
     }
     switch (address)
@@ -274,11 +274,11 @@ uint8_t MCU_DeviceRead(mcu_t& mcu, uint32_t address)
     address &= 0x7f;
     if (address >= 0x10 && address < 0x40)
     {
-        return TIMER_Read(*mcu.timer, address);
+        return TIMER_ReadFRT(*mcu.timer, address);
     }
     if (address >= 0x50 && address < 0x55)
     {
-        return TIMER_Read2(*mcu.timer, address);
+        return TIMER_ReadTMR(*mcu.timer, address);
     }
     switch (address)
     {

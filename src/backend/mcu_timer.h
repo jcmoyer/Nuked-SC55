@@ -70,12 +70,12 @@ void TIMER_Init(mcu_timer_t& timer, mcu_t& mcu);
 void TIMER_Reset(mcu_timer_t& timer);
 
 // Read/write 16-bit FRTs
-void    TIMER_Write(mcu_timer_t& timer, uint32_t address, uint8_t data);
-uint8_t TIMER_Read(mcu_timer_t& timer, uint32_t address);
+void    TIMER_WriteFRT(mcu_timer_t& timer, uint32_t address, uint8_t data);
+uint8_t TIMER_ReadFRT(mcu_timer_t& timer, uint32_t address);
 
 // Read/write 8-bit timer
-void    TIMER2_Write(mcu_timer_t& timer, uint32_t address, uint8_t data);
-uint8_t TIMER_Read2(mcu_timer_t& timer, uint32_t address);
+void    TIMER_WriteTMR(mcu_timer_t& timer, uint32_t address, uint8_t data);
+uint8_t TIMER_ReadTMR(mcu_timer_t& timer, uint32_t address);
 
 // Update all timers and trigger interrupts
 void TIMER_Clock(mcu_timer_t& timer, uint64_t cycles);
