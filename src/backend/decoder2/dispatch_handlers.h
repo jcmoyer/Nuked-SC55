@@ -635,6 +635,7 @@ DecodeError D_ANDC_immXX_CR(CodeReader& reader, uint8_t byte, DecodedInstruction
 // Special format instructions
 //=============================================================================
 template <Size Sz>
+    requires(Sz == Size::Byte || Sz == Size::Word)
 DecodeError D_Bcc(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
 {
     const uint8_t cond = byte & 0b1111;
@@ -661,6 +662,9 @@ DecodeError D_Bcc(CodeReader& reader, uint8_t byte, DecodedInstruction& instr)
             return DecodeError::NeedMoreBytes;
         }
         break;
+    default:
+        // we statically assert Sz is valid
+        std::unreachable();
     }
 
     switch (cond)
