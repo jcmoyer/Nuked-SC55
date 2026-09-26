@@ -10,6 +10,7 @@ your hardware.
 - Rewrite H8/532 VM from scratch to support instruction caching and reduce
   number of ROM reads. [TODO: add final benchmark numbers for this particular
   change]
+- Optimized timer updates for a ~17% overall performance improvement.
 - Fixed a bug where selecting a specific romset using `--romset` would cause
   the emulator to not load all the roms in that romset.
 - Fixed a bug where the renderer output was ~20% slower than the set tempo when
