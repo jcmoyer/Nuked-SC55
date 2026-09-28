@@ -1,4 +1,4 @@
-# Version 0.7.0 (TBD)
+# Version 0.7.0 (2026-09-28)
 
 ## License change
 
