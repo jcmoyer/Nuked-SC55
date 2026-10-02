@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cmath>
 #include <cstdint>
 #include <type_traits>
@@ -49,7 +50,7 @@ inline T PickCloser(T to, T a, T b)
     }
 }
 
-inline size_t NDigits(int32_t n)
+inline std::size_t NDigits(int32_t n)
 {
     if (n < 0)
     {
