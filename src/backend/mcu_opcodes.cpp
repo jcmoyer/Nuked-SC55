@@ -956,7 +956,7 @@ void MCU_Opcode_BCLR_ANDC(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         uint32_t data = MCU_Operand_Read(mcu);
         uint32_t bit = mcu.r[opcode_reg] & 0x0f;
         MCU_SetStatus(mcu, (data & (1 << bit)) == 0, STATUS_Z);
-        data &= ~(1 << bit);
+        data &= static_cast<uint32_t>(~(1 << bit));
         MCU_Operand_Write(mcu, data);
     }
 }
@@ -1074,7 +1074,7 @@ void MCU_Opcode_BCLR(mcu_t& mcu, uint8_t opcode, uint8_t opcode_reg)
         uint32_t data = MCU_Operand_Read(mcu);
         uint32_t bit = (uint32_t)opcode_reg | (uint32_t)((opcode & 1) << 3);
         MCU_SetStatus(mcu, (data & (1 << bit)) == 0, STATUS_Z);
-        data &= ~(1 << bit);
+        data &= static_cast<uint32_t>(~(1 << bit));
         MCU_Operand_Write(mcu, data);
     }
     else
