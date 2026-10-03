@@ -68,15 +68,16 @@ bool Instance::Initialize(const InstanceParameters& params)
         this_nvram += std::to_string(params.instance_id);
     }
 
-    if (!m_emu.Init({.lcd_backend = m_sdl_lcd.get(), .nvram_filename = this_nvram}))
+    EMU_Options opts{
+        .memory         = params.memory,
+        .instance_id    = m_instance_id,
+        .lcd_backend    = m_sdl_lcd.get(),
+        .nvram_filename = this_nvram,
+    };
+
+    if (!m_emu.Init(opts))
     {
         common::Printf("ERROR: Failed to init emulator.\n");
-        return false;
-    }
-
-    if (!m_emu.LoadRoms(params.romset, *params.romset_info))
-    {
-        common::Printf("ERROR: Failed to load roms for instance %02zu\n", params.instance_id);
         return false;
     }
 

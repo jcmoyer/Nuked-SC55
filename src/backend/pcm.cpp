@@ -253,8 +253,14 @@ uint8_t PCM_Read(pcm_t& pcm, uint32_t address)
     return 0;
 }
 
-void PCM_Init(pcm_t& pcm, mcu_t& mcu)
+void PCM_Init(pcm_t& pcm, EmulatorMemory& memory, mcu_t& mcu)
 {
+    pcm.waverom1     = MapBuffer(memory, RomLocation::WAVEROM1).data();
+    pcm.waverom2     = MapBuffer(memory, RomLocation::WAVEROM2).data();
+    pcm.waverom3     = MapBuffer(memory, RomLocation::WAVEROM3).data();
+    pcm.waverom_card = MapBuffer(memory, RomLocation::WAVEROM_CARD).data();
+    pcm.waverom_exp  = MapBuffer(memory, RomLocation::WAVEROM_EXP).data();
+
     pcm.mcu = &mcu;
 }
 

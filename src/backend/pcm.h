@@ -24,6 +24,7 @@
 
 #include <cstdint>
 
+#include "memory.h"
 #include "rom.h"
 
 struct mcu_t;
@@ -70,18 +71,18 @@ struct pcm_t
 
     uint16_t eram[0x4000]{};
 
-    uint8_t waverom1[WAVEROM1_SIZE]{};
-    uint8_t waverom2[WAVEROM2_SIZE]{};
-    uint8_t waverom3[WAVEROM3_SIZE]{};
-    uint8_t waverom_card[WAVEROM_CARD_SIZE]{};
-    uint8_t waverom_exp[WAVEROM_EXP_SIZE]{};
+    uint8_t* waverom1     = nullptr;
+    uint8_t* waverom2     = nullptr;
+    uint8_t* waverom3     = nullptr;
+    uint8_t* waverom_card = nullptr;
+    uint8_t* waverom_exp  = nullptr;
 
     bool enable_oversampling = true;
 };
 
 void PCM_Write(pcm_t& pcm, uint32_t address, uint8_t data);
 uint8_t PCM_Read(pcm_t& pcm, uint32_t address);
-void PCM_Init(pcm_t& pcm, mcu_t& mcu);
+void PCM_Init(pcm_t& pcm, EmulatorMemory& memory, mcu_t& mcu);
 void PCM_Update(pcm_t& pcm, uint64_t cycles);
 uint32_t PCM_GetOutputFrequency(const pcm_t& pcm);
 void PCM_GetConfig(PCM_Config& config, uint8_t config_byte);

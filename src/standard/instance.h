@@ -25,6 +25,7 @@
 #include "lcd_sdl.h"
 #include "output_common.h"
 #include "ringbuffer.h"
+#include "memory.h"
 
 #include "config.h"
 
@@ -42,6 +43,8 @@ struct InstanceParameters
 
     const RomsetInfo* romset_info;
     Romset            romset;
+
+    EmulatorMemory* memory;
 };
 
 class Instance

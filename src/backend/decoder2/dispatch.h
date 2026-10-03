@@ -20,6 +20,7 @@
 #include <cstdint>
 
 struct mcu_t;
+struct EmulatorMemory;
 
 namespace decoder2
 {
@@ -32,6 +33,8 @@ enum class DecodeError : uint8_t
     // EA field but no opcode
     NeedMoreBytes,
 };
+
+bool PreDecode(EmulatorMemory& mem);
 
 void FetchDecodeExecuteNext(mcu_t& mcu);
 

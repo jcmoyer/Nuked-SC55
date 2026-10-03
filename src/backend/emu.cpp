@@ -22,6 +22,7 @@
 #include "mcu_timer.h"
 #include "pcm.h"
 #include "submcu.h"
+#include "memory.h"
 #include <bit>
 #include <fstream>
 #include <span>
@@ -36,28 +37,29 @@ bool Emulator::Init(const EMU_Options& options)
 {
     m_options = options;
 
-    try
+    if (!options.memory)
     {
-        m_mcu   = std::make_unique<mcu_t>();
-        m_sm    = std::make_unique<submcu_t>();
-        m_timer = std::make_unique<mcu_timer_t>();
-        m_lcd   = std::make_unique<lcd_t>();
-        m_pcm   = std::make_unique<pcm_t>();
-    }
-    catch (const std::bad_alloc&)
-    {
-        m_mcu.reset();
-        m_sm.reset();
-        m_timer.reset();
-        m_lcd.reset();
-        m_pcm.reset();
         return false;
     }
 
-    MCU_Init(*m_mcu, *m_sm, *m_pcm, *m_timer, *m_lcd);
-    SM_Init(*m_sm, *m_mcu);
-    PCM_Init(*m_pcm, *m_mcu);
+    if (!ConstructEmulator(*options.memory, options.instance_id))
+    {
+        return false;
+    }
+
+    m_mcu   = (mcu_t*)GetMCUPtr(*options.memory, options.instance_id);
+    m_sm    = (submcu_t*)GetSMPtr(*options.memory, options.instance_id);
+    m_pcm   = (pcm_t*)GetPCMPtr(*options.memory, options.instance_id);
+    m_lcd   = (lcd_t*)GetLCDPtr(*options.memory, options.instance_id);
+    m_timer = (mcu_timer_t*)GetTimerPtr(*options.memory, options.instance_id);
+
+    // TODO: timer must be initialized before mcu, because MCU_Init
+    // sets romset from memory and then calls timer_notifyromsetchange
+    // which accesses timer.mcu
     TIMER_Init(*m_timer, *m_mcu);
+    MCU_Init(*m_mcu, *options.memory, *m_sm, *m_pcm, *m_timer, *m_lcd);
+    SM_Init(*m_sm, *options.memory, *m_mcu);
+    PCM_Init(*m_pcm, *options.memory, *m_mcu);
     LCD_Init(*m_lcd, *m_mcu);
     m_lcd->backend = options.lcd_backend;
 
@@ -190,27 +192,13 @@ void Emulator::LoadNVRAM()
 
 std::span<uint8_t> Emulator::MapBuffer(RomLocation location)
 {
-    switch (location)
+    auto span = ::MapBuffer(*m_options.memory, location);
+    if (!span.data())
     {
-    case RomLocation::ROM1:
-        return GetMCU().rom1;
-    case RomLocation::ROM2:
-        return GetMCU().rom2;
-    case RomLocation::WAVEROM1:
-        return GetPCM().waverom1;
-    case RomLocation::WAVEROM2:
-        return GetPCM().waverom2;
-    case RomLocation::WAVEROM3:
-        return GetPCM().waverom3;
-    case RomLocation::WAVEROM_CARD:
-        return GetPCM().waverom_card;
-    case RomLocation::WAVEROM_EXP:
-        return GetPCM().waverom_exp;
-    case RomLocation::SMROM:
-        return m_sm->rom;
+        Diag_Printf(Diag_Category::Error, "MapBuffer returned null for location %d\n", (int)location);
+        std::abort();
     }
-    Diag_Printf(Diag_Category::Error, "MapBuffer called with invalid location %d\n", (int)location);
-    std::abort();
+    return span;
 }
 
 bool Emulator::LoadRom(RomLocation location, std::span<const uint8_t> source)

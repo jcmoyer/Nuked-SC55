@@ -805,12 +805,17 @@ void MCU_DefaultSampleCallback(void* userdata, const AudioFrame<int32_t>& frame)
     (void)frame;
 }
 
-void MCU_Init(mcu_t& mcu, submcu_t& sm, pcm_t& pcm, mcu_timer_t& timer, lcd_t& lcd)
+void MCU_Init(mcu_t& mcu, EmulatorMemory& memory, submcu_t& sm, pcm_t& pcm, mcu_timer_t& timer, lcd_t& lcd)
 {
+    mcu.rom1 = MapBuffer(memory, RomLocation::ROM1).data();
+    mcu.rom2 = MapBuffer(memory, RomLocation::ROM2).data();
     mcu.sm = &sm;
     mcu.pcm = &pcm;
     mcu.timer = &timer;
     mcu.lcd = &lcd;
+    mcu.icache.SetView(GetOffsetPtr(memory, memory.layout.icache_base));
+    mcu.memory = &memory;
+    MCU_SetRomset(mcu, memory.layout.romset);
 }
 
 void MCU_Deinit(mcu_t& mcu)
@@ -1015,9 +1020,12 @@ void MCU_SetRomset(mcu_t& mcu, Romset romset)
     mcu.is_scb55 = false;
     mcu.is_sc155 = false;
 
+    mcu.rom2_mask = mcu.memory->layout.rom_size[(size_t)RomLocation::ROM2] / 2 - 1;
+
     switch (romset)
     {
     case Romset::MK2:
+        mcu.rom2_mask = mcu.memory->layout.rom_size[(size_t)RomLocation::ROM2] - 1;
         break;
     case Romset::SC155MK2:
         mcu.is_sc155 = true;

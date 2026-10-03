@@ -143,6 +143,19 @@ bool IsRequiredRom(Romset romset, RomLocation location)
     return REQUIRED_ROMS[(size_t)romset][(size_t)location];
 }
 
+bool RomsetSupportsSubmcu(Romset romset)
+{
+    switch (romset)
+    {
+    case Romset::MK2:
+    case Romset::ST:
+    case Romset::SC155MK2:
+        return true;
+    default:
+        return false;
+    }
+}
+
 const RomsetDefinition* RomsetRegistry::GetDefinition(std::string_view name) const
 {
     const auto it = m_name_map.find(name);

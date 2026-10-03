@@ -21,6 +21,8 @@
 #include "common/path_util.h"
 #include "common/term_io.h"
 
+#include "backend/decoder2/dispatch.h"
+
 Application::~Application()
 {
     switch (m_audio_output.kind)
@@ -93,6 +95,26 @@ bool Application::Initialize(const CliParameters& params)
 
     common::Printf("Gain set to %.2fdb\n", common::ScalarToDb(params.gain));
 
+    EmulatorMemoryLayout layout;
+    CreateMemoryLayout(m_romset, params.instances, layout);
+
+    common::Printf("Allocating %zu bytes for emulators...\n", layout.total_alloc_size);
+
+    if (!AllocateMemory(layout, m_memory))
+    {
+        common::Printf("ERROR: Failed to allocate emulator memory\n");
+        return false;
+    }
+
+    common::Printf("Loading roms...\n");
+
+    RomLocationSet loaded{};
+    if (!LoadRoms(m_memory, m_romset_info, &loaded))
+    {
+        common::Printf("FATAL: Failed to load roms.\n");
+        return false;
+    }
+
     for (size_t i = 0; i < params.instances; ++i)
     {
         if (!CreateInstance(params))
@@ -100,6 +122,11 @@ bool Application::Initialize(const CliParameters& params)
             common::Printf("FATAL ERROR: Failed to create instance %zu\n", i);
             return false;
         }
+    }
+
+    if (!decoder2::PreDecode(m_memory))
+    {
+        common::Printf("ERROR: Failed to pre-decode rom instructions\n");
     }
 
     load_result.Purge();
@@ -396,6 +423,7 @@ bool Application::CreateInstance(const CliParameters& app_params)
         .nvram_filename      = app_params.nvram_filename,
         .romset_info         = &m_romset_info,
         .romset              = m_romset,
+        .memory              = &m_memory,
     };
 
     if (!inst->Initialize(inst_params))

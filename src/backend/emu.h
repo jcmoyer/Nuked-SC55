@@ -27,9 +27,17 @@
 #include <filesystem>
 #include <memory>
 #include <span>
+#include "backend/memory.h"
 
 struct EMU_Options
 {
+    // The backing memory allocated to hold the emulator. This field
+    // must be populated.
+    EmulatorMemory* memory = nullptr;
+
+    // The instance to construct in `memory`.
+    size_t instance_id = 0;
+
     // The backend provided here will receive callbacks from the emulator.
     // If left null, LCD processing will be skipped.
     LCD_Backend* lcd_backend = nullptr;
@@ -100,10 +108,10 @@ private:
     bool LoadRom(RomLocation location, std::span<const uint8_t> source);
 
 private:
-    std::unique_ptr<mcu_t>       m_mcu;
-    std::unique_ptr<submcu_t>    m_sm;
-    std::unique_ptr<mcu_timer_t> m_timer;
-    std::unique_ptr<lcd_t>       m_lcd;
-    std::unique_ptr<pcm_t>       m_pcm;
-    EMU_Options                  m_options;
+    mcu_t*       m_mcu   = nullptr;
+    submcu_t*    m_sm    = nullptr;
+    mcu_timer_t* m_timer = nullptr;
+    lcd_t*       m_lcd   = nullptr;
+    pcm_t*       m_pcm   = nullptr;
+    EMU_Options  m_options;
 };

@@ -129,13 +129,11 @@ static void PrintDecodeError(mcu_t& mcu, DecodeError error, DecodeResult& result
                 ToCString(error));
 }
 
-static DecodeError FetchDecode(mcu_t& mcu, DecodeResult& out_result)
+static DecodeError Decode(CodeReader& reader, DecodeResult& out_result)
 {
-    CodeReader reader(mcu);
-    ReadError  read_err;
-    uint8_t    byte;
+    ReadError read_err;
+    uint8_t   byte;
 
-    reader.SetReadAddress(mcu.cp, mcu.pc);
     out_result.decode_first = reader.GetReadAddress();
 
     read_err = reader.ReadU8(byte);
@@ -168,6 +166,74 @@ static DecodeError FetchDecode(mcu_t& mcu, DecodeResult& out_result)
     }
 
     return DecodeError{};
+}
+
+static DecodeError FetchDecode(mcu_t& mcu, DecodeResult& out_result)
+{
+    McuCodeReader reader(mcu);
+    reader.SetReadAddress(mcu.cp, mcu.pc);
+    return Decode(reader, out_result);
+}
+
+constexpr uint32_t MakeWideAddress(uint8_t page, uint16_t addr)
+{
+    return static_cast<uint32_t>(page << 16 | addr);
+}
+
+bool PreDecode(EmulatorMemory& mem)
+{
+    InstructionCache icache;
+    icache.SetView(GetOffsetPtr(mem, mem.layout.icache_base));
+
+    BufferReader reader;
+    reader.SetView(MapBuffer(mem, RomLocation::ROM1));
+
+    for (uint16_t i = 0; i < 0x8000; ++i)
+    {
+        if (reader.SetOffset(i) != ReadError{})
+        {
+            Diag_Printf(Diag_Category::Error, "Failed to pre-decode ROM1\n");
+            return false;
+        }
+
+        DecodeResult decode_result;
+        DecodeError  err = Decode(reader, decode_result);
+        if (err == DecodeError{})
+        {
+            icache.Write(MakeWideAddress(0, i), decode_result.instruction);
+        }
+    }
+
+    reader.SetView(MapBuffer(mem, RomLocation::ROM2));
+
+    constexpr uint8_t rom2_pages[] = {1, 2, 3, 4, 8, 9, 14, 15};
+    for (uint8_t page : rom2_pages)
+    {
+        for (uint32_t i = 0; i <= 0xffff; ++i)
+        {
+            uint32_t address     = MakeWideAddress(page, (uint16_t)i);
+            uint32_t address_rom = address & 0x3ffff;
+            if (page >= 8 && mem.layout.romset != Romset::JV880)
+            {
+                address_rom |= 0x40000;
+            }
+
+            if (reader.SetOffset(address_rom) != ReadError{})
+            {
+                Diag_Printf(Diag_Category::Error, "Failed to pre-decode ROM2\n");
+                return false;
+            }
+
+            DecodeResult decode_result;
+            DecodeError  err = Decode(reader, decode_result);
+            if (err == DecodeError{})
+            {
+                icache.Write(address, decode_result.instruction);
+            }
+        }
+    }
+
+    return true;
 }
 
 void FetchDecodeExecuteNext(mcu_t& mcu)

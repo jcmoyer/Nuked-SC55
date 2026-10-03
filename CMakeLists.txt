@@ -75,6 +75,7 @@ target_sources(nuked-sc55-backend
     src/backend/mcu_opcodes.cpp
     src/backend/mcu_timer.cpp
     src/backend/mcu.cpp
+    src/backend/memory.cpp
     src/backend/pcm.cpp
     src/backend/rom_io.cpp
     src/backend/rom.cpp

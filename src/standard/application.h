@@ -136,6 +136,8 @@ private:
 private:
     static const size_t MAX_INSTANCES = 16;
 
+    EmulatorMemory m_memory;
+
     BoundedVector<Instance, MAX_INSTANCES> m_instances;
 
     RomsetInfo m_romset_info;

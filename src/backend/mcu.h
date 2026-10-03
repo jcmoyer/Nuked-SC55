@@ -27,6 +27,7 @@
 #include "mcu_interrupt.h"
 #include "mcu_opcodes.h"
 #include "rom.h"
+#include "memory.h"
 
 #if NUKED_ENABLE_DECODER2
 #include "decoder2/cache.h"
@@ -226,8 +227,9 @@ struct mcu_t {
     BoundedOrderedBitSet<16> trapa_pending;
     uint64_t cycles = 0;
 
-    uint8_t rom1[ROM1_SIZE]{};
-    uint8_t rom2[ROM2_SIZE]{};
+    EmulatorMemory* memory;
+    uint8_t* rom1 = nullptr;
+    uint8_t* rom2 = nullptr;
     uint8_t ram[RAM_SIZE]{};
     uint8_t sram[SRAM_SIZE]{};
     uint8_t nvram[NVRAM_SIZE]{};
@@ -298,7 +300,7 @@ struct mcu_t {
 #endif
 };
 
-void MCU_Init(mcu_t& mcu, submcu_t& sm, pcm_t& pcm, mcu_timer_t& timer, lcd_t& lcd);
+void MCU_Init(mcu_t& mcu, EmulatorMemory& memory, submcu_t& sm, pcm_t& pcm, mcu_timer_t& timer, lcd_t& lcd);
 void MCU_Reset(mcu_t& mcu);
 void MCU_PatchROM(mcu_t& mcu);
 void MCU_Step(mcu_t& mcu);

@@ -158,3 +158,11 @@ inline void HorizontalAddF32(float* dest, float* src_first, float* src_last)
         ++dest;
     }
 }
+
+// `alignment` must be power-of-two.
+template <typename T>
+    requires std::is_unsigned_v<T>
+constexpr T AlignForward(T value, T alignment)
+{
+    return (value + (alignment - 1)) & (~(alignment - 1));
+}

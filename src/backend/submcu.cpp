@@ -291,8 +291,9 @@ void SM_SetStatus(submcu_t& sm, uint32_t condition, uint32_t mask)
         sm.sr &= (uint8_t)(~mask);
 }
 
-void SM_Init(submcu_t& sm, mcu_t& mcu)
+void SM_Init(submcu_t& sm, EmulatorMemory& memory, mcu_t& mcu)
 {
+    sm.rom = MapBuffer(memory, RomLocation::SMROM).data();
     sm.mcu = &mcu;
 }
 

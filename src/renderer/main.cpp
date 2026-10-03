@@ -1334,6 +1334,29 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
 
     R_LoopPointRecorder loop_recorder;
 
+    EmulatorMemoryLayout layout;
+    CreateMemoryLayout(load_result.romset, instances, layout);
+
+    common::Printf("Allocating %d bytes for emulator...\n", layout.total_alloc_size);
+
+    EmulatorMemory memory;
+    if (!AllocateMemory(layout, memory))
+    {
+        common::Printf("FATAL: Failed to allocate emulator memory.\n");
+        return false;
+    }
+
+    common::Printf("Loading roms...\n");
+
+    RomLocationSet loaded{};
+    if (!LoadRoms(memory, load_result.romset_info, &loaded))
+    {
+        common::Printf("FATAL: Failed to load roms.\n");
+        return false;
+    }
+
+    common::Printf("Creating emulators...\n");
+
     R_TrackRenderState render_states[SMF_CHANNEL_COUNT];
     for (size_t i = 0; i < instances; ++i)
     {
@@ -1344,15 +1367,14 @@ bool R_RenderTrack(const SMF_Data& data, const R_Parameters& params)
             this_nvram += std::to_string(i);
         }
 
-        render_states[i].emu.Init({.lcd_backend = nullptr, .nvram_filename = this_nvram});
+        EMU_Options opts{
+            .memory         = &memory,
+            .instance_id    = i,
+            .lcd_backend    = nullptr,
+            .nvram_filename = this_nvram,
+        };
 
-        RomLocationSet loaded{};
-        if (!render_states[i].emu.LoadRoms(load_result.romset, load_result.romset_info, &loaded))
-        {
-            common::Printf("FATAL: Failed to load roms for instance #%02zu\n", i);
-            return false;
-        }
-
+        render_states[i].emu.Init(opts);
         render_states[i].emu.Reset();
         render_states[i].emu.GetPCM().enable_oversampling = !params.disable_oversampling;
 

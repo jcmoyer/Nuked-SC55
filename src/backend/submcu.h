@@ -20,6 +20,7 @@
 
 #include <cstdint>
 
+#include "memory.h"
 #include "rom.h"
 
 struct mcu_t;
@@ -45,7 +46,7 @@ struct submcu_t {
     uint64_t cycles = 0;
     uint8_t sleep = 0;
     mcu_t* mcu = nullptr;
-    uint8_t rom[SMROM_SIZE]{};
+    uint8_t* rom = nullptr;
 
     uint8_t ram[128]{};
     uint8_t shared_ram[192]{};
@@ -64,7 +65,7 @@ struct submcu_t {
     uint8_t uart_rx_gotbyte = 0;
 };
 
-void SM_Init(submcu_t& sm, mcu_t& mcu);
+void SM_Init(submcu_t& sm, EmulatorMemory& memory, mcu_t& mcu);
 void SM_Reset(submcu_t& sm);
 void SM_Update(submcu_t& sm, uint64_t cycles);
 void SM_SysWrite(submcu_t& sm, uint32_t address, uint8_t data);

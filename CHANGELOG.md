@@ -1,5 +1,8 @@
 # Version 0.8.0 (TBD)
 
+- Reduced memory usage when using multiple instances. [TODO:
+  measurable performance difference?]
+
 # Version 0.7.0 (2026-09-28)
 
 ## License change

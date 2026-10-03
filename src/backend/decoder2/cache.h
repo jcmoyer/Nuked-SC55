@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include <array>
 #include <cstdint>
-#include <memory>
+#include <span>
 
 #include "decoder2/instruction.h"
 
@@ -42,14 +41,19 @@ private:
     // 1..4   : 0..0x7ffff => mcu.rom2
     // 8..9   : 0..0x7ffff => mcu.rom2 (only when !is_jv880)
     // 14..15 : 0..0x7ffff => mcu.rom2 (only when !is_jv880)
-    using ArrayType = std::array<DecodedInstruction, static_cast<size_t>(16 * 0x10000)>;
+    //using ArrayType = std::array<DecodedInstruction, static_cast<size_t>(16 * 0x10000)>;
 
 public:
     InstructionCache();
 
+    void SetView(void* ptr)
+    {
+        m_cache = std::span((DecodedInstruction*)ptr, 16 * 0x10000);
+    }
+
     const DecodedInstruction& Lookup(uint32_t addr) const
     {
-        return (*m_cache)[addr];
+        return m_cache[addr];
     }
 
     bool Contains(uint32_t addr) const
@@ -59,13 +63,13 @@ public:
 
     void Write(uint32_t addr, DecodedInstruction handler)
     {
-        (*m_cache)[addr] = handler;
+        m_cache[addr] = handler;
     }
 
     size_t CountCached() const;
 
 private:
-    std::unique_ptr<ArrayType> m_cache;
+    std::span<DecodedInstruction> m_cache;
 };
 
 } // namespace decoder2

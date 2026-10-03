@@ -18,6 +18,7 @@
  */
 #include "mcu_timer.h"
 #include "mcu.h"
+#include "math_util.h"
 #include <cstdint>
 
 enum TMR_TCR_Bits : uint8_t
@@ -83,13 +84,6 @@ enum FRT_Field_Offset : uint8_t
     REG_ICRL  = 0x09,
 };
 
-// Calculates the next deadline for a timer. This is actually just a
-// pointer alignment algorithm. `interval` must be power-of-two.
-constexpr uint64_t AlignForward(uint64_t value, uint64_t interval)
-{
-    return (value + (interval - 1)) & (~(interval - 1));
-}
-
 void TIMER_Init(mcu_timer_t& timer, mcu_t& mcu)
 {
     timer.mcu = &mcu;
@@ -138,7 +132,7 @@ void TIMER_WriteFRT(mcu_timer_t& timer, uint32_t address, uint8_t data)
 
         const uint8_t stride = timer.frt_step_table[frt.tcr & (FRT_TCR_CKS0 | FRT_TCR_CKS1)];
 
-        frt.deadline = AlignForward(timer.cycles, stride);
+        frt.deadline = AlignForward<uint64_t>(timer.cycles, stride);
         frt.stride   = stride;
 
         break;
@@ -242,7 +236,7 @@ void TIMER_WriteTMR(mcu_timer_t& timer, uint32_t address, uint8_t data)
         }
         else
         {
-            tmr.deadline = AlignForward(timer.cycles, stride);
+            tmr.deadline = AlignForward<uint64_t>(timer.cycles, stride);
         }
 
         tmr.stride = stride;

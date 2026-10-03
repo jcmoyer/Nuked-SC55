@@ -122,6 +122,8 @@ bool IsWaverom(RomLocation location);
 bool IsOptionalRom(Romset romset, RomLocation location);
 bool IsRequiredRom(Romset romset, RomLocation location);
 
+bool RomsetSupportsSubmcu(Romset romset);
+
 // Helper type for constructing RomsetDefinitions at compile time. An array of
 // `RomHashLocationPair` has a dense representation, but can be converted to
 // the sparse representation required by `RomsetHashes` at compile time. This
