@@ -119,3 +119,30 @@ jobs:
           -C Debug
           --output-on-failure
 
+  build-mac-clang:
+    name: macOS-clang
+    runs-on: macos-latest
+    env:
+      CXXFLAGS: -Werror
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: brew install sdl2 rtmidi catch2
+
+      - name: Configure Nuked-SC55
+        run: >
+          cmake -B build
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_CXX_COMPILER=clang++
+          -DCMAKE_BUILD_TYPE=Debug
+          -DNUKED_ENABLE_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        run: >
+          ctest --test-dir build
+          -C Debug
+          --output-on-failure
