@@ -607,39 +607,8 @@ uint8_t MCU_Read_Page14(mcu_t& mcu, uint32_t address)
 
 uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
 {
-    const uint8_t page = (address >> 16) & 0xf;
-
-    switch (page)
-    {
-    case 0:
-        return MCU_Read_Page0(mcu, address);
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-        return MCU_Read_Page1(mcu, address);
-    case 5:
-        return MCU_Read_Page5(mcu, address);
-    case 6:
-    case 7:
-        return MCU_Read_Page6(mcu, address);
-    case 8:
-    case 9:
-        return MCU_Read_Page8(mcu, address);
-    case 10:
-    case 11:
-        return MCU_Read_Page10(mcu, address);
-    case 12:
-    case 13:
-        return MCU_Read_Page12(mcu, address);
-    case 14:
-    case 15:
-        return MCU_Read_Page14(mcu, address);
-    default:
-        // page will always be in range 0..15 and we cover each of
-        // those cases
-        std::unreachable();
-    }
+    const MCU_ReadOp& op = mcu.mrops.GetOp(address);
+    return op(mcu, address);
 }
 
 uint16_t MCU_Read16(mcu_t& mcu, uint32_t address)
@@ -1060,6 +1029,26 @@ void MCU_EncoderTrigger(mcu_t& mcu, int dir)
     MCU_GA_SetGAInt(mcu, dir == 0 ? 3 : 4, 1);
 }
 
+void MCU_SetMRWOps(mcu_t& mcu)
+{
+    mcu.mrops.SetRange(0x0'0000, 0x0'ffff, MCU_Read_Page0);
+    mcu.mrops.SetRange(0x1'0000, 0x1'ffff, MCU_Read_Page1);
+    mcu.mrops.SetRange(0x2'0000, 0x2'ffff, MCU_Read_Page1);
+    mcu.mrops.SetRange(0x3'0000, 0x3'ffff, MCU_Read_Page1);
+    mcu.mrops.SetRange(0x4'0000, 0x4'ffff, MCU_Read_Page1);
+    mcu.mrops.SetRange(0x5'0000, 0x5'ffff, MCU_Read_Page5);
+    mcu.mrops.SetRange(0x6'0000, 0x6'ffff, MCU_Read_Page6);
+    mcu.mrops.SetRange(0x7'0000, 0x7'ffff, MCU_Read_Page6);
+    mcu.mrops.SetRange(0x8'0000, 0x8'ffff, MCU_Read_Page8);
+    mcu.mrops.SetRange(0x9'0000, 0x9'ffff, MCU_Read_Page8);
+    mcu.mrops.SetRange(0xa'0000, 0xa'ffff, MCU_Read_Page10);
+    mcu.mrops.SetRange(0xb'0000, 0xb'ffff, MCU_Read_Page10);
+    mcu.mrops.SetRange(0xc'0000, 0xc'ffff, MCU_Read_Page12);
+    mcu.mrops.SetRange(0xd'0000, 0xd'ffff, MCU_Read_Page12);
+    mcu.mrops.SetRange(0xe'0000, 0xe'ffff, MCU_Read_Page14);
+    mcu.mrops.SetRange(0xf'0000, 0xf'ffff, MCU_Read_Page14);
+}
+
 void MCU_SetRomset(mcu_t& mcu, Romset romset)
 {
     mcu.romset   = romset;
@@ -1100,5 +1089,23 @@ void MCU_SetRomset(mcu_t& mcu, Romset romset)
         break;
     }
 
+    MCU_SetMRWOps(mcu);
+
     TIMER_NotifyRomsetChange(*mcu.timer);
+}
+
+uint8_t MCU_ReadZero(mcu_t& mcu, uint32_t address)
+{
+    (void)mcu;
+    (void)address;
+
+    return 0;
+}
+
+uint8_t MCU_ReadMax(mcu_t& mcu, uint32_t address)
+{
+    (void)mcu;
+    (void)address;
+
+    return 0xff;
 }

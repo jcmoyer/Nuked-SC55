@@ -214,6 +214,36 @@ typedef void(*mcu_sample_callback)(void* userdata, const AudioFrame<int32_t>& fr
 
 void MCU_DefaultSampleCallback(void* userdata, const AudioFrame<int32_t>& frame);
 
+struct mcu_t;
+
+using MCU_ReadOp = uint8_t(*)(mcu_t& mcu, uint32_t address);
+using MCU_WriteOp = void(*)(mcu_t& mcu, uint32_t address, uint8_t value);
+
+uint8_t MCU_ReadZero(mcu_t& mcu, uint32_t address);
+
+class MCU_ReadOpTable {
+    using ArrayType = std::array<MCU_ReadOp, 0x10'0000>;
+
+public:
+    MCU_ReadOpTable() {
+        m_ops = std::make_unique<ArrayType>();
+        m_ops->fill(MCU_ReadZero);
+    }
+
+    void SetRange(uint32_t min, uint32_t max, MCU_ReadOp op)
+    {
+        for (uint32_t addr = min; addr <= max; ++addr)
+        {
+            (*m_ops)[addr] = op;
+        }
+    }
+
+    MCU_ReadOp& GetOp(uint32_t address)
+    { return (*m_ops)[address]; }
+private:
+    std::unique_ptr<ArrayType> m_ops;
+};
+
 struct mcu_t {
     uint16_t r[8]{};
     uint16_t pc = 0;
@@ -225,6 +255,8 @@ struct mcu_t {
     BoundedOrderedBitSet<INTERRUPT_SOURCE_MAX, MCU_Interrupt_Source> interrupt_pending;
     BoundedOrderedBitSet<16> trapa_pending;
     uint64_t cycles = 0;
+
+    MCU_ReadOpTable mrops;
 
     uint8_t rom1[ROM1_SIZE]{};
     uint8_t rom2[ROM2_SIZE]{};
