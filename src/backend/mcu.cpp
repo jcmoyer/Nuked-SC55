@@ -662,139 +662,173 @@ uint32_t MCU_Read32(mcu_t& mcu, uint32_t address)
     return (uint32_t)((b0 << 24) + (b1 << 16) + (b2 << 8) + b3);
 }
 
-void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
+void MCU_Write_Page0(mcu_t& mcu, uint32_t address, uint8_t value)
 {
-    uint8_t page = (address >> 16) & 0xf;
-    address &= 0xffff;
-    if (page == 0)
+    if (address & 0x8000)
     {
-        if (address & 0x8000)
+        if (!mcu.is_mk1)
         {
-            if (!mcu.is_mk1)
+            uint16_t base = mcu.is_jv880 ? 0xf000u : 0xe000u;
+            if (address >= (base | 0x400u) && address < (base | 0x800u))
             {
-                uint16_t base = mcu.is_jv880 ? 0xf000u : 0xe000u;
-                if (address >= (base | 0x400u) && address < (base | 0x800u))
+                if (address == (base | 0x404u) || address == (base | 0x405u))
+                    LCD_Write(*mcu.lcd, address & 1, value);
+                else if (address == (base | 0x401u))
                 {
-                    if (address == (base | 0x404u) || address == (base | 0x405u))
-                        LCD_Write(*mcu.lcd, address & 1, value);
-                    else if (address == (base | 0x401u))
-                    {
-                        mcu.io_sd = value;
-                        LCD_Enable(*mcu.lcd, (value & 1) == 0);
-                    }
-                    else if (address == (base | 0x402u))
-                        mcu.ga_int_enable = (uint8_t)(value << 1);
-                    else
-                        Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
-                    //
-                    // e400: always 4?
-                    // e401: SC0-6?
-                    // e402: enable/disable IRQ?
-                    // e403: always 1?
-                    // e404: LCD
-                    // e405: LCD
-                    // e406: 0 or 40
-                    // e407: 0, e406 continuation?
-                    //
+                    mcu.io_sd = value;
+                    LCD_Enable(*mcu.lcd, (value & 1) == 0);
                 }
-                else if (address >= (base | 0x000u) && address < (base | 0x400u))
-                {
-                    PCM_Write(*mcu.pcm, address & 0x3f, value);
-                }
-                else if (!mcu.is_scb55 && address >= 0xec00 && address < 0xf000)
-                {
-                    SM_SysWrite(*mcu.sm, address & 0xff, value);
-                }
-                else if (address >= 0xff80)
-                {
-                    MCU_DeviceWrite(mcu, address & 0x7f, value);
-                }
-                else if (address >= 0xfb80 && address < 0xff80
-                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
-                {
-                    mcu.ram[(address - 0xfb80) & 0x3ff] = value;
-                }
-                else if (address >= 0x8000 && address < 0xe000)
-                {
-                    mcu.sram[address & 0x7fff] = value;
-                }
+                else if (address == (base | 0x402u))
+                    mcu.ga_int_enable = (uint8_t)(value << 1);
                 else
-                {
                     Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
-                }
+                //
+                // e400: always 4?
+                // e401: SC0-6?
+                // e402: enable/disable IRQ?
+                // e403: always 1?
+                // e404: LCD
+                // e405: LCD
+                // e406: 0 or 40
+                // e407: 0, e406 continuation?
+                //
+            }
+            else if (address >= (base | 0x000u) && address < (base | 0x400u))
+            {
+                PCM_Write(*mcu.pcm, address & 0x3f, value);
+            }
+            else if (!mcu.is_scb55 && address >= 0xec00 && address < 0xf000)
+            {
+                SM_SysWrite(*mcu.sm, address & 0xff, value);
+            }
+            else if (address >= 0xff80)
+            {
+                MCU_DeviceWrite(mcu, address & 0x7f, value);
+            }
+            else if (address >= 0xfb80 && address < 0xff80
+                     && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
+            {
+                mcu.ram[(address - 0xfb80) & 0x3ff] = value;
+            }
+            else if (address >= 0x8000 && address < 0xe000)
+            {
+                mcu.sram[address & 0x7fff] = value;
             }
             else
             {
-                if (address >= 0xe000 && address < 0xe040)
-                {
-                    PCM_Write(*mcu.pcm, address & 0x3f, value);
-                }
-                else if (address >= 0xff80)
-                {
-                    MCU_DeviceWrite(mcu, address & 0x7f, value);
-                }
-                else if (address >= 0xfb80 && address < 0xff80
-                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
-                {
-                    mcu.ram[(address - 0xfb80) & 0x3ff] = value;
-                }
-                else if (address >= 0x8000 && address < 0xe000)
-                {
-                    mcu.sram[address & 0x7fff] = value;
-                }
-                else if (address >= 0xf000 && address < 0xf100)
-                {
-                    mcu.io_sd = address & 0xff;
-                    LCD_Enable(*mcu.lcd, (mcu.io_sd & 8) != 0);
-                }
-                else if (address == 0xf105)
-                {
-                    LCD_Write(*mcu.lcd, 0, value);
-                    mcu.ga_lcd_counter = 500;
-                }
-                else if (address == 0xf104)
-                {
-                    LCD_Write(*mcu.lcd, 1, value);
-                    mcu.ga_lcd_counter = 500;
-                }
-                else if (address == 0xf107)
-                {
-                    mcu.io_sd = value;
-                }
-                else
-                {
-                    Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
-                }
+                Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
             }
-        }
-        else if (mcu.is_jv880 && address >= 0x6196 && address <= 0x6199)
-        {
-            // nop: the jv880 rom writes into the rom at 002E77-002E7D
         }
         else
         {
-            Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
+            if (address >= 0xe000 && address < 0xe040)
+            {
+                PCM_Write(*mcu.pcm, address & 0x3f, value);
+            }
+            else if (address >= 0xff80)
+            {
+                MCU_DeviceWrite(mcu, address & 0x7f, value);
+            }
+            else if (address >= 0xfb80 && address < 0xff80
+                     && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
+            {
+                mcu.ram[(address - 0xfb80) & 0x3ff] = value;
+            }
+            else if (address >= 0x8000 && address < 0xe000)
+            {
+                mcu.sram[address & 0x7fff] = value;
+            }
+            else if (address >= 0xf000 && address < 0xf100)
+            {
+                mcu.io_sd = address & 0xff;
+                LCD_Enable(*mcu.lcd, (mcu.io_sd & 8) != 0);
+            }
+            else if (address == 0xf105)
+            {
+                LCD_Write(*mcu.lcd, 0, value);
+                mcu.ga_lcd_counter = 500;
+            }
+            else if (address == 0xf104)
+            {
+                LCD_Write(*mcu.lcd, 1, value);
+                mcu.ga_lcd_counter = 500;
+            }
+            else if (address == 0xf107)
+            {
+                mcu.io_sd = value;
+            }
+            else
+            {
+                Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
+            }
         }
     }
-    else if (page == 5 && mcu.is_mk1)
+    else if (mcu.is_jv880 && address >= 0x6196 && address <= 0x6199)
     {
-        mcu.sram[address & 0x7fff] = value; // FIXME
-    }
-    else if (page == 10 && !mcu.is_mk1)
-    {
-        mcu.sram[address & 0x7fff] = value; // FIXME
-    }
-    else if (page == 12 && mcu.is_jv880)
-    {
-        mcu.nvram[address & 0x7fff] = value; // FIXME
-    }
-    else if (page == 14 && mcu.is_jv880)
-    {
-        mcu.cardram[address & 0x7fff] = value; // FIXME
+        // nop: the jv880 rom writes into the rom at 002E77-002E7D
     }
     else
     {
-        Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", (uint32_t)(page << 16) | address, value);
+        Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
+    }
+}
+
+void MCU_Write_Page5(mcu_t& mcu, uint32_t address, uint8_t value)
+{
+    if (mcu.is_mk1)
+    {
+        mcu.sram[address & 0x7fff] = value; // FIXME
+    }
+}
+
+void MCU_Write_Page10(mcu_t& mcu, uint32_t address, uint8_t value)
+{
+    if (!mcu.is_mk1)
+    {
+        mcu.sram[address & 0x7fff] = value; // FIXME
+    }
+}
+
+void MCU_Write_Page12(mcu_t& mcu, uint32_t address, uint8_t value)
+{
+    if (mcu.is_jv880)
+    {
+        mcu.nvram[address & 0x7fff] = value; // FIXME
+    }
+}
+
+void MCU_Write_Page14(mcu_t& mcu, uint32_t address, uint8_t value)
+{
+    if (mcu.is_jv880)
+    {
+        mcu.cardram[address & 0x7fff] = value; // FIXME
+    }
+}
+
+void MCU_Write(mcu_t& mcu, uint32_t address, uint8_t value)
+{
+    const uint8_t page = (address >> 16) & 0xf;
+
+    switch (page)
+    {
+    case 0:
+        MCU_Write_Page0(mcu, address, value);
+        break;
+    case 5:
+        MCU_Write_Page5(mcu, address, value);
+        break;
+    case 10:
+        MCU_Write_Page10(mcu, address, value);
+        break;
+    case 12:
+        MCU_Write_Page12(mcu, address, value);
+        break;
+    case 14:
+        MCU_Write_Page14(mcu, address, value);
+        break;
+    default:
+        Diag_Printf(Diag_Category::Debug, "Unknown write %x %x\n", address, value);
+        break;
     }
 }
 
