@@ -219,7 +219,7 @@ struct mcu_t;
 using MCU_ReadOp = uint8_t(*)(mcu_t& mcu, uint32_t address);
 using MCU_WriteOp = void(*)(mcu_t& mcu, uint32_t address, uint8_t value);
 
-uint8_t MCU_ReadZero(mcu_t& mcu, uint32_t address);
+uint8_t MCU_ReadDefault(mcu_t& mcu, uint32_t address);
 
 class MCU_ReadOpTable {
     using ArrayType = std::array<MCU_ReadOp, 0x10'0000>;
@@ -227,7 +227,12 @@ class MCU_ReadOpTable {
 public:
     MCU_ReadOpTable() {
         m_ops = std::make_unique<ArrayType>();
-        m_ops->fill(MCU_ReadZero);
+        m_ops->fill(MCU_ReadDefault);
+    }
+
+    void Set(uint32_t addr, MCU_ReadOp op)
+    {
+        (*m_ops)[addr] = op;
     }
 
     void SetRange(uint32_t min, uint32_t max, MCU_ReadOp op)

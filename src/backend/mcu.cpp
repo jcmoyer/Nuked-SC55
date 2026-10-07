@@ -441,168 +441,103 @@ void MCU_UpdateAnalog(mcu_t& mcu, uint64_t cycles)
         mcu.analog_end_time = 0;
 }
 
-uint8_t MCU_Read_Page0(mcu_t& mcu, uint32_t address)
+uint8_t MCU_ReadRom1(mcu_t& mcu, uint32_t address)
 {
-    if (!(address & 0x8000))
-        return mcu.rom1[address & 0x7fff];
-    else
-    {
-        if (!mcu.is_mk1)
-        {
-            uint16_t base = mcu.is_jv880 ? 0xf000 : 0xe000;
-            if (address >= base && address < (base | 0x400u))
-            {
-                return PCM_Read(*mcu.pcm, address & 0x3f);
-            }
-            else if (!mcu.is_scb55 && address >= 0xec00u && address < 0xf000u)
-            {
-                return SM_SysRead(*mcu.sm, address & 0xff);
-            }
-            else if (address >= 0xff80)
-            {
-                return MCU_DeviceRead(mcu, address & 0x7f);
-            }
-            else if (address >= 0xfb80u && address < 0xff80u
-                     && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
-                return mcu.ram[(address - 0xfb80) & 0x3ff];
-            else if (address >= 0x8000u && address < 0xe000u)
-            {
-                return mcu.sram[address & 0x7fff];
-            }
-            else if (address == (base | 0x402u))
-            {
-                uint8_t ret = (uint8_t)mcu.ga_int_trigger;
-                mcu.ga_int_trigger = 0;
-                MCU_Interrupt_SetRequest(mcu, mcu.is_jv880 ? INTERRUPT_SOURCE_IRQ0 : INTERRUPT_SOURCE_IRQ1, 0);
-                return ret;
-            }
-            //
-            // e402:2-0 irq source
-            //
-        }
-        else
-        {
-            if (address >= 0xe000 && address < 0xe040)
-            {
-                return PCM_Read(*mcu.pcm, address & 0x3f);
-            }
-            else if (address >= 0xff80)
-            {
-                return MCU_DeviceRead(mcu, address & 0x7f);
-            }
-            else if (address >= 0xfb80 && address < 0xff80
-                     && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
-            {
-                return mcu.ram[(address - 0xfb80) & 0x3ff];
-            }
-            else if (address >= 0x8000 && address < 0xe000)
-            {
-                return mcu.sram[address & 0x7fff];
-            }
-            else if (address >= 0xf000 && address < 0xf100)
-            {
-                mcu.io_sd = address & 0xff;
+    return mcu.rom1[address & 0x7fff];
+}
 
-                if (mcu.is_cm300)
-                    return 0xff;
+uint8_t MCU_ReadDevice(mcu_t& mcu, uint32_t address)
+{
+    return MCU_DeviceRead(mcu, address & 0x7f);
+}
 
-                LCD_Enable(*mcu.lcd, (mcu.io_sd & 8) != 0);
+uint8_t MCU_ReadPCM(mcu_t& mcu, uint32_t address)
+{
+    return PCM_Read(*mcu.pcm, address & 0x3f);
+}
 
-                uint8_t data = 0xff;
-                uint32_t button_pressed = mcu.button_pressed;
+uint8_t MCU_ReadGA(mcu_t& mcu, uint32_t address)
+{
+    (void)address;
 
-                if ((mcu.io_sd & 1) == 0)
-                    data &= ((button_pressed >> 0) & 255) ^ 255;
-                if ((mcu.io_sd & 2) == 0)
-                    data &= ((button_pressed >> 8) & 255) ^ 255;
-                if ((mcu.io_sd & 4) == 0)
-                    data &= ((button_pressed >> 16) & 255) ^ 255;
-                if ((mcu.io_sd & 8) == 0)
-                    data &= (uint8_t)(((button_pressed >> 24) & 255) ^ 255);
-                return data;
-            }
-            else if (address == 0xf106)
-            {
-                uint8_t ret = (uint8_t)mcu.ga_int_trigger;
-                mcu.ga_int_trigger = 0;
-                MCU_Interrupt_SetRequest(mcu, INTERRUPT_SOURCE_IRQ1, 0);
-                return ret;
-            }
-            //
-            // f106:2-0 irq source
-            //
-        }
-    }
+    uint8_t ret = (uint8_t)mcu.ga_int_trigger;
+    mcu.ga_int_trigger = 0;
+    MCU_Interrupt_SetRequest(mcu, mcu.is_jv880 ? INTERRUPT_SOURCE_IRQ0 : INTERRUPT_SOURCE_IRQ1, 0);
+    return ret;
+}
+
+bool MCU_IsRamEnabled(mcu_t& mcu)
+{
+    return static_cast<bool>(mcu.dev_register[DEV_RAMCR] & 0x80);
+}
+
+uint8_t MCU_ReadRam(mcu_t& mcu, uint32_t address)
+{
+    const uint32_t tr_address = address - 0xfb80;
+    return mcu.ram[tr_address];
+}
+
+uint8_t MCU_ReadSM(mcu_t& mcu, uint32_t address)
+{
+    return SM_SysRead(*mcu.sm, address & 0xff);
+}
+
+uint8_t MCU_ReadLCD(mcu_t& mcu, uint32_t address)
+{
+    mcu.io_sd = address & 0xff;
+
+    if (mcu.is_cm300)
+        return 0xff;
+
+    LCD_Enable(*mcu.lcd, (mcu.io_sd & 8) != 0);
+
+    uint8_t data = 0xff;
+    uint32_t button_pressed = mcu.button_pressed;
+
+    if ((mcu.io_sd & 1) == 0)
+        data &= ((button_pressed >> 0) & 255) ^ 255;
+    if ((mcu.io_sd & 2) == 0)
+        data &= ((button_pressed >> 8) & 255) ^ 255;
+    if ((mcu.io_sd & 4) == 0)
+        data &= ((button_pressed >> 16) & 255) ^ 255;
+    if ((mcu.io_sd & 8) == 0)
+        data &= (uint8_t)(((button_pressed >> 24) & 255) ^ 255);
+
+    return data;
+}
+
+uint8_t MCU_ReadDefault(mcu_t& mcu, uint32_t address)
+{
+    (void)mcu;
 
     Diag_Printf(Diag_Category::Debug, "Unknown read %x\n", address);
     return 0xff;
 }
 
-// 1..4 inclusive
-uint8_t MCU_Read_Page1(mcu_t& mcu, uint32_t address)
+uint8_t MCU_ReadRom2Low(mcu_t& mcu, uint32_t address)
 {
-    uint32_t address_rom = address & 0x3ffff;
-    if (address & 0x80000 && !mcu.is_jv880)
-        address_rom |= 0x40000;
-    return mcu.rom2[address_rom & mcu.rom2_mask];
+    return mcu.rom2[address & 0x3ffff & mcu.rom2_mask];
 }
 
-uint8_t MCU_Read_Page5(mcu_t& mcu, uint32_t address)
+uint8_t MCU_ReadSRAM(mcu_t& mcu, uint32_t address)
 {
-    if (mcu.is_mk1)
-        return mcu.sram[address & 0x7fff]; // FIXME
-    else
-        return 0xff;
+    return mcu.sram[address & 0x7fff]; // FIXME
 }
 
-// 6..7 inclusive
-uint8_t MCU_Read_Page6(mcu_t& mcu, uint32_t address)
+uint8_t MCU_ReadNVRAM(mcu_t& mcu, uint32_t address)
 {
-    (void)mcu;
-    (void)address;
-    return 0;
+    return mcu.nvram[address & 0x7fff]; // FIXME
 }
 
-// 8..9 inclusive
-uint8_t MCU_Read_Page8(mcu_t& mcu, uint32_t address)
+uint8_t MCU_ReadRom2High(mcu_t& mcu, uint32_t address)
 {
-    uint32_t address_rom = address & 0x3ffff;
-    if (address & 0x80000 && !mcu.is_jv880)
-        address_rom |= 0x40000;
-    if (!mcu.is_jv880)
-        return mcu.rom2[address_rom & mcu.rom2_mask];
-    else
-        return 0xff;
+    const uint32_t address_rom = (address & 0x3ffff) | 0x40000;
+    return mcu.rom2[address_rom];
 }
 
-// 10..11 inclusive
-uint8_t MCU_Read_Page10(mcu_t& mcu, uint32_t address)
+uint8_t MCU_ReadCardRam(mcu_t& mcu, uint32_t address)
 {
-    if (!mcu.is_mk1)
-        return mcu.sram[address & 0x7fff]; // FIXME
-    else
-        return 0xff;
-}
-
-// 12..13 inclusive
-uint8_t MCU_Read_Page12(mcu_t& mcu, uint32_t address)
-{
-    if (mcu.is_jv880)
-        return mcu.nvram[address & 0x7fff]; // FIXME
-    else
-        return 0xff;
-}
-
-// 14..15 inclusive
-uint8_t MCU_Read_Page14(mcu_t& mcu, uint32_t address)
-{
-    uint32_t address_rom = address & 0x3ffff;
-    if (address & 0x80000 && !mcu.is_jv880)
-        address_rom |= 0x40000;
-    if (!mcu.is_jv880)
-        return mcu.rom2[address_rom & mcu.rom2_mask];
-    else
-        return mcu.cardram[address & 0x7fff]; // FIXME
+    return mcu.cardram[address & 0x7fff]; // FIXME
 }
 
 uint8_t MCU_Read(mcu_t& mcu, uint32_t address)
@@ -1029,24 +964,283 @@ void MCU_EncoderTrigger(mcu_t& mcu, int dir)
     MCU_GA_SetGAInt(mcu, dir == 0 ? 3 : 4, 1);
 }
 
+uint8_t MCU_ReadOriginal(mcu_t& mcu, uint32_t address)
+{
+    uint32_t address_rom = address & 0x3ffff;
+    if (address & 0x80000 && !mcu.is_jv880)
+        address_rom |= 0x40000;
+    uint8_t page = (address >> 16) & 0xf;
+    address &= 0xffff;
+    uint8_t ret = 0xff;
+    switch (page)
+    {
+    case 0:
+        if (!(address & 0x8000))
+            ret = mcu.rom1[address & 0x7fff];
+        else
+        {
+            if (!mcu.is_mk1)
+            {
+                uint16_t base = mcu.is_jv880 ? 0xf000 : 0xe000;
+                if (address >= base && address < (base | 0x400u))
+                {
+                    ret = PCM_Read(*mcu.pcm, address & 0x3f);
+                }
+                else if (!mcu.is_scb55 && address >= 0xec00u && address < 0xf000u)
+                {
+                    ret = SM_SysRead(*mcu.sm, address & 0xff);
+                }
+                else if (address >= 0xff80)
+                {
+                    ret = MCU_DeviceRead(mcu, address & 0x7f);
+                }
+                else if (address >= 0xfb80u && address < 0xff80u
+                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
+                    ret = mcu.ram[(address - 0xfb80) & 0x3ff];
+                else if (address >= 0x8000u && address < 0xe000u)
+                {
+                    ret = mcu.sram[address & 0x7fff];
+                }
+                else if (address == (base | 0x402u))
+                {
+                    ret = (uint8_t)mcu.ga_int_trigger;
+                    mcu.ga_int_trigger = 0;
+                    MCU_Interrupt_SetRequest(mcu, mcu.is_jv880 ? INTERRUPT_SOURCE_IRQ0 : INTERRUPT_SOURCE_IRQ1, 0);
+                }
+                else
+                {
+                    Diag_Printf(Diag_Category::Debug, "Unknown read %x\n", address);
+                    ret = 0xff;
+                }
+                //
+                // e402:2-0 irq source
+                //
+            }
+            else
+            {
+                if (address >= 0xe000 && address < 0xe040)
+                {
+                    ret = PCM_Read(*mcu.pcm, address & 0x3f);
+                }
+                else if (address >= 0xff80)
+                {
+                    ret = MCU_DeviceRead(mcu, address & 0x7f);
+                }
+                else if (address >= 0xfb80 && address < 0xff80
+                    && (mcu.dev_register[DEV_RAMCR] & 0x80) != 0)
+                {
+                    ret = mcu.ram[(address - 0xfb80) & 0x3ff];
+                }
+                else if (address >= 0x8000 && address < 0xe000)
+                {
+                    ret = mcu.sram[address & 0x7fff];
+                }
+                else if (address >= 0xf000 && address < 0xf100)
+                {
+                    mcu.io_sd = address & 0xff;
+
+                    if (mcu.is_cm300)
+                        return 0xff;
+
+                    LCD_Enable(*mcu.lcd, (mcu.io_sd & 8) != 0);
+
+                    uint8_t data = 0xff;
+                    uint32_t button_pressed = mcu.button_pressed;
+
+                    if ((mcu.io_sd & 1) == 0)
+                        data &= ((button_pressed >> 0) & 255) ^ 255;
+                    if ((mcu.io_sd & 2) == 0)
+                        data &= ((button_pressed >> 8) & 255) ^ 255;
+                    if ((mcu.io_sd & 4) == 0)
+                        data &= ((button_pressed >> 16) & 255) ^ 255;
+                    if ((mcu.io_sd & 8) == 0)
+                        data &= (uint8_t)(((button_pressed >> 24) & 255) ^ 255);
+                    return data;
+                }
+                else if (address == 0xf106)
+                {
+                    ret = (uint8_t)mcu.ga_int_trigger;
+                    mcu.ga_int_trigger = 0;
+                    MCU_Interrupt_SetRequest(mcu, INTERRUPT_SOURCE_IRQ1, 0);
+                }
+                else
+                {
+                    Diag_Printf(Diag_Category::Debug, "Unknown read %x\n", address);
+                    ret = 0xff;
+                }
+                //
+                // f106:2-0 irq source
+                //
+            }
+        }
+        break;
+#if 0
+    case 3:
+        ret = rom2[address | 0x30000];
+        break;
+    case 4:
+        ret = rom2[address];
+        break;
+    case 10:
+        ret = rom2[address | 0x60000]; // FIXME
+        break;
+    case 1:
+        ret = rom2[address | 0x10000];
+        break;
+#endif
+    case 1:
+        ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        break;
+    case 2:
+        ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        break;
+    case 3:
+        ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        break;
+    case 4:
+        ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        break;
+    case 8:
+        if (!mcu.is_jv880)
+            ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        else
+            ret = 0xff;
+        break;
+    case 9:
+        if (!mcu.is_jv880)
+            ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        else
+            ret = 0xff;
+        break;
+    case 14:
+    case 15:
+        if (!mcu.is_jv880)
+            ret = mcu.rom2[address_rom & mcu.rom2_mask];
+        else
+            ret = mcu.cardram[address & 0x7fff]; // FIXME
+        break;
+    case 10:
+    case 11:
+        if (!mcu.is_mk1)
+            ret = mcu.sram[address & 0x7fff]; // FIXME
+        else
+            ret = 0xff;
+        break;
+    case 12:
+    case 13:
+        if (mcu.is_jv880)
+            ret = mcu.nvram[address & 0x7fff]; // FIXME
+        else
+            ret = 0xff;
+        break;
+    case 5:
+        if (mcu.is_mk1)
+            ret = mcu.sram[address & 0x7fff]; // FIXME
+        else
+            ret = 0xff;
+        break;
+    default:
+        ret = 0x00;
+        break;
+    }
+    return ret;
+}
+
 void MCU_SetMRWOps(mcu_t& mcu)
 {
-    mcu.mrops.SetRange(0x0'0000, 0x0'ffff, MCU_Read_Page0);
-    mcu.mrops.SetRange(0x1'0000, 0x1'ffff, MCU_Read_Page1);
-    mcu.mrops.SetRange(0x2'0000, 0x2'ffff, MCU_Read_Page1);
-    mcu.mrops.SetRange(0x3'0000, 0x3'ffff, MCU_Read_Page1);
-    mcu.mrops.SetRange(0x4'0000, 0x4'ffff, MCU_Read_Page1);
-    mcu.mrops.SetRange(0x5'0000, 0x5'ffff, MCU_Read_Page5);
-    mcu.mrops.SetRange(0x6'0000, 0x6'ffff, MCU_Read_Page6);
-    mcu.mrops.SetRange(0x7'0000, 0x7'ffff, MCU_Read_Page6);
-    mcu.mrops.SetRange(0x8'0000, 0x8'ffff, MCU_Read_Page8);
-    mcu.mrops.SetRange(0x9'0000, 0x9'ffff, MCU_Read_Page8);
-    mcu.mrops.SetRange(0xa'0000, 0xa'ffff, MCU_Read_Page10);
-    mcu.mrops.SetRange(0xb'0000, 0xb'ffff, MCU_Read_Page10);
-    mcu.mrops.SetRange(0xc'0000, 0xc'ffff, MCU_Read_Page12);
-    mcu.mrops.SetRange(0xd'0000, 0xd'ffff, MCU_Read_Page12);
-    mcu.mrops.SetRange(0xe'0000, 0xe'ffff, MCU_Read_Page14);
-    mcu.mrops.SetRange(0xf'0000, 0xf'ffff, MCU_Read_Page14);
+    mcu.mrops.SetRange(0x0'0000, 0xf'ffff, MCU_ReadOriginal);
+
+    mcu.mrops.SetRange(0x0'0000, 0x0'7fff, MCU_ReadRom1);
+
+    mcu.mrops.SetRange(0x0'8000, 0x0'ffff, MCU_ReadDefault);
+    // these overwrite the above range!
+    if (!mcu.is_mk1)
+    {
+        if (mcu.is_jv880)
+        {
+            mcu.mrops.Set(0x0'f402, MCU_ReadGA);
+        }
+        else
+        {
+            mcu.mrops.Set(0x0'e402, MCU_ReadGA);
+        }
+        if (!mcu.is_scb55)
+        {
+            mcu.mrops.SetRange(0x0'ec00, 0x0'efff, MCU_ReadSM);
+        }
+    }
+    else
+    {
+        mcu.mrops.SetRange(0x0'f000, 0x0'f0ff, MCU_ReadLCD);
+        mcu.mrops.Set(0x0'f106, MCU_ReadGA);
+    }
+    mcu.mrops.SetRange(0x0'8000, 0x0'dfff, MCU_ReadSRAM);
+    mcu.mrops.SetRange(0x0'fb80, 0x0'ff7f, MCU_ReadRam);
+    mcu.mrops.SetRange(0x0'ff80, 0x0'ffff, MCU_ReadDevice);
+    if (mcu.is_jv880)
+    {
+        // TODO: what is going on here? PCM masks 3f, but mapped range is 3ff?
+        mcu.mrops.SetRange(0x0'f000, 0x0'f3ff, MCU_ReadPCM);
+    }
+    else
+    {
+        mcu.mrops.SetRange(0x0'e000, 0x0'e03f, MCU_ReadPCM);
+    }
+
+    mcu.mrops.SetRange(0x1'0000, 0x1'ffff, MCU_ReadRom2Low);
+    mcu.mrops.SetRange(0x2'0000, 0x2'ffff, MCU_ReadRom2Low);
+    mcu.mrops.SetRange(0x3'0000, 0x3'ffff, MCU_ReadRom2Low);
+    mcu.mrops.SetRange(0x4'0000, 0x4'ffff, MCU_ReadRom2Low);
+    if (mcu.is_mk1)
+    {
+        mcu.mrops.SetRange(0x5'0000, 0x5'ffff, MCU_ReadSRAM);
+    }
+    else
+    {
+        mcu.mrops.SetRange(0x5'0000, 0x5'ffff, MCU_ReadMax);
+    }
+    mcu.mrops.SetRange(0x6'0000, 0x6'ffff, MCU_ReadZero);
+    mcu.mrops.SetRange(0x7'0000, 0x7'ffff, MCU_ReadZero);
+    if (!mcu.is_jv880)
+    {
+        mcu.mrops.SetRange(0x8'0000, 0x8'ffff, MCU_ReadRom2High);
+        mcu.mrops.SetRange(0x9'0000, 0x9'ffff, MCU_ReadRom2High);
+    }
+    else
+    {
+        mcu.mrops.SetRange(0x8'0000, 0x8'ffff, MCU_ReadMax);
+        mcu.mrops.SetRange(0x9'0000, 0x9'ffff, MCU_ReadMax);
+    }
+    if (!mcu.is_mk1)
+    {
+        mcu.mrops.SetRange(0xa'0000, 0xa'ffff, MCU_ReadSRAM);
+        mcu.mrops.SetRange(0xb'0000, 0xb'ffff, MCU_ReadSRAM);
+    }
+    else
+    {
+        mcu.mrops.SetRange(0xa'0000, 0xa'ffff, MCU_ReadMax);
+        mcu.mrops.SetRange(0xb'0000, 0xb'ffff, MCU_ReadMax);
+    }
+    if (mcu.is_jv880)
+    {
+        mcu.mrops.SetRange(0xc'0000, 0xc'ffff, MCU_ReadNVRAM);
+        mcu.mrops.SetRange(0xd'0000, 0xd'ffff, MCU_ReadNVRAM);
+    }
+    else
+    {
+        mcu.mrops.SetRange(0xc'0000, 0xc'ffff, MCU_ReadMax);
+        mcu.mrops.SetRange(0xd'0000, 0xd'ffff, MCU_ReadMax);
+    }
+    if (!mcu.is_jv880)
+    {
+        mcu.mrops.SetRange(0xe'0000, 0xe'ffff, MCU_ReadRom2High);
+        mcu.mrops.SetRange(0xf'0000, 0xf'ffff, MCU_ReadRom2High);
+    }
+    else
+    {
+        mcu.mrops.SetRange(0xe'0000, 0xe'ffff, MCU_ReadCardRam);
+        mcu.mrops.SetRange(0xf'0000, 0xf'ffff, MCU_ReadCardRam);
+    }
 }
 
 void MCU_SetRomset(mcu_t& mcu, Romset romset)
