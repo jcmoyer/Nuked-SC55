@@ -452,3 +452,15 @@ add_render_test("mk2-v1.01" "issue_18/issue_18.mid" "ee613cc83e031a3b140312c0773
 add_render_test_multi_instance("mk2-v1.01" "issue_42/anacrusis.mid" 2 "f0f8f5889e3f45bf54a0ee89d2d6a075ac566a1ab0f8532d8331740d484f6b43")
 
 add_render_test("jv880-v1.0.1" "jv880/jv880.mid" "73feda3c5d7153e2ae04eb3a12e3b4a08e0a0e8eeebb39a77159b45385d3bbbc")
+
+add_render_test("mk2-v1.01" "chorus_reverb/chorus_reverb.mid" "d8201c96163cded15b8d45611124e16ea41c46577dfd9da2b519b2ca02a30ca2")
+add_render_test("mk1-v1.00" "chorus_reverb/chorus_reverb.mid" "8b7c5b9c92352d60f06eb238d2236bd13f2117698c3c952e3637897f53b2f00a")
+add_render_test("mk1-v1.21" "chorus_reverb/chorus_reverb.mid" "37a3da3cb1d40e2755296a5ce7ff6046a1cae98443c1489ff05959cfaa1c0854")
+add_render_test("mk1-v2.00" "chorus_reverb/chorus_reverb.mid" "6deb4d78218726cad6e29003b2709794fe90257a4a7546be721bf7a300b59878")
+add_render_test("st-v1.01" "chorus_reverb/chorus_reverb.mid" "7ff37a625def3695147fec0d757f7002a0452c5616a172ea2687fb9e494893ec")
+add_render_test("cm300-v1.10" "chorus_reverb/chorus_reverb.mid" "ce8b1102352deac319a58b2cc590ec13a6237c89feaf108738eae8f0c5cdf877")
+add_render_test("cm300-v1.20" "chorus_reverb/chorus_reverb.mid" "6612565473866b7ce1d55d72525975c9248bf9d95ffccd2137d29518a4a04a12")
+add_render_test("cm300-v1.30" "chorus_reverb/chorus_reverb.mid" "3941063767f94543742182284b6f7f74034c0c5c66a0d4a9fad7b28a3041ad7f")
+add_render_test("rlp3237-v2.01" "chorus_reverb/chorus_reverb.mid" "1a02d7bbe43b06ff362dded211fce30bb9966c2bc9e3bc436d6ad091d524e27b")
+add_render_test("scb55-v2.00" "chorus_reverb/chorus_reverb.mid" "78a6f6d1728784bb65d802bd511ca00b6b41f54c956c8f9a38db457200102e29")
+add_render_test("sc155-rev1" "chorus_reverb/chorus_reverb.mid" "4e12b50eee0de362e2a53bdb5120f490de49b8e6cf1acdd567e42b02730c6e65")
