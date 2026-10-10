@@ -952,54 +952,30 @@ void PCM_Update(pcm_t& pcm, uint64_t cycles)
 
                 eram_pack(pcm, pcm.ram2[29][9] + pcm.tv_counter, pcm.ram1[29][1]);
             }
-            {
-                // 21
+        }
 
-                int v1 = pcm.ram2[31][2];
-                int v2 = (int)pcm.ram1[29][5];
+        for (int i = 2; i <= 3; ++i)
+        {
+            int v1 = pcm.ram2[31][i];
+            int v2 = (int)pcm.ram1[29][5];
 
-                int m1 = multi(v2, (int8_t)(v1 >> 8)) >> 5;
-                int m2 = multi(v2, (int8_t)(v1 & 255)) >> 5;
+            int m1 = multi(v2, (int8_t)(v1 >> 8)) >> 5;
+            int m2 = multi(v2, (int8_t)(v1 & 255)) >> 5;
 
-                rcadd[2] = m1;
-                rcadd2[2] = m2;
-            }
-            {
-                // 22
+            rcadd[i] = m1;
+            rcadd2[i] = m2;
+        }
 
-                int v1 = pcm.ram2[31][3];
-                int v2 = (int)pcm.ram1[29][5];
+        for (int i = 4; i <= 5; ++i)
+        {
+            int v1 = pcm.ram2[31][i];
+            int v2 = (int)pcm.ram1[28][1];
 
-                int m1 = multi(v2, (int8_t)(v1 >> 8)) >> 5;
-                int m2 = multi(v2, (int8_t)(v1 & 255)) >> 5;
+            int m1 = multi(v2, (int8_t)(v1 >> 8)) >> 5;
+            int m2 = multi(v2, (int8_t)(v1 & 255)) >> 5;
 
-                rcadd[3] = m1;
-                rcadd2[3] = m2;
-            }
-            {
-                // 23
-
-                int v1 = pcm.ram2[31][4];
-                int v2 = (int)pcm.ram1[28][1];
-
-                int m1 = multi(v2, (int8_t)(v1 >> 8)) >> 5;
-                int m2 = multi(v2, (int8_t)(v1 & 255)) >> 5;
-
-                rcadd[4] = m1;
-                rcadd2[4] = m2;
-            }
-            {
-                // 31
-
-                int v1 = pcm.ram2[31][5];
-                int v2 = (int)pcm.ram1[28][1];
-
-                int m1 = multi(v2, (int8_t)(v1 >> 8)) >> 5;
-                int m2 = multi(v2, (int8_t)(v1 & 255)) >> 5;
-
-                rcadd[5] = m1;
-                rcadd2[5] = m2;
-            }
+            rcadd[i] = m1;
+            rcadd2[i] = m2;
         }
 
         {
