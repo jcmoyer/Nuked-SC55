@@ -999,7 +999,9 @@ void PCM_UpdateSlot(pcm_t& pcm, int slot, int* rcadd, int* rcadd2)
     pcm.rcsum[0] = addclip20(pcm.rcsum[0], rc0 >> 1, rc0 & 1);
     pcm.rcsum[1] = addclip20(pcm.rcsum[1], rc1 >> 1, rc1 & 1);
 
-    if (slot != pcm.config.reg_slots - 1)
+    // sum into ram1[31] until we reach the last slot, then commit for
+    // mixing/output
+    if (slot < pcm.config.reg_slots - 1)
     {
         pcm.ram1[31][1] = (uint32_t)suml;
         pcm.ram1[31][3] = (uint32_t)sumr;
